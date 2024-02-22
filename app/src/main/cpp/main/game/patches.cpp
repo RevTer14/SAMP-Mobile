@@ -68,7 +68,7 @@ void readVehiclesAudioSettings()
 			   &CurrentVehicleAudioProperties.field_14,
 			   &CurrentVehicleAudioProperties.field_16);
 
-		((void (*)(const char* thiz, int16_t* a2))(g_libGTASA + 0x385D48 + 1))(vehicleModel, &pIndex);
+		((void (*)(const char* thiz, int16_t* a2))(g_libGTASA + 0x385E38 + 1))(vehicleModel, &pIndex);
 		memcpy(&VehicleAudioProperties[pIndex-400], &CurrentVehicleAudioProperties, sizeof(VehicleAudioPropertiesStruct));
 
 

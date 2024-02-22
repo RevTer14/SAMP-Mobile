@@ -1869,31 +1869,31 @@ PED_TYPE* GamePool_FindPlayerPed()
 PED_TYPE* GamePool_Ped_GetAt(int iID)
 {
 	// GetPoolPed
-	return ((PED_TYPE* (*)(int))(g_libGTASA + /*0x41DD7C*/0x483D48 + 1))(iID);
+	return ((PED_TYPE* (*)(int))(g_libGTASA + /*0x41DD7C*/0x483DB8 + 1))(iID);
 }
 
 int GamePool_Ped_GetIndex(PED_TYPE* pActor)
 {
 	// GettPoolPedRef
-	return ((int (*)(PED_TYPE*))(g_libGTASA + 0x483D3A + 1))(pActor);
+	return ((int (*)(PED_TYPE*))(g_libGTASA + 0x483DAA + 1))(pActor);
 }
 
 ENTITY_TYPE *GamePool_Object_GetAt(int iID)
 {
 	// GetPoolObj
-	return ((ENTITY_TYPE* (*)(int))(g_libGTASA + /*0x41DDB4*/0x483D62 + 1))(iID);
+	return ((ENTITY_TYPE* (*)(int))(g_libGTASA + /*0x41DDB4*/0x483DD2 + 1))(iID);
 }
 
 uintptr_t GamePool_Vehicle_GetIndex(VEHICLE_TYPE* pGtaVehicle)
 {
 	// GettPoolVehicleRef
-	return ((uintptr_t (*)(VEHICLE_TYPE*))(g_libGTASA + 0x483D20 + 1))(pGtaVehicle);
+	return ((uintptr_t (*)(VEHICLE_TYPE*))(g_libGTASA + 0x483D90 + 1))(pGtaVehicle);
 }
 
 VEHICLE_TYPE* GamePool_Vehicle_GetAt(int iID)
 {
 	// GetPoolVehicle
-	return ((VEHICLE_TYPE* (*)(int))(g_libGTASA + 0x483D2E + 1))(iID);
+	return ((VEHICLE_TYPE* (*)(int))(g_libGTASA + 0x483D9E + 1))(iID);
 }
 
 // 0.3.7
@@ -1903,25 +1903,25 @@ int GetVehicleSubtype(VEHICLE_TYPE* pGtaVehicle)
 	{
 		uintptr_t vtable = pGtaVehicle->entity.vtable;
 
-		if (vtable == (g_libGTASA + 0x66D688)) {		// CAutomobile
+		if (vtable == (g_libGTASA + 0x0066D678)) {		// CAutomobile
 			return VEHICLE_SUBTYPE_CAR;
 		}
-		else if (vtable == (g_libGTASA + 0x66D800)) {	// CBike
+		else if (vtable == (g_libGTASA + 0x0066D7F0)) {	// CBike
 			return VEHICLE_SUBTYPE_BIKE;
 		}
-		else if (vtable == (g_libGTASA + 0x66DB44)) {	// CHeli
+		else if (vtable == (g_libGTASA + 0x0066DB34)) {	// CHeli
 			return VEHICLE_SUBTYPE_HELI;
 		}
-		else if (vtable == (g_libGTASA + 0x66DA30)) {	// CBoat
+		else if (vtable == (g_libGTASA + 0x0066DA20)) {	// CBoat
 			return VEHICLE_SUBTYPE_BOAT;
 		}
-		else if (vtable == (g_libGTASA + 0x66DD94)) {	// CPlane
+		else if (vtable == (g_libGTASA + 0x0066DD84)) {	// CPlane
 			return VEHICLE_SUBTYPE_PLANE;
 		}
-		else if (vtable == (g_libGTASA + 0x66D918)) {	// CBmx
+		else if (vtable == (g_libGTASA + 0x0066D908)) {	// CBmx
 			return VEHICLE_SUBTYPE_PUSHBIKE;
 		}
-		else if (vtable == (g_libGTASA + 0x66E10C)) {	// CTrain
+		else if (vtable == (g_libGTASA + 0x0066E0FC)) {	// CTrain
 			return VEHICLE_SUBTYPE_TRAIN;
 		}
 	}
@@ -1968,7 +1968,7 @@ bool IsValidPedModel(uint modelID)
 		uintptr_t modelInfo = GetModelInfoByID(modelID);
 		if (modelInfo)
 		{
-			if ( (*(uintptr_t*)modelInfo) == (g_libGTASA + 0x667668))
+			if ( (*(uintptr_t*)modelInfo) == (g_libGTASA + 0x667658))
 				return true;
 		}
 	}
@@ -1984,7 +1984,7 @@ uintptr_t GetModelRWObject(uint uiModel)
 
 uintptr_t GetTexture(const char* texname)
 {
-	uintptr_t texture = ((uintptr_t(*)(const char*))(g_libGTASA + 0x1E9CE4 + 1))(texname);
+	uintptr_t texture = ((uintptr_t(*)(const char*))(g_libGTASA + 0x1E9C64 + 1))(texname);
 	if (texture == 0) return 0;
 	int count = *(int*)(texture + 0x54);
 	count++;
@@ -2991,7 +2991,7 @@ bool IsGameEntityArePlaceable(ENTITY_TYPE *pEntity)
     if(pEntity)
     {
         if(pEntity->vtable)
-            return (pEntity->vtable == g_libGTASA+0x667D24);
+            return (pEntity->vtable == g_libGTASA+0x667D14);
     }
 
     return false;

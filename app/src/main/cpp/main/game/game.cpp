@@ -47,7 +47,7 @@ void CGame::StartGame()
 	FLog("Starting game..");
 
 	// OnNewGameCheck
-	((void (*)(void))(g_libGTASA + 0x2A7200 + 1))();
+	((void (*)(void))(g_libGTASA + 0x2A7270 + 1))();
 
 	//*(int*)(g_libGTASA + 0xA987C8) = 8;
 	//*(char*)(g_libGTASA + 0x96B514) = 0;
@@ -67,7 +67,7 @@ void CGame::Initialize()
 	FLog("CGame initializing..");
 
 	// Menu_SwithOffToGame
-	((void (*)(void))(g_libGTASA + 0x2A92F0 + 1))();
+	((void (*)(void))(g_libGTASA + 0x2A9360 + 1))();
 
 	ApplySAMPPatchesInGame();
 	GameResetRadarColors();
@@ -78,23 +78,23 @@ void CGame::Initialize()
 void CGame::SetMaxStats()
 {
 	// CCheat::VehicleSkillsCheat
-	((void(*)(void))(g_libGTASA + /*0x2BAED0*/0x2FE620 + 1))();
+	((void(*)(void))(g_libGTASA + /*0x2BAED0*/0x2FE690 + 1))();
 	// CCheat::WeaponSkillsCheat
-	((void(*)(void))(g_libGTASA + /*0x2BAE68*/0x2FE5BA + 1))();
+	((void(*)(void))(g_libGTASA + /*0x2BAE68*/0x2FE62A + 1))();
 	// CStats::SetStatValue
-	ARMHook::makeRET(g_libGTASA + /*0x3B9074*/0x41552C);
+	ARMHook::makeRET(g_libGTASA + /*0x3B9074*/0x41557C);
 }
 // 0.3.7
 void CGame::ToggleThePassingOfTime(bool bOnOff)
 {
 	if (bOnOff)
 	{
-		ARMHook::writeMemory(g_libGTASA + /*0x38C154*/0x3E3378, (uintptr_t)"\xD0\xB5", 2);
+		ARMHook::writeMemory(g_libGTASA + /*0x38C154*/0x3E33C8, (uintptr_t)"\xD0\xB5", 2);
 		this->m_bClockEnabled = true;
 	}
 	else
 	{
-		ARMHook::makeRET(g_libGTASA + /*0x38C154*/0x3E3378);
+		ARMHook::makeRET(g_libGTASA + /*0x38C154*/0x3E33C8);
 		this->m_bClockEnabled = false;
 	}
 }
@@ -102,17 +102,17 @@ void CGame::ToggleThePassingOfTime(bool bOnOff)
 void CGame::EnableClock(bool bEnable)
 {
 	char byteClockData[] = { '%', '0', '2', 'd', ':', '%', '0', '2', 'd', 0 };
-	ARMHook::unprotect(g_libGTASA + /*0x599504*/0x2BD5A8);
+	ARMHook::unprotect(g_libGTASA + /*0x599504*/0x2BD618);
 
 	if (bEnable)
 	{
 		ToggleThePassingOfTime(true);
-		memcpy((void*)(g_libGTASA + /*0x599504*/0x2BD5A8), byteClockData, 10);
+		memcpy((void*)(g_libGTASA + /*0x599504*/0x2BD618), byteClockData, 10);
 	}
 	else
 	{
 		ToggleThePassingOfTime(false);
-		memset((void*)(g_libGTASA + /*0x599504*/0x2BD5A8), 0, 10);
+		memset((void*)(g_libGTASA + /*0x599504*/0x2BD618), 0, 10);
 	}
 }
 // 0.3.7

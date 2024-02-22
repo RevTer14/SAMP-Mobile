@@ -500,7 +500,7 @@ uint32_t CCamera_IsTargetingActive_hook(uintptr_t thiz, PED_TYPE* pPed)
 	else
 	{
 		/* CCamera::IsTargetingActive */
-		uint32_t bIsTargeting = ((uint32_t (*)(uintptr_t))(g_libGTASA + 0x3D9F04 + 1))(g_libGTASA + 0x951FA8);
+		uint32_t bIsTargeting = ((uint32_t (*)(uintptr_t))(g_libGTASA + 0x3E157C + 1))(g_libGTASA + 0x951FA8);
 		LocalPlayerKeys.bKeys[ePadKeys::KEY_HANDBRAKE] = bIsTargeting;
 		return bIsTargeting;
 	}

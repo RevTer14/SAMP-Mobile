@@ -89,7 +89,7 @@ CObject::~CObject()
 			pGame->GetCamera()->AttachToEntity(0);
 	}
 
-	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D24)) /* CPlaceable */
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D14)) /* CPlaceable */
 	{
 		ScriptCommand(&destroy_object, m_dwGTAId);
 		if (GetModelRefCounts(m_iModel) == 0)
@@ -275,7 +275,7 @@ void CObject::GetRotation(float* pfX, float* pfY, float* pfZ)
 		
 		if (mat) {
 			// CMatrix::ConvertToEulerAngles
-			((void (*)(PMATRIX4X4, float*, float*, float*, int))(g_libGTASA + 0x44E65C + 1))(mat, pfX, pfY, pfZ, 21);
+			((void (*)(PMATRIX4X4, float*, float*, float*, int))(g_libGTASA + 0x44E6AC + 1))(mat, pfX, pfY, pfZ, 21);
 		}
 
 		*pfX = *pfX * 57.295776 * -1.0;
@@ -319,7 +319,7 @@ void CObject::ApplyMoveSpeed()
 {
 	if (m_pEntity)
 	{
-		float fTimeStep = *(float*)(g_libGTASA + 0x96B500);
+		float fTimeStep = *(float*)(g_libGTASA + 0x96B504);
 
 		MATRIX4X4 mat;
 		GetMatrix(&mat);

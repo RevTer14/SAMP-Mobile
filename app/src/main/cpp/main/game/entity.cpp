@@ -116,7 +116,7 @@ void CEntity::TeleportTo(float fX, float fY, float fZ)
 {
 	MATRIX4X4 mat;
 
-	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D24)) /* CPlaceable */
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D14)) /* CPlaceable */
 	{
 		uint16_t modelIndex = m_pEntity->nModelIndex;
 		if (modelIndex != TRAIN_PASSENGER_LOCO &&
@@ -135,7 +135,7 @@ bool CEntity::IsAdded()
 {
 	if (m_pEntity)
 	{
-		if (m_pEntity->vtable == (g_libGTASA + /*0x5C7358*/0x667D24)) // CPlaceable
+		if (m_pEntity->vtable == (g_libGTASA + /*0x5C7358*/0x667D14)) // CPlaceable
 			return false;
 
 		if (m_pEntity->dwUnkModelRel)
@@ -147,7 +147,7 @@ bool CEntity::IsAdded()
 // 0.3.7
 void CEntity::Add()
 {
-	if (!m_pEntity || m_pEntity->vtable == (g_libGTASA + /*0x5C7358*/0x667D24)) { // CPlaceable
+	if (!m_pEntity || m_pEntity->vtable == (g_libGTASA + /*0x5C7358*/0x667D14)) { // CPlaceable
 		return;
 	}
 
@@ -169,7 +169,7 @@ void CEntity::Add()
 // 0.3.7
 void CEntity::Remove()
 {
-	if (!m_pEntity || m_pEntity->vtable == (g_libGTASA + /*0x5C7358*/0x667D24)) { // CPlaceable
+	if (!m_pEntity || m_pEntity->vtable == (g_libGTASA + /*0x5C7358*/0x667D14)) { // CPlaceable
 		return;
 	}
 
@@ -182,7 +182,7 @@ void CEntity::Remove()
 float CEntity::GetDistanceFromCamera()
 {
 	MATRIX4X4 matEnt;
-	if (!m_pEntity || m_pEntity->vtable == 0x667D24) // CPlaceable
+	if (!m_pEntity || m_pEntity->vtable == 0x667D14) // CPlaceable
 		return 100000.0f;
 
 	GetMatrix(&matEnt);
@@ -252,7 +252,7 @@ float CEntity::GetDistanceFromLocalPlayerPed()
 
 void CEntity::SetCollisionChecking(bool bCheck)
 {
-	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D24))
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D14))
 	{
 		if (bCheck)
 			m_pEntity->dwProcessingFlags |= 1;
@@ -263,7 +263,7 @@ void CEntity::SetCollisionChecking(bool bCheck)
 
 bool CEntity::GetCollisionChecking()
 {
-	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D24))
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D14))
 		return m_pEntity->dwProcessingFlags & 1;
 
 	return true;
@@ -271,7 +271,7 @@ bool CEntity::GetCollisionChecking()
 
 void CEntity::SetGravityProcessing(bool state)
 {
-	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D24))
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D14))
 	{
 		if (state)
 			m_pEntity->dwProcessingFlags &= 0x7FFFFFFD;
@@ -298,7 +298,7 @@ void CEntity::UpdateMatrix(MATRIX4X4 matrix)
 // 0.3.7
 void CEntity::UpdateRwMatrixAndFrame()
 {
-	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + 0x667D24)) // CPlaceable
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + 0x667D14)) // CPlaceable
 	{
 		if (m_pEntity->pRwObject)
 		{

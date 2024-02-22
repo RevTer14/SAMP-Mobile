@@ -125,7 +125,7 @@ CPlayerPed::~CPlayerPed()
 	// GameResetPlayerKeys
 	SetPlayerPedPtrRecord(m_bytePlayerNumber, 0);
 
-	if (m_pPed && (GamePool_Ped_GetAt(m_dwGTAId) != 0) && m_pPed->entity.vtable != (g_libGTASA + 0x667D24) /* CPlaceable */)
+	if (m_pPed && (GamePool_Ped_GetAt(m_dwGTAId) != 0) && m_pPed->entity.vtable != (g_libGTASA + 0x667D14) /* CPlaceable */)
 	{
 		if (m_dwParachuteObject)
 		{
@@ -149,7 +149,7 @@ CPlayerPed::~CPlayerPed()
 		//((void (*)(PED_TYPE*))(*(void**)(m_pPed->entity.vtable + 0x4)))(m_pPed);
 
 		// CPopulation::RemovePed
-		(( void (*)(uintptr_t))(g_libGTASA+0x4CE630+1))((uintptr_t)m_pEntity);
+		(( void (*)(uintptr_t))(g_libGTASA+0x4CC7E4+1))((uintptr_t)m_pEntity);
 
 		m_pPed = nullptr;
 		m_pEntity = nullptr;
@@ -320,7 +320,7 @@ bool IsTaskRunNamedOrSlideToCoord(void* pTask)
 {
 
 	uintptr_t dwVTable = *(uintptr_t*)(pTask);
-	if (dwVTable == (g_libGTASA + 0x66C4F0) || dwVTable == (g_libGTASA + 0x669500)) // CTaskSimpleSlideToCoord CTaskSimpleRunNamedAnim
+	if (dwVTable == (g_libGTASA + 0x66C4E0) || dwVTable == (g_libGTASA + 0x6694F0)) // CTaskSimpleSlideToCoord CTaskSimpleRunNamedAnim
 	{
 		return true;
 	}
@@ -413,7 +413,7 @@ bool CPlayerPed::IsPlayingAnimation(int iIndex)
 	}
 	const char* pNameAnim = strchr(pAnim, ':') + 1;
 
-	uintptr_t blendAssoc = ((uintptr_t(*)(uintptr_t clump, const char* szName))(g_libGTASA + 0x00390A28 + 1))
+	uintptr_t blendAssoc = ((uintptr_t(*)(uintptr_t clump, const char* szName))(g_libGTASA + 0x00390A24 + 1))
 			(m_pPed->entity.pRwObject, pNameAnim);	// RpAnimBlendClumpGetAssociation
 
 	if (blendAssoc)
@@ -805,7 +805,7 @@ void CPlayerPed::DestroyFollowPedTask()
 void CPlayerPed::GetBonePosition(int iBoneID, VECTOR* vecOut)
 {
 	if (!m_pPed) return;
-	if (m_pEntity->vtable == g_libGTASA + 0x667D24) return; // CPlaceable
+	if (m_pEntity->vtable == g_libGTASA + 0x667D14) return; // CPlaceable
 
 	// CPed::GetBonePosition
 	((void (*)(PED_TYPE*, VECTOR*, int, int))(g_libGTASA + 0x4A4A9C + 1))(m_pPed, vecOut, iBoneID, 0);
@@ -814,7 +814,7 @@ void CPlayerPed::GetBonePosition(int iBoneID, VECTOR* vecOut)
 void CPlayerPed::GetTransformedBonePosition(int iBoneID, VECTOR* vecOut)
 {
 	if (!m_pPed) return;
-	if (m_pEntity->vtable == g_libGTASA + 0x667D24) return; // CPlaceable
+	if (m_pEntity->vtable == g_libGTASA + 0x667D14) return; // CPlaceable
 
 	// CPed::GetTransformedBonePosition
 	((void (*)(PED_TYPE*, VECTOR*, int, int))(g_libGTASA + 0x4A2438 + 1))(m_pPed, vecOut, iBoneID, 0);
@@ -957,7 +957,7 @@ void CPlayerPed::PutDirectlyInVehicle(uint32_t dwVehicleGTAId, uint8_t byteSeatI
 
 	VEHICLE_TYPE* pGtaVehicle = GamePool_Vehicle_GetAt(dwVehicleGTAId);
 
-	if (pGtaVehicle->fHealth != 0.0f && pGtaVehicle->entity.vtable != (g_libGTASA + 0x667D24))
+	if (pGtaVehicle->fHealth != 0.0f && pGtaVehicle->entity.vtable != (g_libGTASA + 0x667D14))
 	{
 		if (GetVehicleSubtype(pGtaVehicle) == VEHICLE_SUBTYPE_CAR ||
 			GetVehicleSubtype(pGtaVehicle) == VEHICLE_SUBTYPE_BIKE)
@@ -1121,7 +1121,7 @@ int CPlayerPed::GetVehicleSeatID()
 void CPlayerPed::SetAttachedObject(int index, NEW_ATTACHED_OBJECT* pNewAttachedObject)
 {
 	FLog("CPlayerPed::SetAttachedObject BoneID: %d", pNewAttachedObject->iBoneID);
-	if (m_pPed && m_pPed->entity.vtable != (g_libGTASA + 0x667D24))
+	if (m_pPed && m_pPed->entity.vtable != (g_libGTASA + 0x667D14))
 	{
 		if (m_pPed->entity.pRwObject)
 		{
@@ -1273,7 +1273,7 @@ void CPlayerPed::ProcessAttachedObjects()
 // 0.3.7
 void CPlayerPed::GetBoneMatrix(MATRIX4X4* matOut, int iBoneID)
 {
-	if (m_pPed && m_pPed->entity.vtable != (g_libGTASA + 0x667D24))
+	if (m_pPed && m_pPed->entity.vtable != (g_libGTASA + 0x667D14))
 	{
 		if (m_pPed->entity.pRwObject)
 		{

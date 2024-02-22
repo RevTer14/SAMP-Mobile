@@ -514,7 +514,7 @@ bool CVehicle::IsDriverLocalPlayer()
 // 0.3.7
 void CVehicle::SetInvulnerable(bool bInv)
 {
-	if (m_pVehicle && GamePool_Vehicle_GetAt(m_dwGTAId) && m_pVehicle->entity.vtable != (g_libGTASA + 0x667D24))
+	if (m_pVehicle && GamePool_Vehicle_GetAt(m_dwGTAId) && m_pVehicle->entity.vtable != (g_libGTASA + 0x667D14))
 	{
 		if (bInv)
 		{

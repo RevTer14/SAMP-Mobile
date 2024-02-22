@@ -96,7 +96,7 @@ void UI::render()
 {
 	ImGuiWrapper::render();
 
-	uintptr_t ms_memoryUsed = *(uint32_t*)(g_libGTASA+0x00792B74);
+	uintptr_t ms_memoryUsed = *(uint32_t*)(g_libGTASA+0x00792B7C);
 	uintptr_t ms_memoryAvailable = *(uint32_t*)(g_libGTASA+0x00685FA0);
     std::string str = string_format(std::string ("%d/%d"), ms_memoryUsed>>20, ms_memoryAvailable>>20);
     //d_label->setText(str);

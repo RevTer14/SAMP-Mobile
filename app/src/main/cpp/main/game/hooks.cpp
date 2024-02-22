@@ -253,10 +253,10 @@ void CStream_InitImageList_hook()
 	*(char*)(g_libGTASA + 0x792EC8) = 0;
 
 	// CStreaming::AddImageToList
-	((uintptr_t(*)(const char*, int))(g_libGTASA + 0x2CF760 + 1))("TEXDB\\SAMPCOL.IMG", 1);
-	((uintptr_t(*)(const char*, int))(g_libGTASA + 0x2CF760 + 1))("TEXDB\\GTA3.IMG", 1);
-	((uintptr_t(*)(const char*, int))(g_libGTASA + 0x2CF760 + 1))("TEXDB\\GTA_INT.IMG", 1);
-	((uintptr_t(*)(const char*, int))(g_libGTASA + 0x2CF760 + 1))("TEXDB\\SAMP.IMG", 1);
+	((uintptr_t(*)(const char*, int))(g_libGTASA + 0x2CF7D0 + 1))("TEXDB\\SAMPCOL.IMG", 1);
+	((uintptr_t(*)(const char*, int))(g_libGTASA + 0x2CF7D0 + 1))("TEXDB\\GTA3.IMG", 1);
+	((uintptr_t(*)(const char*, int))(g_libGTASA + 0x2CF7D0 + 1))("TEXDB\\GTA_INT.IMG", 1);
+	((uintptr_t(*)(const char*, int))(g_libGTASA + 0x2CF7D0 + 1))("TEXDB\\SAMP.IMG", 1);
 	return;
 }
 
@@ -267,7 +267,7 @@ uint32_t CGame__InitialiseRenderWare_hook()
 	FLog("Loading SAMP texture database..");
 	uint32_t result = CGame__InitialiseRenderWare();
 	// TextureDatabaseRuntime::Load()
-	((void(*)(const char*, int, int))(g_libGTASA + /*0x1BF244*/0x1EA8E4 + 1))("samp", 0, 5);
+	((void(*)(const char*, int, int))(g_libGTASA + /*0x1BF244*/0x1EA864 + 1))("samp", 0, 5);
 	/*((void(*)(const char*, int, int))(g_libGTASA + 0x1EA8E4 + 1))("gui", 0, 5);//gui
 	((void(*)(const char*, int, int))(g_libGTASA + 0x1EA8E4 + 1))("gtasa", 0, 5);//gtasa
 	((void(*)(const char*, int, int))(g_libGTASA + 0x1EA8E4 + 1))("game", 0, 5);//game
@@ -436,7 +436,7 @@ PED_MODEL* CModelInfo_AddPedModel_hook(int id)
 
 	PED_MODEL* model = &PedsModels[PedsModelsCount];
 	memset(model, 0, sizeof(PED_MODEL));
-	model->vtable = (uintptr_t)(g_libGTASA + /*0x5C6E90*/0x667668);
+	model->vtable = (uintptr_t)(g_libGTASA + /*0x5C6E90*/0x667658);
 
 	// CClumpModelInfo::CClumpModelInit()
 	((uintptr_t(*)(PED_MODEL*))(*(void**)(model->vtable + 0x1C)))(model);
@@ -1497,7 +1497,7 @@ uint32_t CWorld_ProcessLineOfSight_hook(VECTOR* vecOrigin, VECTOR* vecEnd, VECTO
 				if (g_pCurrentBulletData)
 				{
 					pEntity = g_pCurrentBulletData->pEntity;
-					if (pEntity && pEntity->vtable != (g_libGTASA + 0x667D24)) // CPlaceable
+					if (pEntity && pEntity->vtable != (g_libGTASA + 0x667D14)) // CPlaceable
 					{
 						if (pEntity->mat)
 						{
@@ -1895,7 +1895,7 @@ uintptr_t CTxdStore__TxdStoreFindCB_hook(const char *a1)
 		((void (*)(int))(g_libGTASA+0x1E9BC8+1))(db_handle);
 
 		// TextureDatabaseRuntime::GetTexture
-		uintptr_t tex = ((uintptr_t (*)(const char *))(g_libGTASA+0x1E9CE4+1))(a1);
+		uintptr_t tex = ((uintptr_t (*)(const char *))(g_libGTASA+0x1E9C64+1))(a1);
 
 		// TextureDatabaseRuntime::Unregister
 		((void (*)(int))(g_libGTASA+0x1E9C80+1))(db_handle);

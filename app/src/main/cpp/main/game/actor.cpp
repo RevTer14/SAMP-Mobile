@@ -32,7 +32,7 @@ CActor::CActor(int iSkin, float fX, float fY, float fZ, float fAngle)
 CActor::~CActor()
 {
 	if (m_pPed && GamePool_Ped_GetAt(m_dwGTAId) &&
-		m_pPed->entity.vtable != (g_libGTASA + 0x667D24))
+		m_pPed->entity.vtable != (g_libGTASA + 0x667D14))
 	{
 		// CPlayerPed::Destructor
 		((void (*)(PED_TYPE*))(*(void**)(m_pPed->entity.vtable + 0x4)))(m_pPed);
