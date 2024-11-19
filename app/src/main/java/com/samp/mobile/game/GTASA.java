@@ -3,6 +3,7 @@ package com.samp.mobile.game;
 import android.os.Bundle;
 import android.util.Log;
 
+import com.bytedance.shadowhook.ShadowHook;
 import com.wardrumstudios.utils.WarMedia;
 
 import java.io.File;
@@ -16,20 +17,22 @@ public class GTASA extends WarMedia {
     boolean UseExpansionPack = false;
 
     static {
-        vmVersion = null;
-        Log.i(TAG, "**** Loading SO's");
+        ShadowHook.init(new ShadowHook.ConfigBuilder()
+                .setMode(ShadowHook.Mode.UNIQUE)
+                .build());
 
+        vmVersion = null;
+        System.out.println("**** Loading SO's");
         try {
             vmVersion = System.getProperty("java.vm.version");
-            Log.i(TAG, "vmVersion " + vmVersion);
-
+            System.out.println("vmVersion " + vmVersion);
             System.loadLibrary("ImmEmulatorJ");
-            System.loadLibrary("SCAnd");
-            System.loadLibrary("GTASA");
         }
-        catch (ExceptionInInitializerError | UnsatisfiedLinkError e) {
-            Log.e(TAG, e.getMessage());
+        catch (ExceptionInInitializerError | UnsatisfiedLinkError ignored) {
         }
+        System.loadLibrary("GTASA");
+        System.loadLibrary("bass");
+        System.loadLibrary("samp");
     }
 
     @Override

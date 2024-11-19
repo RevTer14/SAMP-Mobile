@@ -11,7 +11,6 @@ import android.widget.ImageView;
 
 import androidx.fragment.app.Fragment;
 
-import com.applovin.mediation.ads.MaxAdView;
 import com.samp.mobile.R;
 import com.samp.mobile.launcher.MainActivity;
 import com.samp.mobile.launcher.util.ButtonAnimator;

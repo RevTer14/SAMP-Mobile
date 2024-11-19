@@ -27,8 +27,6 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.applovin.sdk.AppLovinSdk;
-import com.applovin.sdk.AppLovinSdkConfiguration;
 import com.downloader.Progress;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
 import com.samp.mobile.R;
@@ -75,14 +73,6 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
 
         Config.currentContext = this;
-
-        /*AppLovinSdk.getInstance(  this ).setMediationProvider( "max" );
-        AppLovinSdk.initializeSdk(  this, new AppLovinSdk.SdkInitializationListener() {
-            @Override
-            public void onSdkInitialized(final AppLovinSdkConfiguration configuration)
-            {
-            }
-        } );*/
 
         prefs = getSharedPreferences("com.samp.mobile", MODE_PRIVATE);
 

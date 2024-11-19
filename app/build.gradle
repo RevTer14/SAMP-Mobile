@@ -7,13 +7,13 @@ plugins {
 android {
     signingConfigs {
         debug {
-            storeFile file('C:\\Clients\\NewLauncherForPlayMarket\\keystore_playmarket2.jks')
+            storeFile file('C:\\Projects\\NewLauncher\\keystore_playmarket2.jks')
             storePassword 'hayk2010'
             keyAlias 'key0'
             keyPassword 'hayk2010'
         }
         release {
-            storeFile file('C:\\Clients\\NewLauncherForPlayMarket\\keystore_playmarket2.jks')
+            storeFile file('C:\\Projects\\NewLauncher\\keystore_playmarket2.jks')
             storePassword 'hayk2010'
             keyPassword 'hayk2010'
             keyAlias 'key0'
@@ -24,8 +24,8 @@ android {
 
     defaultConfig {
         applicationId "com.samp.mobile"
-        minSdk 21
-        targetSdk 28
+        minSdk 26
+        targetSdk 34
         versionCode 86
         versionName "4.7.1.2"
 
@@ -44,8 +44,17 @@ android {
     }
 
     externalNativeBuild {
-        ndkBuild {
-            path "src/main/cpp/main/Android.mk"
+        cmake {
+            path "src/main/cpp/CMakeLists.txt"
+        }
+    }
+
+    packagingOptions {
+        jniLibs {
+            excludes += ['META-INF/*']
+        }
+        resources {
+            excludes += ['META-INF/*']
         }
     }
 
@@ -83,6 +92,9 @@ android {
         // but continue the build even when errors are found:
         abortOnError false
     }
+    buildFeatures {
+        prefab true
+    }
 }
 
 dependencies {
@@ -96,7 +108,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 
-    implementation 'com.mindorks.android:prdownloader:0.6.0'
+    implementation 'com.github.amitshekhariitbhu:PRDownloader:1.0.1'
     implementation 'com.android.volley:volley:1.2.1'
     implementation 'com.intuit.sdp:sdp-android:1.1.0'
 
@@ -110,7 +122,7 @@ dependencies {
 
     implementation 'com.github.bumptech.glide:glide:4.13.0'
 
-    implementation 'com.applovin:applovin-sdk:11.11.0'
-
     implementation("androidx.lifecycle:lifecycle-process:2.2.0")
+
+    implementation 'com.bytedance.android:shadowhook:1.0.9'
 }
