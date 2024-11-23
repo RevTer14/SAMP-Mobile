@@ -2,6 +2,7 @@
 #include "game.h"
 #include "../gui/gui.h"
 #include "RW/RenderWare.h"
+#include "Scene.h"
 
 extern UI* pUI;
 
@@ -37,7 +38,7 @@ void MaterialTextGenerator::SetUpScene()
 	((void(*)(uintptr_t, int))(g_libGTASA + 0x1D5DA8 + 1))(m_camera, 1);
 
 	// RpWorldAddCamera
-	uintptr_t pRwWorld = *(uintptr_t*)(g_libGTASA + 0x9FC938);
+    uintptr_t pRwWorld = reinterpret_cast<uintptr_t>(Scene.m_pRpWorld);
 	if (pRwWorld) {
 		((void(*)(uintptr_t, uintptr_t))(g_libGTASA + 0x21E004 + 1))(pRwWorld, m_camera);
 	}

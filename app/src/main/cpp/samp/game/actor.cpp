@@ -32,10 +32,10 @@ CActor::CActor(int iSkin, float fX, float fY, float fZ, float fAngle)
 CActor::~CActor()
 {
 	if (m_pPed && GamePool_Ped_GetAt(m_dwGTAId) &&
-		m_pPed->entity.vtable != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098)))
+		*(uint32_t*)&m_pPed->entity != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098)))
 	{
 		// CPlayerPed::Destructor
-		((void (*)(PED_TYPE*))(*(void**)(m_pPed->entity.vtable + 0x4)))(m_pPed);
+		((void (*)(PED_TYPE*))(*(void**)(*(uint32_t*)&m_pPed->entity + (VER_x32 ? 0x4:0x4*2))))(m_pPed);
 		m_pPed = nullptr;
 		m_pEntity = nullptr;
 	}
@@ -90,7 +90,7 @@ void CActor::ClearAnimation()
 {
 	if (m_pPed) {
 		// CPedIntelligence::FlushImmediately
-		((void (*)(PED_TASKS_TYPE*, bool))(g_libGTASA + 0x4C0A44 + 1))(m_pPed->Tasks, true);
+		//((void (*)(PED_TASKS_TYPE*, bool))(g_libGTASA + 0x4C0A44 + 1))(m_pPed->Tasks, true);
 	}
 }
 // 0.3.7

@@ -499,10 +499,12 @@ uint32_t CCamera_IsTargetingActive_hook(uintptr_t thiz, PED_TYPE* pPed)
 	}
 	else
 	{
-		/* CCamera::IsTargetingActive */
-		uint32_t bIsTargeting = ((uint32_t (*)(uintptr_t))(g_libGTASA + 0x3E157C + 1))(g_libGTASA + 0x951FA8);
-		LocalPlayerKeys.bKeys[ePadKeys::KEY_HANDBRAKE] = bIsTargeting;
-		return bIsTargeting;
+        /* CCamera::IsTargetingActive */
+        static CCamera& TheCamera = *reinterpret_cast<CCamera*>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
+        uint32_t bIsTargeting = CHook::CallFunction<bool>(g_libGTASA + (VER_x32 ? 0x3D9F54 + 1 : 0x4B8154), &TheCamera);
+
+        LocalPlayerKeys.bKeys[ePadKeys::KEY_HANDBRAKE] = bIsTargeting;
+        return bIsTargeting;
 	}
 }
 
@@ -694,59 +696,57 @@ void HookCPad()
 {
 	memset(&LocalPlayerKeys, 0, sizeof(PAD_KEYS));
 
-	// lr/ud (onfoot)
-	CHook::InstallPLT(g_libGTASA + 0x671014, (uintptr_t)CPad__GetPedWalkLeftRight_hook, (uintptr_t*)&CPad__GetPedWalkLeftRight);
-	CHook::InstallPLT(g_libGTASA + 0x6706D0, (uintptr_t)CPad__GetPedWalkUpDown_hook, (uintptr_t*)&CPad__GetPedWalkUpDown);
+    // lr/ud (onfoot)
+    CHook::InlineHook("_ZN4CPad19GetPedWalkLeftRightEv", &CPad__GetPedWalkLeftRight_hook, &CPad__GetPedWalkLeftRight);
+    CHook::InlineHook("_ZN4CPad16GetPedWalkUpDownEv", &CPad__GetPedWalkUpDown_hook, &CPad__GetPedWalkUpDown);
 
-	// sprint/jump stuff
-	CHook::InstallPLT(g_libGTASA + 0x670CE0, (uintptr_t)CPad__GetSprint_hook, (uintptr_t*)&CPad__GetSprint);
-	CHook::InstallPLT(g_libGTASA + 0x670274, (uintptr_t)CPad__JumpJustDown_hook, (uintptr_t*)& CPad__JumpJustDown);
-	CHook::InstallPLT(g_libGTASA + 0x66FAE0, (uintptr_t)CPad__GetJump_hook, (uintptr_t*)& CPad__GetJump);
-	CHook::InstallPLT(g_libGTASA + 0x674A0C, (uintptr_t)CPad__GetAutoClimb_hook, (uintptr_t*)& CPad__GetAutoClimb);
-	CHook::InstallPLT(g_libGTASA + 0x6718D4, (uintptr_t)CPad__GetAbortClimb_hook, (uintptr_t*)& CPad__GetAbortClimb);
+    CHook::InlineHook("_ZN4CPad9GetSprintEi", &CPad__GetSprint_hook, &CPad__GetSprint);
+    CHook::InlineHook("_ZN4CPad12JumpJustDownEv", &CPad__JumpJustDown_hook, &CPad__JumpJustDown);
+    CHook::InlineHook("_ZN4CPad7GetJumpEv", &CPad__GetJump_hook, &CPad__GetJump);
+    CHook::InlineHook("_ZN4CPad15GetCarGunUpDownEbP11CAutomobilefb", &CPad__GetCarGunUpDown_hook, &CPad__GetCarGunUpDown);
+    CHook::InlineHook("_ZN4CPad12GetAutoClimbEv", &CPad__GetAutoClimb_hook, &CPad__GetAutoClimb);
+    CHook::InlineHook("_ZN4CPad13GetAbortClimbEv", &CPad__GetAbortClimb_hook, &CPad__GetAbortClimb);
 
-	// swimm
-	CHook::InstallPLT(g_libGTASA + 0x672FD0, (uintptr_t)CPad__DiveJustDown_hook, (uintptr_t*)& CPad__DiveJustDown);
-	CHook::InstallPLT(g_libGTASA + 0x674030, (uintptr_t)CPad__SwimJumpJustDown_hook, (uintptr_t*)& CPad__SwimJumpJustDown);
+    // swimm
+    CHook::InlineHook("_ZN4CPad12DiveJustDownEv", &CPad__DiveJustDown_hook, &CPad__DiveJustDown);
+    CHook::InlineHook("_ZN4CPad16SwimJumpJustDownEv", &CPad__SwimJumpJustDown_hook, &CPad__SwimJumpJustDown);
 
-	CHook::InstallPLT(g_libGTASA + 0x67127C, (uintptr_t)CPad__MeleeAttackJustDown_hook, (uintptr_t*)& CPad__MeleeAttackJustDown);
-	CHook::InstallPLT(g_libGTASA + 0x6727CC, (uintptr_t)CPad__DuckJustDown_hook, (uintptr_t*)& CPad__DuckJustDown);
-	CHook::InstallPLT(g_libGTASA + 0x66FAD8, (uintptr_t)CPad__GetBlock_hook, (uintptr_t*)& CPad__GetBlock);
+    CHook::InlineHook("_ZN4CPad19MeleeAttackJustDownEv", &CPad__MeleeAttackJustDown_hook, &CPad__MeleeAttackJustDown);
+    CHook::InlineHook("_ZN4CPad12DuckJustDownEP4CPed", &CPad__DuckJustDown_hook, &CPad__DuckJustDown);
+    CHook::InlineHook("_ZN4CPad8GetBlockEv", &CPad__GetBlock_hook, &CPad__GetBlock);
 
-	// steering lr/ud (incar)
-	CHook::InstallPLT(g_libGTASA + 0x673D84, (uintptr_t)CPad__GetSteeringLeftRight_hook, (uintptr_t*)& CPad__GetSteeringLeftRight);
-	CHook::InstallPLT(g_libGTASA + 0x672C14, (uintptr_t)CPad__GetSteeringUpDown_hook, (uintptr_t*)& CPad__GetSteeringUpDown);
+    // steering lr/ud (incar)
+    CHook::InlineHook("_ZN4CPad20GetSteeringLeftRightEv", &CPad__GetSteeringLeftRight_hook, &CPad__GetSteeringLeftRight);
+    CHook::InlineHook("_ZN4CPad17GetSteeringUpDownEv", &CPad__GetSteeringUpDown_hook, &CPad__GetSteeringUpDown);
 
-	CHook::InstallPLT(g_libGTASA + 0x67482C, (uintptr_t)CPad__GetAccelerate_hook, (uintptr_t*)& CPad__GetAccelerate);
-	CHook::InstallPLT(g_libGTASA + 0x66EBE0, (uintptr_t)CPad__GetBrake_hook, (uintptr_t*)& CPad__GetBrake);
-	CHook::InstallPLT(g_libGTASA + 0x670514, (uintptr_t)CPad__GetHandBrake_hook, (uintptr_t*)& CPad__GetHandBrake);
-	CHook::InstallPLT(g_libGTASA + 0x673010, (uintptr_t)CPad__GetHorn_hook, (uintptr_t*)& CPad__GetHorn);
-    CHook::InstallPLT(g_libGTASA + 0x674B54, (uintptr_t)CPad__GetHorn_hook);
+    CHook::InlineHook("_ZN4CPad13GetAccelerateEv", &CPad__GetAccelerate_hook, &CPad__GetAccelerate);
+    CHook::InlineHook("_ZN4CPad8GetBrakeEv", &CPad__GetBrake_hook, &CPad__GetBrake);
+    CHook::InlineHook("_ZN4CPad12GetHandBrakeEv", &CPad__GetHandBrake_hook, &CPad__GetHandBrake);
+    CHook::InlineHook("_ZN4CPad7GetHornEb", &CPad__GetHorn_hook, &CPad__GetHorn);
 
-	CHook::InstallPLT(g_libGTASA + 0x66EB90, (uintptr_t)CPad__ExitVehicleJustDown_hook, (uintptr_t*)& CPad__ExitVehicleJustDown);
-	CHook::InstallPLT(g_libGTASA + 0x672440, (uintptr_t)CPad__GetExitVehicle_hook, (uintptr_t*)&CPad__GetExitVehicle);
+	//CHook::InstallPLT(g_libGTASA + 0x66EB90, (uintptr_t)CPad__ExitVehicleJustDown_hook, (uintptr_t*)& CPad__ExitVehicleJustDown);
+	//CHook::InstallPLT(g_libGTASA + 0x672440, (uintptr_t)CPad__GetExitVehicle_hook, (uintptr_t*)&CPad__GetExitVehicle);
 
-	CHook::InstallPLT(g_libGTASA + 0x675394, (uintptr_t)CPad__GetDisplayVitalStats_hook, (uintptr_t*)&CPad__GetDisplayVitalStats);
+	//CHook::InstallPLT(g_libGTASA + 0x675394, (uintptr_t)CPad__GetDisplayVitalStats_hook, (uintptr_t*)&CPad__GetDisplayVitalStats);
 	//����ҧ������ͧ�ѹ��ѧ
-	CHook::InstallPLT(g_libGTASA + 0x67063C, (uintptr_t)CPad__GetLookBehindForPed_hook, (uintptr_t*)&CPad__GetLookBehindForPed);
+	//CHook::InstallPLT(g_libGTASA + 0x67063C, (uintptr_t)CPad__GetLookBehindForPed_hook, (uintptr_t*)&CPad__GetLookBehindForPed);
 
 	// WEAPON
-	CHook::InstallPLT(g_libGTASA + 0x675260, (uintptr_t)CPad__GetEnterTargeting_hook, (uintptr_t*)&CPad__GetEnterTargeting);
-	CHook::InstallPLT(g_libGTASA + 0x672E8C, (uintptr_t)CPad__GetWeapon_hook, (uintptr_t*)&CPad__GetWeapon);
-	CHook::InstallPLT(g_libGTASA + 0x6708F0, (uintptr_t)CCamera_IsTargetingActive_hook, (uintptr_t*)&CCamera_IsTargetingActive);
-	CHook::InstallPLT(g_libGTASA + 0x66FA0C, (uintptr_t)CPad__CycleWeaponRightJustDown_hook, (uintptr_t*)&CPad__CycleWeaponRightJustDown);
-	CHook::InstallPLT(g_libGTASA + 0x66F304, (uintptr_t)CPad__CycleWeaponLeftJustDown_hook, (uintptr_t*)&CPad__CycleWeaponLeftJustDown);
+    CHook::InlineHook("_ZN4CPad17GetEnterTargetingEv", &CPad__GetEnterTargeting_hook, &CPad__GetEnterTargeting);
+    CHook::InlineHook("_ZN4CPad9GetWeaponEP4CPedb", &CPad__GetWeapon_hook, &CPad__GetWeapon);
+    CHook::InlineHook("_ZN7CCamera17IsTargetingActiveEP10CPlayerPed", &CCamera_IsTargetingActive_hook, &CCamera_IsTargetingActive);
+    CHook::InlineHook("_ZN4CPad24CycleWeaponRightJustDownEv", &CPad__CycleWeaponRightJustDown_hook, &CPad__CycleWeaponRightJustDown);
+	//CHook::InstallPLT(g_libGTASA + 0x66F304, (uintptr_t)CPad__CycleWeaponLeftJustDown_hook, (uintptr_t*)&CPad__CycleWeaponLeftJustDown);
 
     // nitro
-    CHook::InstallPLT(g_libGTASA + 0x66FAF8, (uintptr_t)CPad__GetNitroFired_hook, (uintptr_t*)&CPad__GetNitroFired);
+    CHook::InlineHook("_ZN4CPad13GetNitroFiredEv", &CPad__GetNitroFired_hook, &CPad__GetNitroFired);
 
-    CHook::InstallPLT(g_libGTASA + 0x67324C, (uintptr_t)CPad__GetLookLeft_hook, (uintptr_t*)&CPad__GetLookLeft);
-    CHook::InstallPLT(g_libGTASA + 0x67205C, (uintptr_t)CPad__GetLookRight_hook, (uintptr_t*)&CPad__GetLookRight);
+    //CHook::InstallPLT(g_libGTASA + 0x67324C, (uintptr_t)CPad__GetLookLeft_hook, (uintptr_t*)&CPad__GetLookLeft);
+    //CHook::InstallPLT(g_libGTASA + 0x67205C, (uintptr_t)CPad__GetLookRight_hook, (uintptr_t*)&CPad__GetLookRight);
 
-	CHook::InstallPLT(g_libGTASA + 0x674418, (uintptr_t)CPad__GetCarGunLeftRight_hook,(uintptr_t*)&CPad__GetCarGunLeftRight);
-	CHook::InstallPLT(g_libGTASA + 0x674240, (uintptr_t)CPad__GetCarGunUpDown_hook, (uintptr_t*)&CPad__GetCarGunUpDown);
-	CHook::InstallPLT(g_libGTASA + 0x675ABC, (uintptr_t)CPad__GetCarGunFired_hook, (uintptr_t*)&CPad__GetCarGunFired);
+	//CHook::InstallPLT(g_libGTASA + 0x674418, (uintptr_t)CPad__GetCarGunLeftRight_hook,(uintptr_t*)&CPad__GetCarGunLeftRight);
+	//CHook::InstallPLT(g_libGTASA + 0x675ABC, (uintptr_t)CPad__GetCarGunFired_hook, (uintptr_t*)&CPad__GetCarGunFired);
 
-	CHook::InstallPLT(g_libGTASA + 0x671CDC, (uintptr_t)CPad__GetTurretLeft_hook, (uintptr_t*)&CPad__GetTurretLeft);
-	CHook::InstallPLT(g_libGTASA + 0x672894, (uintptr_t)CPad__GetTurretRight_hook, (uintptr_t*)&CPad__GetTurretRight);
+    CHook::InlineHook("_ZN4CPad13GetTurretLeftEv", &CPad__GetTurretLeft_hook, &CPad__GetTurretLeft);
+    CHook::InlineHook("_ZN4CPad14GetTurretRightEv", &CPad__GetTurretRight_hook, &CPad__GetTurretRight);
 }

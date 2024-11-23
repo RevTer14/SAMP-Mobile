@@ -95,7 +95,6 @@ bool UI::initialize()
 void UI::render()
 {
 	ImGuiWrapper::render();
-
     // x64 CStreaming::ms_memoryUsed	00000000009729DC
     // x64 CStreaming::ms_memoryAvailable	000000000085EBD8
 	uintptr_t ms_memoryUsed = *(uint32_t*)(g_libGTASA+(VER_x32 ? 0x00792B7C:0x9729DC));

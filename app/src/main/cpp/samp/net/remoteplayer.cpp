@@ -81,7 +81,7 @@ void CRemotePlayer::Process()
 				}
 			}
 
-			if(IS_TARGETING(m_ofSync.wKeys) && 
+			if(IS_TARGETING(m_pPlayerPed->m_pPed) &&
 				(m_pPlayerPed->GetCurrentWeapon() == 34 ||
 				m_pPlayerPed->GetCurrentWeapon() == 35 ||
 				m_pPlayerPed->GetCurrentWeapon() == 36))

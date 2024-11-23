@@ -24,9 +24,8 @@
 #include "SocketLayer.h"
 #include <assert.h>
 #include "MTUSize.h"
-#include "SAMP/samp_netencr.h"
 
-#include "main.h"
+#include "..//..//main.h"
 
 #ifdef _WIN32
 #include <process.h>
@@ -487,6 +486,7 @@ int SocketLayer::RecvFrom( const SOCKET s, RakPeer *rakPeer, int *errorCode )
 #ifdef _MSC_VER
 #pragma warning( disable : 4702 ) // warning C4702: unreachable code
 #endif
+#include "SAMP/samp_netencr.h"
 int SocketLayer::SendTo( SOCKET s, const char *data, int length, unsigned int binaryAddress, unsigned short port )
 {
 	if ( s == INVALID_SOCKET )

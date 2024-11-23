@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         }
         ((ImageView)tabLayout.getTabAt(0).getCustomView().findViewById(R.id.imageView2)).setBackgroundResource(tabSelectedImages[0]);
 
-        getServersInfo();
+        //getServersInfo();
         getFavoriteServersInfo();
     }
 

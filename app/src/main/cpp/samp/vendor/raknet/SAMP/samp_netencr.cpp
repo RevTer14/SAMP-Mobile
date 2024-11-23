@@ -4,7 +4,7 @@
 	Updated to 0.3.7 by P3ti
 */
 
-#include "main.h"
+#include "..//..//..//main.h"
 
 int dblSpace;
 char buf[131072];

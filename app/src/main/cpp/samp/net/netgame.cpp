@@ -32,42 +32,34 @@ void InstallVehicleEngineLightPatches();
 // 0.3.7
 unsigned char GetPacketID(Packet *p)
 {
-	if (p == 0) return 255;
+    if (p == 0) return 255;
 
-	if ((unsigned char)p->data[0] == ID_TIMESTAMP)
-		return (unsigned char)p->data[sizeof(unsigned char) + sizeof(unsigned long)];
-	else
-		return (unsigned char)p->data[0];
+    if ((unsigned char) p->data[0] == ID_TIMESTAMP)
+        return (unsigned char) p->data[sizeof(unsigned char) + sizeof(unsigned long)];
+    else
+        return (unsigned char) p->data[0];
 }
 
 CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char *szPlayerName, const char* szPass)
 {
-	FLog("CNetGame initializing..");
-
 	// voice
 	Network::OnRaknetConnect(szHostOrIp, iPort);
-    FLog("CNetGame initializing..1");
 
 	//MyLog2("Voice connect %s:%d", szHostOrIp, iPort);
 	//MyLog2("Voice connect %s:%d", szHostOrIp, iPort);
 	//MyLog2("Voice connect %s:%d", szHostOrIp, iPort);
 
-    FLog("CNetGame initializing..2");
 	m_pNetSet = new NET_SETTINGS;
 	memset(m_szHostName, 0, 256);
 	memset(m_szHostOrIp, 0, 256);
 
-    FLog("CNetGame initializing..3");
 	strcpy(m_szHostName, "SA-MP");
 	strncpy(m_szHostOrIp, szHostOrIp, sizeof(m_szHostOrIp));
 	m_iPort = iPort;
 
-    FLog("CNetGame initializing..4");
 	m_pRakClient = RakNetworkFactory::GetRakClientInterface();
-    FLog("CNetGame initializing..4 1");
 	InitializePools();
 
-    FLog("CNetGame initializing.. 5");
 	GetPlayerPool()->SetLocalPlayerName(szPlayerName);
 
 	RegisterRPCs(m_pRakClient);
@@ -76,11 +68,9 @@ CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char *szPlayerName, 
 
 	memset(m_dwMapIcon, 0, sizeof(m_dwMapIcon));
 
-    FLog("CNetGame initializing.. 6");
 	pGame->EnableClock(false);
 	pGame->EnableZoneNames(false);
 
-    FLog("CNetGame initializing..7");
 	m_pNetSet->iDeathDropMoney = 0;
 	m_pNetSet->iSpawnsAvailable = 0;
 	m_pNetSet->bNameTagLOS = 0;
@@ -102,6 +92,8 @@ CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char *szPlayerName, 
 	m_bLanMode = false;
 
 	if (pUI) pUI->chat()->addDebugMessage("{FFFFFF}SA-MP {B9C9BF}" SAMP_VERSION " {FFFFFF}Started");
+
+    FLog("pNetGame end");
 }
 // 0.3.7
 CNetGame::~CNetGame()
@@ -215,34 +207,37 @@ void CNetGame::UninitializePools()
 
 void CNetGame::Process()
 {
-    FLog("CNetgame process");
-	static uint32_t time = GetTickCount();
-	bool bProcess = false;
-	if (GetTickCount() - time >= 1000 / 30)
-	{
-		//UpdateNetwork();
-		time = GetTickCount();
-		bProcess = true;
-	}
-    FLog("CNetgame process1");
+    FLog("CNetGame::Process");
+	UpdateNetwork();
 	if (m_pNetSet->byteHoldTime) {
 		pGame->SetWorldTime(m_pNetSet->byteWorldTime_Hour, m_pNetSet->byteWorldTime_Minute);
 	}
+    FLog("CNetGame::Process 2");
 
-    FLog("CNetgame process2");
-	pGame->PreloadObjectsAnims();
+	//pGame->PreloadObjectsAnims();
 
-    FLog("CNetgame process3");
 	if (GetGameState() == GAMESTATE_CONNECTED) {
-        FLog("CNetgame process4");
-		//ProcessPools();
+        FLog("CNetGame::Process3");
+        if (GetPlayerPool()) {
+            GetPlayerPool()->Process();
+        }
+
+        if(GetVehiclePool()) {
+            GetVehiclePool()->Process();
+        }
+
+        if (GetPickupPool()) {
+            GetPickupPool()->Process();
+        }
+        return;
 	}
 	else {
-        FLog("CNetgame process5");
+        FLog("CNetGame::Process4");
 		ProcessLoadingScreen();
 	}
 
 	if (GetGameState() == GAMESTATE_WAIT_CONNECT) {
+        FLog("CNetGame::Process5");
 		ProcessConnecting();
 	}
 }
@@ -256,6 +251,7 @@ void CNetGame::UpdateNetwork()
 	while (pkt = m_pRakClient->Receive())
 	{
 		packetIdentifier = GetPacketID(pkt);
+        FLog("packetid : %d", packetIdentifier);
 
 		switch (packetIdentifier) {
             case ID_AUTH_KEY:
@@ -431,28 +427,31 @@ void CNetGame::ProcessPools()
 // 0.3.7
 void CNetGame::ProcessLoadingScreen()
 {
+    FLog("CNetGame::ProcessLoadingScreen");
 	CPlayerPed* pPlayerPed = pGame->FindPlayerPed();
 	if (pPlayerPed->IsInVehicle()) {
+        FLog("CNetGame::ProcessLoadingScreen1111");
 		pPlayerPed->RemoveFromVehicleAndPutAt(1093.4, -2036.5, 82.710602);
 	}
 	else {
+        FLog("CNetGame::ProcessLoadingScreen2222");
 		pPlayerPed->TeleportTo(1133.0504, -2038.4034, 69.099998);
 	}
 
+    FLog("CNetGame::ProcessLoadingScreen2");
 	CCamera::SetPosition(1093.0, -2036.0, 90.0, 0.0, 0.0, 0.0);
 	CCamera::LookAtPoint(384.0, -1557.0, 20.0, 2);
 	pGame->SetWorldWeather(1);
-	pGame->DisplayHUD(false);
 }
 // 0.3.7
 void CNetGame::ProcessConnecting()
 {
-	if (GetTickCount() - m_dwLastConnectAttempt > 1000/*3000*/)
+	if (GetTickCount() - m_dwLastConnectAttempt > 3000)
 	{
-		//if (pUI) pUI->chat()->addDebugMessage("Connecting to %s:%d...", m_szHostOrIp, m_iPort);
-		if (pUI) pUI->chat()->addDebugMessage("Connecting to SA-MP Server...");
+		if (pUI) pUI->chat()->addDebugMessage("Connecting to %s:%d...", m_szHostOrIp, m_iPort);
+		//if (pUI) pUI->chat()->addDebugMessage("Connecting to SA-MP Server...");
 
-		m_pRakClient->Connect(m_szHostOrIp, m_iPort, 0, 0, 2);
+		m_pRakClient->Connect(m_szHostOrIp, m_iPort, 0, 0, 5);
 		
 		// voice fix voice not connect when restart
 		Network::OnRaknetConnect(m_szHostOrIp, m_iPort);

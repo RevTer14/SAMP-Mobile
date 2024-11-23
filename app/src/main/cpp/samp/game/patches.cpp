@@ -3,11 +3,14 @@
 #include "../vendor/armhook/patch.h"
 #include "vehicleColoursTable.h"
 #include "../settings.h"
+#include "multitouch.h"
+#include "net/netgame.h"
 extern CSettings* pSettings;
 
 VehicleAudioPropertiesStruct VehicleAudioProperties[20000];
-char* WORLD_PLAYERS = nullptr;
+uint32_t WORLD_PLAYERS[MAX_PLAYERS];
 #include "game.h"
+
 extern CGame* pGame;
 void readVehiclesAudioSettings()
 {
@@ -116,28 +119,25 @@ void ApplySAMPPatchesInGame()
 
 int32_t CWorld__FindPlayerSlotWithPedPointer(uint32_t pPlayersPed)
 {
-    uint32_t result = 0;
-
-    uint32_t *dwWorldPlayers = (uint32_t*)WORLD_PLAYERS;
-    while(*dwWorldPlayers != pPlayersPed)
+    FLog("CWorld__FindPlayerSlotWithPedPointer");
+    for(int i = 0; i < MAX_PLAYERS; ++i)
     {
-        ++result;
-        dwWorldPlayers += 101;
-        if(result > 210)
-            return 0;
+        if(WORLD_PLAYERS[i] == pPlayersPed)
+        {
+            FLog("CWorld__FindPlayerSlotWithPedPointer true");
+            return i;
+        }
     }
-
-    return result;
+    return -1;
 }
 
 void ApplyPatches_level0()
 {
     FLog("ApplyPatches_level0");
 
-    WORLD_PLAYERS = new char[0x404 * PLAYER_PED_SLOTS];
-    memset(WORLD_PLAYERS, 0, 0x404 * PLAYER_PED_SLOTS);
-    CHook::UnFuck(g_libGTASA+(VER_x32 ? 0x006783C0 : 0x84E7A8));
-    *(char**)(g_libGTASA + (VER_x32 ? 0x006783C0 : 0x84E7A8)) = WORLD_PLAYERS;
+    MultiTouch::initialize();
+
+    CHook::Write(g_libGTASA + (VER_x32 ? 0x006783C0 : 0x84E7A8), &WORLD_PLAYERS);
     FLog("CWorld::Players new address: 0x%X", WORLD_PLAYERS);
 
     CHook::Redirect("_ZN6CWorld28FindPlayerSlotWithPedPointerEPv", &CWorld__FindPlayerSlotWithPedPointer);

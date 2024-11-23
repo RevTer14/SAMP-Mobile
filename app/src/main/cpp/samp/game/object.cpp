@@ -89,7 +89,7 @@ CObject::~CObject()
 			pGame->GetCamera()->AttachToEntity(0);
 	}*/
 
-	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D14)) /* CPlaceable */
+	if (m_pEntity && *(uint32_t*)m_pEntity != (g_libGTASA + /*0x5C7358*/(VER_x32 ? 0x667D14 : 0x830098))) /* CPlaceable */
 	{
 		ScriptCommand(&destroy_object, m_dwGTAId);
 		if (GetModelRefCounts(m_iModel) == 0)
@@ -271,11 +271,11 @@ void CObject::InstantRotate(float x, float y, float z)
 void CObject::GetRotation(float* pfX, float* pfY, float* pfZ)
 {
 	if (m_pEntity) {
-		RwMatrix* mat = m_pEntity->mat;
+		RwMatrix* mat = reinterpret_cast<RwMatrix *>(m_pEntity->m_matrix);
 		
 		if (mat) {
 			// CMatrix::ConvertToEulerAngles
-			((void (*)(RwMatrix*, float*, float*, float*, int))(g_libGTASA + 0x44E6AC + 1))(mat, pfX, pfY, pfZ, 21);
+			((void (*)(RwMatrix*, float*, float*, float*, int))(g_libGTASA + (VER_x32 ? 0x44E6AC + 1:0x536C7C)))(mat, pfX, pfY, pfZ, 21);
 		}
 
 		*pfX = *pfX * 57.295776 * -1.0;
@@ -315,11 +315,12 @@ void CObject::RotateMatrix(CVector vecRot)
 	m_matTarget.at.z = cosy * cosx;
 }
 // 0.3.7
+#include "Timer.h"
 void CObject::ApplyMoveSpeed()
 {
 	if (m_pEntity)
 	{
-		float fTimeStep = *(float*)(g_libGTASA + 0x96B504);
+		float fTimeStep = CTimer::ms_fTimeStep;
 
 		RwMatrix mat;
 		GetMatrix(&mat);
@@ -348,7 +349,7 @@ void CObject::SetMaterial(int iModel, int iMaterialIndex, char* txdname, char* t
 	if (iMaterialIndex < 16)
 	{
 		if (m_MaterialTexture[iMaterialIndex]) {
-			DeleteRwTexture(m_MaterialTexture[iMaterialIndex]);
+			RwTextureDestroy(reinterpret_cast<RwTexture *>(m_MaterialTexture[iMaterialIndex]));
 			m_MaterialTexture[iMaterialIndex] = 0;
 		}
 
@@ -366,7 +367,7 @@ void CObject::SetMaterialText(int index, char* text, int materialSize, char* fon
 	if (index > 16) return;
 
 	if (m_MaterialTextTexture[index]) {
-		DeleteRwTexture(m_MaterialTextTexture[index]);
+        RwTextureDestroy(reinterpret_cast<RwTexture *>(m_MaterialTextTexture[index]));
 		m_MaterialTextTexture[index] = 0;
 	}
 

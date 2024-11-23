@@ -8,6 +8,7 @@ if(${ANDROID_ABI} STREQUAL "armeabi-v7a")
 elseif(${ANDROID_ABI} STREQUAL "arm64-v8a")
     add_definitions(-DVER_x32=false)
 endif()
+add_definitions(-DRAKSAMP_CLIENT=true)
 
 # Add source files
 file(GLOB_RECURSE SOURCES

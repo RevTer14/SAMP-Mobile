@@ -308,7 +308,7 @@ bool CLocalPlayer::Process()
 
             if((dwThisTick - m_dwLastSendTick) < 1000)
             {
-                if(IS_TARGETING(wKeys) && IS_FIRING(wKeys))
+                if(IS_TARGETING(m_pPlayerPed->m_pPed) && IS_FIRING(m_pPlayerPed->m_pPed))
                 {
                     if(g_iLagCompensationMode == 2)
                     {
