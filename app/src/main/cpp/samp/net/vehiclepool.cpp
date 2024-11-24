@@ -144,7 +144,7 @@ VEHICLEID CVehiclePool::FindNearestToLocalPlayerPed()
     {
         if (m_bVehicleSlotState[x] && m_bIsActive[x])
         {
-            fThisDistance = m_pVehicles[x]->GetDistanceFromLocalPlayerPed();
+            fThisDistance = m_pVehicles[x]->m_pVehicle->GetDistanceFromLocalPlayerPed();
             if (fThisDistance < fLeastDistance)
             {
                 fLeastDistance = fThisDistance;
@@ -203,7 +203,7 @@ void CVehiclePool::Process()
                 }
                 else
                 {
-                    float fDistance = pVehicle->GetDistanceFromLocalPlayerPed();
+                    float fDistance = pVehicle->m_pVehicle->GetDistanceFromLocalPlayerPed();
                     if (pVehicle->GetVehicleSubtype() != VEHICLE_SUBTYPE_BOAT &&
                         fDistance < 200.0f &&
                         pVehicle->HasSunk()) {

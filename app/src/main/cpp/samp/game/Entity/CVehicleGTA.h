@@ -217,13 +217,13 @@ struct CVehicleGTA : CPhysical {
     CVehicleGTA* m_pTrailer;
     uint8_t padd_2[3];
     bool m_bFireAutoFlare;
-    CEntity *pBombOwner;
+    CEntityGTA *pBombOwner;
     uint32_t DontUseSmallerRemovalRange;
     uint32_t TimeOfLastShotFired;
     uint32_t m_nTimeOfDeath;
     uint16_t GetOutOfCarTimer;
     uint16_t DelayedExplosion;
-    CEntity *pDelayedExplosionInflictor;
+    CEntityGTA *pDelayedExplosionInflictor;
     float LastFrontHeight;
     float LastRearHeight;
     uint8_t NumOilSpillsToDo;
@@ -236,7 +236,7 @@ struct CVehicleGTA : CPhysical {
     uint32_t m_LastTimeGunFired;
     int8_t LastDamagedWeaponType;
     uint8_t skip15[3]; // wtf?
-    CEntity *pLastDamageEntity;
+    CEntityGTA *pLastDamageEntity;
     uint8_t m_nRadioStation;
     uint8_t m_nRainHitCount;
     uint8_t m_nSoundIndex;

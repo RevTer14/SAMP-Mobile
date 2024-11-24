@@ -289,10 +289,10 @@ uint16_t CPad__GetAccelerate_hook(uintptr_t thiz)
 		{
 			if (pPlayerPed)
 			{
-				VEHICLE_TYPE* pGtaVehicle = pPlayerPed->GetGtaVehicle();
+                CVehicleGTA* pGtaVehicle = pPlayerPed->GetGtaVehicle();
 				if (pGtaVehicle)
 				{
-					if (pGtaVehicle->dwFlags.bEngineOn == 0)
+					if (pGtaVehicle->m_nVehicleFlags.bEngineOn == 0)
 					{
 						wAccelerate = 0;
 					}
@@ -328,10 +328,10 @@ uint16_t CPad__GetBrake_hook(uintptr_t thiz)
         {
             if (pPlayerPed)
             {
-                VEHICLE_TYPE* pGtaVehicle = pPlayerPed->GetGtaVehicle();
+                CVehicleGTA* pGtaVehicle = pPlayerPed->GetGtaVehicle();
                 if (pGtaVehicle)
                 {
-                    if (pGtaVehicle->dwFlags.bEngineOn == 0)
+                    if (pGtaVehicle->m_nVehicleFlags.bEngineOn == 0)
                     {
                         wBrake = 0;
                     }

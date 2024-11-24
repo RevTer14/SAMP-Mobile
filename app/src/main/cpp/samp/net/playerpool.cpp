@@ -262,8 +262,8 @@ void CPlayerPool::ApplyCollisionChecking()
 			{
 				if (!pPlayerPed->IsInVehicle())
 				{
-					m_bCollisionChecking[playerId] = pPlayerPed->GetCollisionChecking();
-					pPlayerPed->SetCollisionChecking(true);
+					m_bCollisionChecking[playerId] = pPlayerPed->m_pPed->m_bCollisionProcessed;
+					pPlayerPed->m_pPed->SetCollisionChecking(true);
 				}
 			}
 		}
@@ -286,7 +286,7 @@ void CPlayerPool::ResetCollisionChecking()
 				if (!pPlayerPed->IsInVehicle())
 				{
 					if(!pPlayerPed->IsInVehicle())
-						pPlayerPed->SetCollisionChecking(m_bCollisionChecking[playerId]);
+						pPlayerPed->m_pPed->SetCollisionChecking(m_bCollisionChecking[playerId]);
 				}
 			}
 		}

@@ -138,8 +138,8 @@ void CPlayerBubblePool::Draw(ImGuiRenderer* renderer)
                     if (pRemotePlayer && pRemotePlayer->IsActive()) {
                         CPlayerPed *pPlayerPed = pRemotePlayer->GetPlayerPed();
 
-                        if (pPlayerPed && pPlayerPed->IsAdded()) {
-                            if (pPlayerPed->GetDistanceFromCamera() <=
+                        if (pPlayerPed && pPlayerPed->m_pPed->IsAdded()) {
+                            if (pPlayerPed->m_pPed->GetDistanceFromCamera() <=
                                 m_pPlayerBubble[i]->fDistance) {
                                 CVector VecPos;
                                 VecPos.x = 0.0f;
@@ -157,7 +157,7 @@ void CPlayerBubblePool::Draw(ImGuiRenderer* renderer)
                                         ((m_pPlayerBubble[i]->dwLineCount * 0.0125f) + 0.065f) +
                                         (m_pPlayerBubble[i]->dwLineCount * 0.0125f);
                                 TagPos.z +=
-                                        pPlayerPed->GetDistanceFromCamera() * fTextHeight + 0.2f;
+                                        pPlayerPed->m_pPed->GetDistanceFromCamera() * fTextHeight + 0.2f;
 
                                 CVector Out;
 

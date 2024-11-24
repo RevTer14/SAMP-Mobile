@@ -264,7 +264,7 @@ struct CPedGTA : public CPhysical {
     CPhysical*      m_pGroundPhysical;
     CVector         m_vecGroundOffset;
     CVector         m_vecGroundNormal;
-    CEntity*        m_pEntityStandingOn;
+    CEntityGTA*        m_pEntityStandingOn;
     float           m_fHitHeadHeight;
 
     CVehicleGTA*    pVehicle;
@@ -280,8 +280,8 @@ struct CPedGTA : public CPhysical {
     uint8           m_nWeaponShootingRate;
     uint8           m_nWeaponAccuracy;
     uint8           pad10;
-    CEntity         *m_pEntLockOnTarget;
-    CEntity         *m_pEntMagnetizeTarget;
+    CEntityGTA         *m_pEntLockOnTarget;
+    CEntityGTA         *m_pEntMagnetizeTarget;
     CVector         m_vecWeaponPrevPos;
     eWeaponSkill    m_nWeaponSkill;
     eFightingStyle  m_nFightingStyle;
@@ -289,7 +289,7 @@ struct CPedGTA : public CPhysical {
     uint8           field_72F;
     uintptr_t       *m_pFire;
     float           m_fireDmgMult;
-    CEntity*        m_pLookTarget;
+    CEntityGTA*        m_pLookTarget;
     float           m_fLookDirection; // In RAD
     int32           m_nWeaponModelId;
     uint32          m_nUnconsciousTimer;
@@ -303,7 +303,7 @@ struct CPedGTA : public CPhysical {
     float           m_wobbleSpeed;
     uint8           m_nLastDamagedWeaponType; // See eWeaponType
     uint8           pad8[3];
-    CEntity*        m_pLastEntityDamage;
+    CEntityGTA*        m_pLastEntityDamage;
     uint32          m_nLastDamagedTime;
     CVector         m_vecAttachOffset;
     uint16          m_nAttachLookDirn;
@@ -322,6 +322,7 @@ public:
     void GetBonePosition(RwV3d *posn, uint32 boneTag, bool bCalledFromCamera);
 
     bool IsInVehicle() const noexcept   { return bInVehicle && pVehicle != nullptr; }
+    bool IsAPassenger() const noexcept  { return bInVehicle && pVehicle != nullptr && pVehicle->pDriver != this; }
 };
 
 VALIDATE_SIZE(CPedGTA, (VER_x32 ? 0x7A4 : 0x988));

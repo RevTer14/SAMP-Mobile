@@ -106,14 +106,14 @@ void SpeakerList::Render()
                             {
                                 CVector VecPos;
 
-                                if(!pPlayerPed->IsAdded()) continue;
+                                if(!pPlayerPed->m_pPed->IsAdded()) continue;
                                 VecPos.x = 0.0f;
                                 VecPos.y = 0.0f;
                                 VecPos.z = 0.0f;
                                 pPlayerPed->GetBonePosition(8, &VecPos);
 
-                                if(pPlayerPed->GetDistanceFromLocalPlayerPed() < 60.0f)
-                                    SpeakerList::Draw(&VecPos, pPlayerPed->GetDistanceFromCamera());
+                                if(pPlayerPed->m_pPed->GetDistanceFromLocalPlayerPed() < 60.0f)
+                                    SpeakerList::Draw(&VecPos, pPlayerPed->m_pPed->GetDistanceFromCamera());
                             }
                         }
 

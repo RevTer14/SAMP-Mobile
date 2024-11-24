@@ -23,7 +23,6 @@ CActor::CActor(int iSkin, float fX, float fY, float fZ, float fAngle)
 
 	m_dwGTAId = dwRet;
 	m_pPed = GamePool_Ped_GetAt(m_dwGTAId);
-	m_pEntity = (ENTITY_TYPE*)m_pPed;
 
 	ScriptCommand(&set_actor_can_be_decapitated, m_dwGTAId, 0);
 	ScriptCommand(&set_actor_decision_marker, m_dwGTAId, 0x10006);
@@ -38,13 +37,11 @@ CActor::~CActor()
         // CPopulation::RemovePed
         ((void (*)(uintptr_t))(g_libGTASA + (VER_x32 ? 0x004CE6A0 + 1 : 0x5CDC64)))((uintptr_t)m_pPed);
 		m_pPed = nullptr;
-		m_pEntity = nullptr;
 	}
 	else
 	{
 		m_dwGTAId = 0;
 		m_pPed = nullptr;
-		m_pEntity = 0;
 	}
 }
 // 0.3.7

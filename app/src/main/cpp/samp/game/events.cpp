@@ -78,7 +78,7 @@ void ProcessIncommingEvent(PLAYERID playerId, int iEventType,
 										if (pCurrentVehicle) {
 											pCurrentVehicle->LinkToInterior(dwParam3);
 										}
-										pLocalPlayerPed->SetInterior(dwParam3, false);
+										pLocalPlayerPed->m_pPed->SetInterior(dwParam3, false);
 										pLocalPlayerPed->TogglePlayerControllable(false);
 									}
 									else
@@ -86,7 +86,7 @@ void ProcessIncommingEvent(PLAYERID playerId, int iEventType,
 										if (pCurrentVehicle) {
 											pCurrentVehicle->LinkToInterior(0);
 										}
-										pLocalPlayerPed->SetInterior(0, false);
+										pLocalPlayerPed->m_pPed->SetInterior(0, false);
 										pLocalPlayerPed->TogglePlayerControllable(true);
 									}
 								}

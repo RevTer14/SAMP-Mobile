@@ -34,7 +34,7 @@ CObject::CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance
 	uint32_t dwRetID;
 	ScriptCommand(&create_object, iModel, vecPos.x, vecPos.y, vecPos.z, &dwRetID);
 
-	ENTITY_TYPE* pEntity = GamePool_Object_GetAt(dwRetID);
+	CPhysical* pEntity = GamePool_Object_GetAt(dwRetID);
 
 	if (dwRetID && pEntity)
 	{
@@ -47,11 +47,11 @@ CObject::CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance
 
 		m_iModel = iModel;
 
-		GetMatrix(&m_Matrix);
+        m_Matrix = m_pEntity->GetMatrix().ToRwMatrix();
 		m_Matrix.pos.x = vecPos.x;
 		m_Matrix.pos.y = vecPos.y;
 		m_Matrix.pos.z = vecPos.z;
-		SetMatrix(m_Matrix);
+		m_pEntity->SetMatrix((CMatrix&)m_Matrix);
 		SetRotation(&vecRot);
 	}
 
@@ -80,7 +80,7 @@ CObject::CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance
 
 CObject::~CObject()
 {
-    ENTITY_TYPE* pEntity = GamePool_Object_GetAt(m_dwGTAId);
+    CPhysical* pEntity = GamePool_Object_GetAt(m_dwGTAId);
 	m_pEntity = pEntity;
 
 	/*if(pGame->GetCamera())
@@ -89,7 +89,7 @@ CObject::~CObject()
 			pGame->GetCamera()->AttachToEntity(0);
 	}*/
 
-	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D14)) /* CPlaceable */
+	if (m_pEntity) /* CPlaceable */
 	{
 		ScriptCommand(&destroy_object, m_dwGTAId);
 		if (GetModelRefCounts(m_iModel) == 0)
@@ -117,7 +117,7 @@ void CObject::Process(float fElapsedTime)
 				CVehicle* pVehicle = pVehiclePool->GetAt(m_AttachedVehicleID);
 				if (pVehicle)
 				{
-					if (pVehicle->IsAdded()) {
+					if (pVehicle->m_pVehicle->IsAdded()) {
 						this->AttachToVehicle(pVehicle);
 					}
 				}
@@ -147,7 +147,7 @@ void CObject::Process(float fElapsedTime)
 	{
 		CVector vecSpeed = { 0.0f, 0.0f, 0.0f };
 		RwMatrix matEnt;
-		GetMatrix(&matEnt);
+        matEnt = m_pEntity->GetMatrix().ToRwMatrix();
 		float distance = fElapsedTime * m_fMoveSpeed;
 		float remaining = DistanceRemaining(&matEnt);
 		uint32_t dwThisTick = GetTickCount();
@@ -161,15 +161,15 @@ void CObject::Process(float fElapsedTime)
 
 		if (distance >= remaining)
 		{
-			SetMoveSpeedVector(vecSpeed);
-			SetTurnSpeedVector(vecSpeed);
+            m_pEntity->SetVelocity(vecSpeed);
+            m_pEntity->SetTurnSpeed(vecSpeed);
 			matEnt.pos.x = m_matTarget.pos.x;
 			matEnt.pos.y = m_matTarget.pos.y;
 			matEnt.pos.z = m_matTarget.pos.z;
 			if (m_bNeedRotate) {
 				m_quatTarget.GetMatrix(reinterpret_cast<RwMatrix *>(&matEnt));
 			}
-			UpdateMatrix(matEnt);
+			m_pEntity->SetMatrix((CMatrix&)matEnt);
 			StopMoving();
 			return;
 		}
@@ -209,8 +209,8 @@ void CObject::Process(float fElapsedTime)
 			}
 		}
 
-		SetMoveSpeedVector(vecSpeed);
-		ApplyMoveSpeed();
+		m_pEntity->SetVelocity(vecSpeed);
+        m_pEntity->ApplyMoveSpeed();
 
 		if (m_bNeedRotate)
 		{
@@ -230,8 +230,8 @@ void CObject::Process(float fElapsedTime)
 				vecSpeed.z = 0.001f;
 			}
 
-			SetTurnSpeedVector(vecSpeed);
-			GetMatrix(&matEnt);
+            m_pEntity->SetTurnSpeed(vecSpeed);
+            matEnt = m_pEntity->GetMatrix().ToRwMatrix();
 			CQuaternion quat;
 			quat.Slerp(&m_quatStart, &m_quatTarget, slerpDelta);
 			quat.Normalize();
@@ -239,10 +239,10 @@ void CObject::Process(float fElapsedTime)
 		}
 		else
 		{
-			GetMatrix(&matEnt);
+            matEnt = m_pEntity->GetMatrix().ToRwMatrix();
 		}
 
-		UpdateMatrix(matEnt);
+		m_pEntity->SetMatrix((CMatrix&)matEnt);
 	}
 }
 
@@ -271,8 +271,8 @@ void CObject::InstantRotate(float x, float y, float z)
 void CObject::GetRotation(float* pfX, float* pfY, float* pfZ)
 {
 	if (m_pEntity) {
-		RwMatrix* mat = m_pEntity->mat;
-		
+		RwMatrix* mat = reinterpret_cast<RwMatrix *>(m_pEntity->m_matrix);
+
 		if (mat) {
 			// CMatrix::ConvertToEulerAngles
 			((void (*)(RwMatrix*, float*, float*, float*, int))(g_libGTASA + 0x44E6AC + 1))(mat, pfX, pfY, pfZ, 21);
@@ -322,11 +322,11 @@ void CObject::ApplyMoveSpeed()
 		float fTimeStep = *(float*)(g_libGTASA + 0x96B504);
 
 		RwMatrix mat;
-		GetMatrix(&mat);
-		mat.pos.x += fTimeStep * m_pEntity->vecMoveSpeed.x;
-		mat.pos.y += fTimeStep * m_pEntity->vecMoveSpeed.y;
-		mat.pos.z += fTimeStep * m_pEntity->vecMoveSpeed.z;
-		UpdateMatrix(mat);
+        mat = m_pEntity->GetMatrix().ToRwMatrix();
+		mat.pos.x += fTimeStep * m_pEntity->GetMoveSpeed().x;
+		mat.pos.y += fTimeStep * m_pEntity->GetMoveSpeed().y;
+		mat.pos.z += fTimeStep * m_pEntity->GetMoveSpeed().z;
+		m_pEntity->SetMatrix((CMatrix&)mat);
 	}
 }
 // 0.3.7
@@ -408,7 +408,7 @@ void CObject::ProcessMaterialText()
 void CObject::MoveTo(float fX, float fY, float fZ, float fSpeed, float fRotX, float fRotY, float fRotZ)
 {
 	RwMatrix mat;
-	this->GetMatrix(&mat);
+    mat = m_pEntity->GetMatrix().ToRwMatrix();
 
 	if (m_byteMoving & 1) {
 		this->StopMoving();
@@ -420,7 +420,7 @@ void CObject::MoveTo(float fX, float fY, float fZ, float fSpeed, float fRotX, fl
 			m_quatTarget.GetMatrix(reinterpret_cast<RwMatrix *>(&mat));
 		}
 
-		this->UpdateMatrix(mat);
+		m_pEntity->SetMatrix((CMatrix&)mat);
 	}
 
 	m_dwMoveTick = GetTickCount();
@@ -449,14 +449,15 @@ void CObject::MoveTo(float fX, float fY, float fZ, float fSpeed, float fRotX, fl
 		m_vecSubRotationTarget.z = subAngle(vecRot.z, fRotZ);
 
 		this->RotateMatrix(CVector{ fRotX, fRotY, fRotZ });
-		this->GetMatrix(&matrix);
+        matrix = m_pEntity->GetMatrix().ToRwMatrix();
 		m_quatStart.SetFromMatrix(&matrix);
 		m_quatTarget.SetFromMatrix(&m_matTarget);
 		m_quatStart.Normalize();
 		m_quatTarget.Normalize();
 	}
 
-	m_fDistanceToTargetPoint = this->GetDistanceFromPoint(m_matTarget.pos);
+	m_fDistanceToTargetPoint = m_pEntity->GetDistanceFromPoint(m_matTarget.pos.x, m_matTarget.pos.y,
+                                                               m_matTarget.pos.z);
 
 	if (pNetGame) {
 		CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
@@ -466,14 +467,13 @@ void CObject::MoveTo(float fX, float fY, float fZ, float fSpeed, float fRotX, fl
 	}
 
 	// sub_1009F070
-	m_pEntity->flags &= 0xFFFFFFF7;
 }
 // 0.3.7
 void CObject::StopMoving()
 {
 	CVector vec = { 0.0f, 0.0f, 0.0f };
-	this->SetMoveSpeedVector(vec);
-	this->SetTurnSpeedVector(vec);
+	m_pEntity->SetVelocity(vec);
+	m_pEntity->SetTurnSpeed(vec);
 
 	m_byteMoving &= ~1;
 }
@@ -585,26 +585,4 @@ bool CObject::AttachedToMovingEntity()
 	}
 
 	return false;
-}
-
-void CObject::TeleportTo(float fX, float fY, float fZ) {
-
-	/*if (fX > 3000.0f || fX < -3000.0f ||
-		fY > 3000.0f || fY < -3000.0f) {
-		m_bForceRender = true;
-	}
-	else {
-		m_bForceRender = false;
-	}*/
-
-	int v4 = 0;
-	int v5 = 0;
-	if ( fX < -3000.0 )
-		v4 = 1;
-	if ( fX > 3000.0 )
-		v5 = 1;
-
-	m_bForceRender = (fY > 3000.0) | v4 | v5 | (fY < -3000.0);
-
-	CEntity::TeleportTo(fX, fY, fZ);
 }

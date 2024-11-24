@@ -6,6 +6,8 @@
 
 
 #include "CEntityGTA.h"
+#include "PtrNodeDoubleLink.h"
+#include "EntryInfoList.h"
 
 struct CPhysical : public CEntityGTA {
     float       m_fPrevDistFromCam;
@@ -63,7 +65,7 @@ struct CPhysical : public CEntityGTA {
     float           m_fElasticity;
     float           m_fBuoyancyConstant;
     CVector         m_vecCentreOfMass;
-    uintptr_t       m_pCollisionList;
+    CEntryInfoList       m_pCollisionList;
 
     uintptr_t       m_pMovingList;
 
@@ -72,22 +74,48 @@ struct CPhysical : public CEntityGTA {
     eSurfaceType    m_nContactSurface;
     uint8_t         _pad4;
 
-    CEntity*        m_apCollidedEntities[6];
+    CEntityGTA*        m_apCollidedEntities[6];
     float           m_fMovingSpeed; // m_fTrueDistanceTravelled
     float           m_fDamageIntensity; // m_fDamageImpulseMagnitude
-    CEntity         *m_pDamageEntity;
+    CEntityGTA         *m_pDamageEntity;
     CVector         m_vecLastCollisionImpactVelocity;
     CVector         m_vecLastCollisionPosn;
     uint16_t        m_nPieceType;
     uint8_t         _pad5[2];
-    CEntity         *m_pAttachedTo;
+    CEntityGTA         *m_pAttachedTo;
     CVector         m_vecAttachPosnOffset;
     CVector         m_vecAttachTiltOffset;
     CQuaternion     m_qAttachedEntityRotation;
-    CEntity         *m_pEntityIgnoredCollision;
+    CEntityGTA         *m_pEntityIgnoredCollision;
     float           m_fContactSurfaceBrightness;
     float           m_fDynamicLighting;
     uintptr_t       m_pShadowData;
+
+public:
+    CPhysical();
+    ~CPhysical() override;
+
+    // originally virtual functions
+    void Add() override;
+    void Remove() override;
+    bool IsAdded();
+
+    CVector GetSpeed( CVector point);
+    void ApplyMoveSpeed();
+    void ApplyTurnSpeed();
+
+    CVector& GetMoveSpeed()                 { return m_vecMoveSpeed; }
+    void     SetVelocity(CVector velocity)  { m_vecMoveSpeed = velocity; } // 0x441130
+
+    CVector& GetTurnSpeed()         { return m_vecTurnSpeed; }
+    void ResetTurnSpeed()           { m_vecTurnSpeed = CVector(); }
+    void SetTurnSpeed(CVector vec)  { m_vecTurnSpeed = vec; }
+
+    void ResetMoveSpeed()           { SetVelocity(CVector{}); }
+
+    void ApplyMoveForce(float x, float y, float z);
+    void ApplyMoveForce(CVector force);
+    void ApplyTurnForce(CVector force, CVector point);
 };
 
 static_assert(sizeof(CPhysical) == (VER_x32 ? 0x13C : 0x198), "Invalid size CPhysical");

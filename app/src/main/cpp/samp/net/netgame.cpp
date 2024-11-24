@@ -390,7 +390,7 @@ void CNetGame::ShutdownForGameModeRestart()
 	pGame->m_bCheckpointsEnabled = false;
 	pGame->m_bRaceCheckpointsEnabled = false;
 
-	pGame->FindPlayerPed()->SetInterior(0, true);
+	pGame->FindPlayerPed()->m_pPed->SetInterior(0, true);
 	pGame->ResetLocalMoney();
 	pGame->FindPlayerPed()->SetDead();
 	pGame->FindPlayerPed()->SetArmour(0.0f);
@@ -437,7 +437,7 @@ void CNetGame::ProcessLoadingScreen()
 		pPlayerPed->RemoveFromVehicleAndPutAt(1093.4, -2036.5, 82.710602);
 	}
 	else {
-		pPlayerPed->TeleportTo(1133.0504, -2038.4034, 69.099998);
+		pPlayerPed->m_pPed->SetPosn(1133.0504, -2038.4034, 69.099998);
 	}
 
 	CCamera::SetPosition(1093.0, -2036.0, 90.0, 0.0, 0.0, 0.0);

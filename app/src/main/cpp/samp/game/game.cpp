@@ -189,9 +189,7 @@ void CGame::DisplayHUD(bool bDisp)
 // 0.3.7
 uint8_t CGame::GetActiveInterior()
 {
-	uint32_t dwRet;
-	ScriptCommand(&get_active_interior, &dwRet);
-	return (uint8_t)dwRet;
+	return CGame::currArea;
 }
 
 const char* CGame::GetDataDirectory()
@@ -201,8 +199,10 @@ const char* CGame::GetDataDirectory()
 // 0.3.7
 void CGame::UpdateCheckpoints()
 {
+    FLog("UpdateCheckpoints");
 	if (m_bCheckpointsEnabled)
 	{
+        FLog("UpdateCheckpoints1");
 		CPlayerPed* pPlayerPed = this->FindPlayerPed();
 		if (pPlayerPed) 
 		{
@@ -219,12 +219,14 @@ void CGame::UpdateCheckpoints()
 	}
 	else if (m_dwCheckpointMarker)
 	{
+        FLog("UpdateCheckpoints2");
 		DisableMarker(m_dwCheckpointMarker);
 		m_dwCheckpointMarker = 0;
 	}
 
 	if (m_bRaceCheckpointsEnabled)
 	{
+        FLog("UpdateCheckpoints3");
 		CPlayerPed* pPlayerPed = this->FindPlayerPed();
 		if (pPlayerPed)
 		{
@@ -237,9 +239,11 @@ void CGame::UpdateCheckpoints()
 	}
 	else if (m_dwRaceCheckpointMarker)
 	{
+        FLog("UpdateCheckpoints4");
 		DisableMarker(m_dwRaceCheckpointMarker);
 		DisableRaceCheckpoint();
 		m_dwRaceCheckpointMarker = 0;
+        FLog("UpdateCheckpoints5");
 	}
 }
 // 0.3.7
@@ -618,4 +622,9 @@ void CGame::DisableEnterExits()
 void CGame::ToggleCJWalk(bool bUseCJWalk)
 {
         CHook::NOP(g_libGTASA + (VER_x32 ? 0x004C5F6A : 0x5C3970), 2);
+}
+
+void CGame::InjectHooks()
+{
+    CHook::Write(g_libGTASA + (VER_x32 ? 0x00678C38 : 0x84F8A0), &CGame::currArea);
 }

@@ -79,8 +79,7 @@ Java_com_samp_mobile_game_ui_AttachEdit_Exit(JNIEnv *env, jobject thiz) {
             pJavaWrapper->HideEditObject();
         }
 
-        RwMatrix matrix4X4;
-        pObject->GetMatrix(&matrix4X4);
+        RwMatrix matrix4X4 = pObject->m_pEntity->GetMatrix().ToRwMatrix();
         auto pos = matrix4X4.pos;
         CVector rot;
         pObject->GetRotation(&rot.x, &rot.y, &rot.z);
@@ -155,13 +154,13 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
             pPlayer->m_attachedObjectInfo[slot].vecOffset.z += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
-            RwMatrix matrix;
-            pObject->GetMatrix(&matrix);
+            RwMatrix matrix = pObject->m_pEntity->GetMatrix().ToRwMatrix();
             auto pos = matrix.pos;
             pos.x += value;
 
-            pObject->TeleportTo(pos.x, pos.y, pos.z);
-            pObject->UpdateRwMatrixAndFrame();
+            pObject->m_pEntity->SetPosn(pos.x, pos.y, pos.z);
+            pObject->m_pEntity->UpdateRW();
+            pObject->m_pEntity->UpdateRwFrame();
         }
     }
 
@@ -172,13 +171,13 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
             pPlayer->m_attachedObjectInfo[slot].vecOffset.x += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
-            RwMatrix matrix;
-            pObject->GetMatrix(&matrix);
+            RwMatrix matrix = pObject->m_pEntity->GetMatrix().ToRwMatrix();
             auto pos = matrix.pos;
             pos.z += value;
 
-            pObject->TeleportTo(pos.x, pos.y, pos.z);
-            pObject->UpdateRwMatrixAndFrame();
+            pObject->m_pEntity->SetPosn(pos.x, pos.y, pos.z);
+            pObject->m_pEntity->UpdateRW();
+            pObject->m_pEntity->UpdateRwFrame();
         }
     }
     if(button_type == 2) { // y
@@ -188,13 +187,13 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
             pPlayer->m_attachedObjectInfo[slot].vecOffset.y += value;
         }
         if(CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
-            RwMatrix matrix;
-            pObject->GetMatrix(&matrix);
+            RwMatrix matrix = pObject->m_pEntity->GetMatrix().ToRwMatrix();
             auto pos = matrix.pos;
             pos.y += value;
 
-            pObject->TeleportTo(pos.x, pos.y, pos.z);
-            pObject->UpdateRwMatrixAndFrame();
+            pObject->m_pEntity->SetPosn(pos.x, pos.y, pos.z);
+            pObject->m_pEntity->UpdateRW();
+            pObject->m_pEntity->UpdateRwFrame();
         }
     }
     if(button_type == 3) { // scale
@@ -270,8 +269,7 @@ Java_com_samp_mobile_game_ui_AttachEdit_AttachClick(JNIEnv *env, jobject thiz, j
         if (CObjectEditor::editType == CObjectEditor::TYPE_OBJECT) {
             auto pObject = pNetGame->GetObjectPool()->GetAt(CObjectEditor::iEditedId);
 
-            RwMatrix matrix4X4;
-            pObject->GetMatrix(&matrix4X4);
+            RwMatrix matrix4X4 = pObject->m_pEntity->GetMatrix().ToRwMatrix();
             auto pos = matrix4X4.pos;
             CVector rot;
             pObject->GetRotation(&rot.x, &rot.y, &rot.z);
@@ -316,8 +314,7 @@ Java_com_samp_mobile_game_ui_AttachEdit_Save(JNIEnv *env, jobject thiz) {
         if(!pObject)
             goto exit;
 
-        RwMatrix matrix4X4;
-        pObject->GetMatrix(&matrix4X4);
+        RwMatrix matrix4X4 = pObject->m_pEntity->GetMatrix().ToRwMatrix();
         auto pos = matrix4X4.pos;
         CVector rot;
         pObject->GetRotation(&rot.x, &rot.y, &rot.z);

@@ -12,6 +12,9 @@
 #include "game/Enums/eSurfaceType.h"
 #include "game/Enums/eAreaCodes.h"
 #include "game/Reference.h"
+#include "Rect.h"
+#include "game/Models/BaseModelInfo.h"
+#include "game/Enums/eModelID.h"
 
 struct CEntityGTA : public CPlaceable{
 public:
@@ -86,5 +89,45 @@ public:
     eEntityType     m_nType : 3;          // Mask: & 0x7  = 7
     eEntityStatus   m_nStatus : 5;        // Mask: & 0xF8 = 248 (Remember: In the original code unless this was left shifted the value it's compared to has to be left shifted by 3!)
     uint8_t         pad_0;
+
+
+public:
+    CEntityGTA();
+    ~CEntityGTA() override;
+
+    virtual void Add();                                             // VTab: 2, similar to previous, but with entity bound rect
+    virtual void Add(const CRect* rect);                            // VTab: 1
+    virtual void Remove();                                          // VTab: 3
+    virtual void SetIsStatic(bool isStatic);                        // VTab: 4
+    virtual void SetModelIndex(uint32_t index);                       // VTab: 5
+    virtual void SetModelIndexNoCreate(uint32_t index);               // VTab: 6
+
+    [[nodiscard]] auto GetType() const noexcept { return (eEntityType)m_nType; }
+    void SetType(eEntityType type) { m_nType = type; }
+
+    [[nodiscard]] auto GetStatus() const noexcept { return m_nStatus; }
+    void SetStatus(eEntityStatus status) { m_nStatus = status; }
+
+    void SetInterior(int interiorId, bool needRefresh = false);
+
+    float GetDistanceFromCamera();
+    float GetDistanceFromLocalPlayerPed() const;
+    float GetDistanceFromPoint(float X, float Y, float Z) const;
+
+    void SetCollisionChecking(bool bCheck);
+
+    void UpdateRpHAnim();
+
+    void UpdateRwFrame();
+    void UpdateRW();
+
+    RwMatrix* GetModellingMatrix();
+
+    void DeleteRwObject();
+
+    auto GetModelId() const { return (eModelID)m_nModelIndex; }
+    CBaseModelInfo* GetModelInfo() const;
+
+    void ResolveReferences();
 };
 static_assert(sizeof(CEntityGTA) == (VER_x32 ? 0x3C : 0x60));

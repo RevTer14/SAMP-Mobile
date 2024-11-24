@@ -1877,26 +1877,26 @@ int GamePool_Ped_GetIndex(CPedGTA* pActor)
 	return ((int (*)(CPedGTA*))(g_libGTASA + (VER_x32? 0x483DAA + 1:0x575CFC)))(pActor);
 }
 
-ENTITY_TYPE *GamePool_Object_GetAt(int iID)
+CPhysical *GamePool_Object_GetAt(int iID)
 {
 	// GetPoolObj
-	return ((ENTITY_TYPE* (*)(int))(g_libGTASA + (VER_x32 ? 0x00483DD2 + 1 : 0x575D30)))(iID);
+	return ((CPhysical* (*)(int))(g_libGTASA + (VER_x32 ? 0x00483DD2 + 1 : 0x575D30)))(iID);
 }
 
-uintptr_t GamePool_Vehicle_GetIndex(VEHICLE_TYPE* pGtaVehicle)
+uintptr_t GamePool_Vehicle_GetIndex(CVehicleGTA* pGtaVehicle)
 {
 	// GettPoolVehicleRef
-	return ((uintptr_t (*)(VEHICLE_TYPE*))(g_libGTASA + (VER_x32 ? 0x00483D90 + 1 : 0x575CD8)))(pGtaVehicle);
+	return ((uintptr_t (*)(CVehicleGTA*))(g_libGTASA + (VER_x32 ? 0x00483D90 + 1 : 0x575CD8)))(pGtaVehicle);
 }
 
-VEHICLE_TYPE* GamePool_Vehicle_GetAt(int iID)
+CVehicleGTA* GamePool_Vehicle_GetAt(int iID)
 {
 	// GetPoolVehicle
-	return ((VEHICLE_TYPE* (*)(int))(g_libGTASA + (VER_x32 ? 0x00483D9E + 1 : 0x575CE8)))(iID);
+	return ((CVehicleGTA* (*)(int))(g_libGTASA + (VER_x32 ? 0x00483D9E + 1 : 0x575CE8)))(iID);
 }
 
 // 0.3.7
-int GetVehicleSubtype(VEHICLE_TYPE* pGtaVehicle)
+int GetVehicleSubtype(CVehicleGTA* pGtaVehicle)
 {
     if (pGtaVehicle) {
         if (*(uintptr*)pGtaVehicle == g_libGTASA + (VER_x32 ? 0x0066D678 : 0x83BB50)) {
@@ -1954,7 +1954,7 @@ bool IsValidModel(int iModelID)
 // 0.3.7
 int GetModelRefCounts(int iModel)
 {
-	uint16_t* p = (uint16_t*)(GetModelInfoByID(iModel) + 30);
+	uint16_t* p = (uint16_t*)(GetModelInfoByID(iModel) + (VER_x32 ? 30:30*2));
 	return *p;
 }
 // 0.3.7
@@ -2116,12 +2116,12 @@ float subAngle(float a1, float a2)
 	return fixAngle(fixAngle(a2) - a1);
 }
 
-void HideEntity(ENTITY_TYPE *pEntity)
+void HideEntity(CEntityGTA *pEntity)
 {
-    pEntity->vPos.z -= 2000.0;
+    pEntity->GetPosition().z -= 2000.0;
 
-    RwMatrix *matrix = pEntity->mat;
-    if(matrix) matrix->pos.y -= 2000.0;
+    RwMatrix matrix = pEntity->GetMatrix().ToRwMatrix();
+    matrix.pos.y -= 2000.0;
 }
 
 /* =========== RemoveBuildings ============= */
@@ -2148,18 +2148,15 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
     uintptr_t *pBuildingPool = *(uintptr_t**)(g_libGTASA+0x95AC4C);
     for(int i = 0; i < 20000; i++)
     {
-        ENTITY_TYPE *pEntity = (ENTITY_TYPE*)((i * 60) + *pBuildingPool);
-        if(pEntity && !IsGameEntityArePlaceable(pEntity))
+        CEntityGTA *pEntity = (CEntityGTA*)((i * 60) + *pBuildingPool);
+        if(pEntity)
         {
-            if(iModel == -1 || pEntity->nModelIndex == iModel)
+            if(iModel == -1 || pEntity->m_nModelIndex == iModel)
             {
                 CVector vecPool = CVector { 0.0f, 0.0f, 0.0f };
-                memcpy(&vecPool, &pEntity->vPos, sizeof(CVector));
+                memcpy(&vecPool, &pEntity->GetPosition(), sizeof(CVector));
 
-                RwMatrix *matrix = pEntity->mat;
-                if(matrix) {
-                    memcpy(&vecPool, &matrix->pos, sizeof(CVector));
-                }
+                memcpy(&vecPool, &pEntity->GetMatrix().m_pos, sizeof(CVector));
 
                 float fDistance = GetDistance(vecPool, vecPos);
                 if(fDistance <= fRange) HideEntity(pEntity);
@@ -2171,18 +2168,15 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
     uintptr_t *pDummyPool = *(uintptr_t**)(g_libGTASA+0x95AC54);
     for(int i = 0; i < 40000; i++)
     {
-        ENTITY_TYPE *pEntity = (ENTITY_TYPE*)((i * 60) + *pDummyPool);
-        if(pEntity && !IsGameEntityArePlaceable(pEntity))
+        CEntityGTA *pEntity = (CEntityGTA*)((i * 60) + *pDummyPool);
+        if(pEntity)
         {
-            if(iModel == -1 || pEntity->nModelIndex == iModel)
+            if(iModel == -1 || pEntity->m_nModelIndex == iModel)
             {
                 CVector vecPool = CVector { 0.0f, 0.0f, 0.0f };
-                memcpy(&vecPool, &pEntity->vPos, sizeof(CVector));
+                memcpy(&vecPool, &pEntity->GetPosition(), sizeof(CVector));
 
-                RwMatrix *matrix = pEntity->mat;
-                if(matrix) {
-                    memcpy(&vecPool, &matrix->pos, sizeof(CVector));
-                }
+                memcpy(&vecPool, &pEntity->GetMatrix().m_pos, sizeof(CVector));
 
                 float fDistance = GetDistance(vecPool, vecPos);
                 if(fDistance <= fRange) HideEntity(pEntity);
@@ -2194,18 +2188,15 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
     uintptr_t *pObjectPool = *(uintptr_t**)(g_libGTASA+0x95AC50);
     for(int i = 0; i < 3000; i++)
     {
-        ENTITY_TYPE *pEntity = (ENTITY_TYPE*)((i * 420) + *pObjectPool);
-        if(pEntity && !IsGameEntityArePlaceable(pEntity))
+        CEntityGTA *pEntity = (CEntityGTA*)((i * 420) + *pObjectPool);
+        if(pEntity)
         {
-            if(iModel == -1 || pEntity->nModelIndex == iModel)
+            if(iModel == -1 || pEntity->m_nModelIndex == iModel)
             {
                 CVector vecPool = CVector { 0.0f, 0.0f, 0.0f };
-                memcpy(&vecPool, &pEntity->vPos, sizeof(CVector));
+                memcpy(&vecPool, &pEntity->GetPosition(), sizeof(CVector));
 
-                RwMatrix *matrix = pEntity->mat;
-                if(matrix) {
-                    memcpy(&vecPool, &matrix->pos, sizeof(CVector));
-                }
+                memcpy(&vecPool, &pEntity->GetMatrix().m_pos, sizeof(CVector));
 
                 float fDistance = GetDistance(vecPool, vecPos);
                 if(fDistance <= fRange) HideEntity(pEntity);
@@ -2599,7 +2590,7 @@ void DestroyAtomicOrClump(uintptr_t rwObject)
 	}
 }
 
-void GamePrepareTrain(VEHICLE_TYPE* pGtaVehicle)
+void GamePrepareTrain(CVehicleGTA* pGtaVehicle)
 {
 	FLog("GamePrepareTrain");
 
@@ -2623,11 +2614,11 @@ void GameResetStats()
 }
 
 // 0.3.7
-void ProjectMatrix(RwV3d* vecOut, RwMatrix* mat, RwV3d* vecPos)
+void ProjectMatrix(CVector* vecOut, CMatrix* mat, CVector* vecPos)
 {
-	vecOut->x =	mat->at.x * vecPos->z + mat->up.x * vecPos->y + mat->right.x * vecPos->x + mat->pos.x;
-	vecOut->y = mat->at.y * vecPos->z + mat->up.y * vecPos->y + mat->right.y * vecPos->x + mat->pos.y;
-	vecOut->z = mat->at.z * vecPos->z + mat->up.z * vecPos->y + mat->right.z * vecPos->x + mat->pos.z;
+    vecOut->x = mat->m_up.x * vecPos->z + mat->m_forward.x * vecPos->y + mat->m_right.x * vecPos->x + mat->m_pos.x;
+    vecOut->y = mat->m_up.y * vecPos->z + mat->m_forward.y * vecPos->y + mat->m_right.y * vecPos->x + mat->m_pos.y;
+    vecOut->z = mat->m_up.z * vecPos->z + mat->m_forward.z * vecPos->y + mat->m_right.z * vecPos->x + mat->m_pos.z;
 }
 
 static CVector _axis[3] = {
@@ -2697,7 +2688,7 @@ void RpWorldRemoveLight(uintptr_t light)
 int LineOfSight(RwV3d* start, RwV3d* end, void* colpoint, uintptr_t ent, char buildings, char vehicles, char peds, char objects, char dummies, bool seeThrough, bool camera, bool unk)
 {
 	// CWorld::LineOfSight
-	return (( int (*)(RwV3d*, RwV3d*, void*, uintptr_t, char, char, char, char, char, char, char, char))(g_libGTASA+0x424B44+1))(start, end, colpoint, ent, buildings, vehicles, peds, objects, dummies, seeThrough, camera, unk);
+	return (( int (*)(RwV3d*, RwV3d*, void*, uintptr_t, char, char, char, char, char, char, char, char))(g_libGTASA+(VER_x32 ? 0x424B94+1:0x508C7C)))(start, end, colpoint, ent, buildings, vehicles, peds, objects, dummies, seeThrough, camera, unk);
 }
 
 void RwMatrixInvert(RwMatrix *matOut, RwMatrix *matIn)
@@ -2793,7 +2784,7 @@ eWidgetState ProcessFixedWidget(uintptr_t pWidget)
 						if(pVehicle)
 						{
 							if(!pPlayerPed->IsInVehicle() && 
-								pVehicle->GetDistanceFromLocalPlayerPed() > 10.0f) 
+								pVehicle->m_pVehicle->GetDistanceFromLocalPlayerPed() > 10.0f)
 							{
 								return STATE_FIXED;
 							}
@@ -2943,13 +2934,9 @@ int GetAnimIdxByName(const char* szName)
 	return -1;
 }
 
-bool IsGameEntityArePlaceable(ENTITY_TYPE *pEntity)
+bool IsGameEntityArePlaceable(CEntityGTA *pEntity)
 {
-    if(pEntity)
-    {
-        if(pEntity->vtable)
-            return (pEntity->vtable == g_libGTASA+0x667D14);
-    }
+
 
     return false;
 }
@@ -2957,7 +2944,7 @@ bool IsGameEntityArePlaceable(ENTITY_TYPE *pEntity)
 RpMaterial* ObjectMaterialCallBack(RpMaterial* material, void* data)
 {
     CObject* pObject = (CObject*)data;
-    RpAtomic* rpAtomic = (RpAtomic*)pObject->m_pEntity->pRpAtomic;
+    RpAtomic* rpAtomic = (RpAtomic*)pObject->m_pEntity->m_pRwAtomic;
     for (int i = 0; i < rpAtomic->geometry->matList.numMaterials; i++)
     {
         if(i >= 16) break;

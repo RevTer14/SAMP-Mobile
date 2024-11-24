@@ -29,7 +29,7 @@ void CPlayerTags::Render(ImGuiRenderer* renderer)
 	if (pNetGame && pNetGame->m_pNetSet->bShowNameTags)
 	{
 		CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
-		pGame->FindPlayerPed()->GetMatrix(&matLocal);
+        matLocal = pGame->FindPlayerPed()->m_pPed->GetMatrix().ToRwMatrix();
 
 		for (PLAYERID playerId = 0; playerId < MAX_PLAYERS; playerId++)
 		{
@@ -41,7 +41,7 @@ void CPlayerTags::Render(ImGuiRenderer* renderer)
 				{
 					CPlayerPed* pPlayerPed = pRemotePlayer->GetPlayerPed();
 
-					if (pPlayerPed && pPlayerPed->GetDistanceFromCamera() <= pNetGame->m_pNetSet->fNameTagDrawDistance)
+					if (pPlayerPed && pPlayerPed->m_pPed->GetDistanceFromCamera() <= pNetGame->m_pNetSet->fNameTagDrawDistance)
 					{
 						/*if (pRemotePlayer->GetState() == PLAYER_STATE_DRIVER &&
 							pRemotePlayer->m_pCurrentVehicle &&
@@ -54,7 +54,7 @@ void CPlayerTags::Render(ImGuiRenderer* renderer)
 						}
 						else
 						{*/
-							if (!pPlayerPed->IsAdded()) continue;
+							if (!pPlayerPed->m_pPed->IsAdded()) continue;
 							vecPos.x = 0.0f;
 							vecPos.y = 0.0f;
 							vecPos.z = 0.0f;
@@ -75,7 +75,7 @@ void CPlayerTags::Render(ImGuiRenderer* renderer)
 							sprintf(szNickBuf, "%s (%d)", pPlayerPool->GetPlayerName(playerId), playerId);
 							this->Draw(renderer,&vecPos, szNickBuf,
 								pRemotePlayer->GetPlayerColor(),
-								pPlayerPed->GetDistanceFromCamera(),
+								pPlayerPed->m_pPed->GetDistanceFromCamera(),
 								pRemotePlayer->m_fReportedHealth,
 								pRemotePlayer->m_fReportedArmour,
 								pRemotePlayer->m_bIsAFK,

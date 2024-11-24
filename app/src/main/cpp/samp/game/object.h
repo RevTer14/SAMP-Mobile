@@ -1,19 +1,18 @@
 #pragma once
 
 #include "../game/Core/Quaternion.h"
+#include "game/Entity/CPhysical.h"
 
 #define MATERIAL_TYPE_MATERIAL	1
 #define MATERIAL_TYPE_TEXT		2
 
-class CObject : public CEntity
+class CObject
 {
 public:
 	CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance, uint8_t unk);
 	virtual ~CObject();
 
 	void Process(float fElapsedTime);
-
-	virtual void TeleportTo(float fX, float fY, float fZ) override;
 
 	void SetRotation(CVector *vecRotation);
 	void GetRotation(float* pfX, float* pfY, float* pfZ);
@@ -63,8 +62,9 @@ public:
 	bool		m_bAttachedToPed;
 	bool		m_bForceRender;
 
-    ENTITY_TYPE		*m_pEntity;
+    CPhysical		*m_pEntity;
     uint8_t		m_byteMoving;
+    uint32_t		m_dwGTAId;
 
 	void InstantRotate(float x, float y, float z);
 

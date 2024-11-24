@@ -75,7 +75,7 @@ public:
 		return false;
 	}
 	// 0.3.7
-	VEHICLEID FindIDFromGtaPtr(VEHICLE_TYPE* pGtaVehicle)
+	VEHICLEID FindIDFromGtaPtr(CVehicleGTA* pGtaVehicle)
 	{
 		for (int i = 0; i < MAX_VEHICLES; i++)
 		{
@@ -104,7 +104,7 @@ public:
 private:
 	CVehicle* m_pVehicles[MAX_VEHICLES];
 	bool m_bVehicleSlotState[MAX_VEHICLES];
-	VEHICLE_TYPE* m_pGTAVehicles[MAX_VEHICLES];
+    CVehicleGTA* m_pGTAVehicles[MAX_VEHICLES];
 	CVector m_vecPos[MAX_VEHICLES];
 	bool m_bIsActive[MAX_VEHICLES];
 	bool m_bIsWasted[MAX_VEHICLES];

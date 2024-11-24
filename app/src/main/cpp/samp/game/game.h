@@ -101,6 +101,10 @@ public:
 	void ToggleCJWalk(bool bUseCJWalk);
 
 	bool bIsGameExiting = false;
+
+    static void InjectHooks();
+
+    inline static int32 currArea;
 public:
 	bool m_bCheckpointsEnabled;
 	bool m_bRaceCheckpointsEnabled;

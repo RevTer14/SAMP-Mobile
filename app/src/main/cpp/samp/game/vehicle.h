@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstring>
-
-class CVehicle : public CEntity
+#include "Entity/CVehicleGTA.h"
+class CVehicle
 {
 public:
 	CVehicle(int iType, float fX, float fY, float fZ, float fRotation, bool bPreloaded, bool bSiren);
@@ -50,7 +50,7 @@ public:
 
 	void SetDoorState(int state);
 	void SetComponentOpenState(int iDoor, int iComponent, float fDoorOpenRatio);
-	void SetAlarmState(uint16_t wAlarmState) { m_pVehicle->wAlarmState = wAlarmState; }
+	void SetAlarmState(uint16_t wAlarmState) { m_pVehicle->m_nVehicleFlags.bSirenOrAlarm = wAlarmState; }
 	void OpenWindow(uint8_t component);
 	void CloseWindow(uint8_t component);
 
@@ -60,8 +60,9 @@ public:
 	bool UpdateLastDrivenTime();
 
 public:
-	VEHICLE_TYPE* m_pVehicle;
+    CVehicleGTA* m_pVehicle;
 	CVehicle* m_pTrailer;
+    uintptr 		m_dwGTAId;
 	bool m_bPreloaded;
 	int m_iEngineState;
 	int m_iLightState;

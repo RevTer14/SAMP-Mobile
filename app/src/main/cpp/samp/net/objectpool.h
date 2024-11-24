@@ -21,9 +21,9 @@ public:
 		return nullptr;
 	}
 
-	OBJECTID FindIDFromGtaPtr(ENTITY_TYPE* pGtaObject);
+	OBJECTID FindIDFromGtaPtr(CPhysical* pGtaObject);
 
-	CObject* FindObjectFromGtaPtr(ENTITY_TYPE* pGtaObject);
+	CObject* FindObjectFromGtaPtr(CPhysical* pGtaObject);
 
 	void ProcessMaterialText();
 

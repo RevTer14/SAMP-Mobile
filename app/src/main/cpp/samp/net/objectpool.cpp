@@ -74,7 +74,7 @@ void CObjectPool::Process()
 	s_dwLastTick = dwThisTick;
 }
 
-CObject* CObjectPool::FindObjectFromGtaPtr(ENTITY_TYPE* pGtaObject)
+CObject* CObjectPool::FindObjectFromGtaPtr(CPhysical* pGtaObject)
 {
 	for (OBJECTID ObjectID = 0; ObjectID < MAX_OBJECTS; ObjectID++)
 	{
@@ -85,7 +85,7 @@ CObject* CObjectPool::FindObjectFromGtaPtr(ENTITY_TYPE* pGtaObject)
 	return nullptr;
 }
 
-OBJECTID CObjectPool::FindIDFromGtaPtr(ENTITY_TYPE* pGtaObject)
+OBJECTID CObjectPool::FindIDFromGtaPtr(CPhysical* pGtaObject)
 {
 	for (OBJECTID ObjectID = 0; ObjectID < MAX_OBJECTS; ObjectID++)
 	{

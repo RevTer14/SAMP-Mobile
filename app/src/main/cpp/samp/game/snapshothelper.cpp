@@ -175,13 +175,12 @@ uintptr_t CSnapShotHelper::CreatePedSnapShot(int iModel, uint32_t dwColor, CVect
 
 	float posZ = iModel == 162 ? 50.15f : 50.05f;
 	float posY = fZoom * -2.25f;
-	pPed->TeleportTo(0.0f, posY, posZ);
+	pPed->m_pPed->SetPosn(0.0f, posY, posZ);
 	pPed->SetModelIndex(iModel);
-	pPed->SetGravityProcessing(false);
-	pPed->SetCollisionChecking(false);
+	//pPed->m_pPed->SetGravityProcessing(false);
+	pPed->m_pPed->SetCollisionChecking(false);
 
-	RwMatrix mat;
-	pPed->GetMatrix(&mat);
+	RwMatrix mat = pPed->m_pPed->GetMatrix().ToRwMatrix();
 
 	if (vecRot->x != 0.0f)
 		RwMatrixRotate(&mat, 0, vecRot->x);
@@ -190,7 +189,7 @@ uintptr_t CSnapShotHelper::CreatePedSnapShot(int iModel, uint32_t dwColor, CVect
 	if (vecRot->z != 0.0f)
 		RwMatrixRotate(&mat, 2, vecRot->z);
 
-	pPed->UpdateMatrix(mat);
+	pPed->m_pPed->SetMatrix((CMatrix&)mat);
 
 	// set camera frame buffer //
 	*(uintptr_t*)(m_camera + 0x60) = raster;
@@ -212,16 +211,16 @@ uintptr_t CSnapShotHelper::CreatePedSnapShot(int iModel, uint32_t dwColor, CVect
 	// DefinedState
 	((void(*) (void))(g_libGTASA + 0x5D0BC0 + 1))();
 
-	pPed->Add();
+	pPed->m_pPed->Add();
 
 	pPed->ClumpUpdateAnimations(100.0f, 1);
-	pPed->Render();
+	//pPed->Render();
 
 	RwCameraEndUpdate((RwCamera*)m_camera);
 
 	RpWorldRemoveLight(m_light);
 
-	pPed->Remove();
+	pPed->m_pPed->Remove();
 
 	delete pPed;
 
@@ -250,21 +249,20 @@ uintptr_t CSnapShotHelper::CreateVehicleSnapShot(int iModel, uint32_t dwColor, C
 
 	if (!raster || !bufferTexture || !pVehicle) return 0;
 
-	pVehicle->SetGravityProcessing(false);
-	pVehicle->SetCollisionChecking(false);
+	//pVehicle->m_pVehicle->SetGravityProcessing(false);
+	pVehicle->m_pVehicle->SetCollisionChecking(false);
 	float radius = GetModelColSphereRadius(iModel);
 	float posY = (-1.0f - (radius + radius)) * fZoom;
 	if (pVehicle->GetVehicleSubtype() == VEHICLE_SUBTYPE_BOAT) {
 		posY = -5.5f - radius * 2.5f;
 	}
 
-	pVehicle->TeleportTo(0.0f, posY, 50.0f);
+	pVehicle->m_pVehicle->SetPosn(0.0f, posY, 50.0f);
 	if (dwColor1 != 0xFFFFFFFF && dwColor2 != 0xFFFFFFFF) {
 		pVehicle->SetColor(dwColor1, dwColor2);
 	}
 
-	RwMatrix mat;
-	pVehicle->GetMatrix(&mat);
+	RwMatrix mat = pVehicle->m_pVehicle->GetMatrix().ToRwMatrix();
 
 	if (vecRot->x != 0.0f) {
 		RwMatrixRotate(&mat, 0, vecRot->x);
@@ -276,7 +274,7 @@ uintptr_t CSnapShotHelper::CreateVehicleSnapShot(int iModel, uint32_t dwColor, C
 		RwMatrixRotate(&mat, 2, vecRot->z);
 	}
 
-	pVehicle->UpdateMatrix(mat);
+	pVehicle->m_pVehicle->SetMatrix((CMatrix&)mat);
 
 	*(uintptr_t*)(m_camera + 0x60) = raster;
 	// CVisibilityPlugins::SetRenderWareCamera
@@ -296,13 +294,13 @@ uintptr_t CSnapShotHelper::CreateVehicleSnapShot(int iModel, uint32_t dwColor, C
 	// DefinedState
 	((void(*) (void))(g_libGTASA + 0x5D0BC0 + 1))();
 
-	pVehicle->Add();
+	pVehicle->m_pVehicle->Add();
 
-	pVehicle->Render();
+	//pVehicle->Render();
 	RwCameraEndUpdate((RwCamera*)m_camera);
 	RpWorldRemoveLight(m_light);
 
-	pVehicle->Remove();
+	pVehicle->m_pVehicle->Remove();
 	delete pVehicle;
 
 	return bufferTexture;

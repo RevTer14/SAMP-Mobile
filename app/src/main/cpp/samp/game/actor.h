@@ -1,6 +1,6 @@
 #pragma once
 
-class CActor : public CEntity
+class CActor
 {
 public:
 	CActor(int iSkin, float fX, float fY, float fZ, float fAngle);
@@ -16,4 +16,5 @@ public:
 public:
 	CPedGTA* m_pPed;
 	bool m_bInvulnerable;
+    uintptr		m_dwGTAId;
 };

@@ -105,8 +105,7 @@ void DoDebugStuff()
 {
 	// ...
 
-	RwMatrix mat;
-	pGame->FindPlayerPed()->GetMatrix(&mat);
+	RwMatrix mat = pGame->FindPlayerPed()->m_pPed->GetMatrix().ToRwMatrix();
 	
 	for (int i = 0; i < 100; i++)
 	{

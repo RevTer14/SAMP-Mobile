@@ -91,7 +91,7 @@ void C3DTextLabelPool::Render(ImGuiRenderer* renderer)
                     CRemotePlayer *pPlayer = pPlayerPool->GetAt(pTextLabel->playerId);
                     if (pPlayer && pPlayer->GetDistanceFromLocalPlayer() < pTextLabel->fDistance) {
                         CPlayerPed *pPlayerPed = pPlayer->GetPlayerPed();
-                        if (pPlayerPed && pPlayerPed->IsAdded()) {
+                        if (pPlayerPed && pPlayerPed->m_pPed->IsAdded()) {
                             CVector matBone;
                             pPlayerPed->GetBonePosition(8, &matBone);
 
@@ -110,10 +110,9 @@ void C3DTextLabelPool::Render(ImGuiRenderer* renderer)
 				CVehiclePool *pVehiclePool = pNetGame->GetVehiclePool();
 				if (pVehiclePool && pVehiclePool->GetSlotState(pTextLabel->vehicleId)) {
 					CVehicle *pVehicle = pVehiclePool->GetAt(pTextLabel->vehicleId);
-					if (pVehicle && pVehicle->IsAdded() &&
-						pVehicle->GetDistanceFromLocalPlayerPed() < pTextLabel->fDistance) {
-						RwMatrix matVehicle;
-						pVehicle->GetMatrix(&matVehicle);
+					if (pVehicle && pVehicle->m_pVehicle->IsAdded() &&
+						pVehicle->m_pVehicle->GetDistanceFromLocalPlayerPed() < pTextLabel->fDistance) {
+						RwMatrix matVehicle = pVehicle->m_pVehicle->GetMatrix().ToRwMatrix();
 
 						vecTextPos.x = matVehicle.pos.x + pTextLabel->vecPos.x;
 						vecTextPos.y = matVehicle.pos.y + pTextLabel->vecPos.y;
@@ -125,7 +124,7 @@ void C3DTextLabelPool::Render(ImGuiRenderer* renderer)
 				}
 			}
 
-			if (pPlayerPed->GetDistanceFromPoint(pTextLabel->vecPos) <= pTextLabel->fDistance)
+			if (pPlayerPed->m_pPed->GetDistanceFromPoint(pTextLabel->vecPos.x, pTextLabel->vecPos.y, pTextLabel->vecPos.z) <= pTextLabel->fDistance)
 				this->Draw(renderer, pTextLabel, vecTextPos, pTextLabel->text,
 						   pTextLabel->dwColor);
         }
@@ -147,8 +146,7 @@ void C3DTextLabelPool::Draw(ImGuiRenderer* renderer, TEXT_LABEL* label, CVector 
 			return;
 		}
 
-        RwMatrix matPlayer;
-		pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->GetMatrix(&matPlayer);
+        RwMatrix matPlayer = pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->m_pPed->GetMatrix().ToRwMatrix();
 
 		CVector vec;
 		vec.x = pCam->pos1x;
@@ -169,7 +167,7 @@ void C3DTextLabelPool::Draw(ImGuiRenderer* renderer, TEXT_LABEL* label, CVector 
     }
 
 	if (!label->bTestLOS || hitEntity) {
-		if (pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->GetDistanceFromPoint(vecPos) <= label->fDistance) {
+		if (pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->m_pPed->GetDistanceFromPoint(vecPos.x, vecPos.y, vecPos.z) <= label->fDistance) {
 			CVector vecOut;
 			// CSprite::CalcScreenCoors
 			((void (*)(CVector *, CVector *, float *, float *, bool, bool)) (g_libGTASA + (VER_x32 ? 0x005C57E8 + 1 : 0x6E9DF8)))(

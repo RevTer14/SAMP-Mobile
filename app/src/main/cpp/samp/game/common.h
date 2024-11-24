@@ -10,8 +10,8 @@
 
 #define IN_VEHICLE(x) ((x->dwStateFlags & 0x100) >> 8)
 #define IS_CROUCHING(x) ((x->dwStateFlags >> 26) & 1)
-#define IS_FIRING(x) (x & 4)
-#define IS_TARGETING(x) (x & 128)
+#define IS_FIRING(x) (x->bFiringWeapon)
+#define IS_TARGETING(x) (x->bIsAimingGun)
 
 #define ASSERT assert
 #define nil nullptr

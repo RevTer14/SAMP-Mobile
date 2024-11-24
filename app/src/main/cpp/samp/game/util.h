@@ -3,6 +3,9 @@
 #include "../game/RW/RenderWare.h"
 
 class CObject;
+struct CVehicleGTA;
+struct CPhysical;
+struct CEntityGTA;
 #include "../game/Core/Rect.h"
 
 enum eWidgetType {
@@ -25,11 +28,11 @@ extern uintptr_t g_pWidgets[TYPE_SIZE];
 CPedGTA* GamePool_FindPlayerPed();
 CPedGTA* GamePool_Ped_GetAt(int iID);
 int GamePool_Ped_GetIndex(CPedGTA* pActor);
-ENTITY_TYPE *GamePool_Object_GetAt(int iID);
-uintptr_t GamePool_Vehicle_GetIndex(VEHICLE_TYPE* pGtaVehicle);
-VEHICLE_TYPE* GamePool_Vehicle_GetAt(int iID);
+CPhysical *GamePool_Object_GetAt(int iID);
+uintptr_t GamePool_Vehicle_GetIndex(CVehicleGTA* pGtaVehicle);
+CVehicleGTA* GamePool_Vehicle_GetAt(int iID);
 
-int GetVehicleSubtype(VEHICLE_TYPE* pGtaVehicle);
+int GetVehicleSubtype(CVehicleGTA* pGtaVehicle);
 
 uintptr_t GetModelInfoByID(int iModelID);
 bool IsExistInfoForModel(int iModelID);
@@ -84,13 +87,13 @@ void DestroyAtomicOrClump(uintptr_t rwObject);
 void RpWorldAddLight(uintptr_t light);
 void RpWorldRemoveLight(uintptr_t light);
 
-void GamePrepareTrain(VEHICLE_TYPE* pGtaVehicle);
+void GamePrepareTrain(CVehicleGTA* pGtaVehicle);
 
 void DrawRaster(RwRaster* raster, CRect const& rect);
 
 void GameResetStats();
 
-void ProjectMatrix(RwV3d* vecOut, RwMatrix* mat, RwV3d* vecPos);
+void ProjectMatrix(CVector* vecOut, CMatrix* mat, CVector* vecPos);
 void RwMatrixRotate(RwMatrix* mat, int axis, float angle);
 void RwMatrixScale(RwMatrix* mat, RwV3d* vecScale);
 
@@ -115,7 +118,7 @@ RwMatrix* mat_invert(RwMatrix *dst, const RwMatrix *src);
 const char* GetAnimByIdx(int idx);
 int GetAnimIdxByName(const char* szName);
 
-bool IsGameEntityArePlaceable(ENTITY_TYPE *pEntity);
+bool IsGameEntityArePlaceable(CEntityGTA *pEntity);
 
 void RemoveBuilding(uint32_t dwModel, RwV3d vecPos, float fRange);
 void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange);

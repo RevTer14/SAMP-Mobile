@@ -631,8 +631,8 @@ void ScrClearPlayerAnimations(RPCParameters* rpcParams)
 			}
 		}
 		if (pPlayerPed) {
-			pPlayerPed->GetMatrix(&mat);
-			pPlayerPed->TeleportTo(mat.pos.x, mat.pos.y, mat.pos.z);
+            mat = pPlayerPed->m_pPed->GetMatrix().ToRwMatrix();
+			pPlayerPed->m_pPed->SetPosn(mat.pos.x, mat.pos.y, mat.pos.z);
 		}
 	}
 }
@@ -671,7 +671,7 @@ void ScrSetPlayerInterior(RPCParameters* rpcParams)
 	RakNet::BitStream bsData((unsigned char*)Data, (iBitLength / 8) + 1, false);
 	bsData.Read(byteInteriorId);
 
-	pGame->FindPlayerPed()->SetInterior(byteInteriorId, true);
+	pGame->FindPlayerPed()->m_pPed->SetInterior(byteInteriorId, true);
 }
 // 0.3.7
 void ScrShowTextDraw(RPCParameters* rpcParams)
@@ -862,7 +862,7 @@ void ScrSetObjectPos(RPCParameters* rpcParams)
 
 	CObject* pObject = pObjectPool->GetAt(ObjectID);
 	if (pObject) {
-		pObject->TeleportTo(fX, fY, fZ);
+		pObject->m_pEntity->SetPosn(fX, fY, fZ);
 	}
 }
 // 0.3.7
@@ -1148,7 +1148,7 @@ void ScrSetPlayerVelocity(RPCParameters* rpcParams)
 		//pPlayerPed->SetStateFlags(dwState ^ 3);
 	}
 
-	pPlayerPed->SetMoveSpeedVector(vecVelocity);
+	pPlayerPed->m_pPed->SetVelocity(vecVelocity);
 }
 // 0.3.7
 void ScrSetVehicleVelocity(RPCParameters* rpcParams)
@@ -1172,7 +1172,7 @@ void ScrSetVehicleVelocity(RPCParameters* rpcParams)
 
 	if (pPlayerPed->IsInVehicle())
 	{
-		VEHICLE_TYPE* pGtaVehicle = pPlayerPed->GetGtaVehicle();
+        CVehicleGTA* pGtaVehicle = pPlayerPed->GetGtaVehicle();
 		VEHICLEID VehicleID = pVehiclePool->FindIDFromGtaPtr(pGtaVehicle);
 		CVehicle* pVehicle = pVehiclePool->GetAt(VehicleID);
 		if (!pVehicle) return;
@@ -1181,12 +1181,12 @@ void ScrSetVehicleVelocity(RPCParameters* rpcParams)
 		{
 			if (byteType == 1)
 			{
-				pVehicle->SetTurnSpeedVector(vecVelocity);
+				pVehicle->m_pVehicle->SetTurnSpeed(vecVelocity);
 			}
 		}
 		else
 		{
-			pVehicle->SetMoveSpeedVector(vecVelocity);
+			pVehicle->m_pVehicle->SetVelocity(vecVelocity);
 		}
 	}
 
@@ -1301,7 +1301,7 @@ void ScrSetPlayerPos(RPCParameters* rpcParams)
 	if (!pLocalPlayer) return;
 
     pLocalPlayer->DisableSurf();
-	pLocalPlayer->GetPlayerPed()->TeleportTo(vecPos.x, vecPos.y, vecPos.z);
+	pLocalPlayer->GetPlayerPed()->m_pPed->SetPosn(vecPos.x, vecPos.y, vecPos.z);
 }
 // 0.3.7
 void ScrSetPlayerPosFindZ(RPCParameters* rpcParams)
@@ -1323,7 +1323,7 @@ void ScrSetPlayerPosFindZ(RPCParameters* rpcParams)
 
 	vecPos.z = pGame->FindGroundZForCoord(vecPos.x, vecPos.y, vecPos.z) + 1.5f;
     pLocalPlayer->DisableSurf();
-	pLocalPlayer->GetPlayerPed()->TeleportTo(vecPos.x, vecPos.y, vecPos.z);
+	pLocalPlayer->GetPlayerPed()->m_pPed->SetPosn(vecPos.x, vecPos.y, vecPos.z);
 }
 // 0.3.7
 void ScrPutPlayerInVehicle(RPCParameters* rpcParams)
@@ -1434,7 +1434,7 @@ void ScrSetVehiclePos(RPCParameters* rpcParams)
 	CVehicle* pVehicle = pVehiclePool->GetAt(VehicleID);
 	if (!pVehicle) return;
 
-	pVehicle->TeleportTo(fX, fY, fZ);
+	pVehicle->m_pVehicle->SetPosn(fX, fY, fZ);
 }
 // 0.3.7
 void ScrSetVehicleZAngle(RPCParameters* rpcParams)
@@ -1752,7 +1752,7 @@ void ScrSetActorPos(RPCParameters* rpcParams)
 
 	CActor* pActor = pActorPool->GetAt(ActorID);
 	if (pActor) {
-		pActor->TeleportTo(vecPos.x, vecPos.y, vecPos.z);
+		pActor->m_pPed->SetPosn(vecPos.x, vecPos.y, vecPos.z);
 	}
 }
 // 0.3.7

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "entity.h"
 #include "vehicle.h"
 #include "object.h"
 #include "game/Entity/CPedGTA.h"
@@ -35,12 +34,12 @@ typedef struct _BULLET_DATA
 	CVector vecOrigin;
 	CVector vecPos;
 	CVector vecOffset;
-	ENTITY_TYPE* pEntity;
+	CEntityGTA* pEntity;
 } BULLET_DATA;
 #pragma pack(pop)
 
 #pragma pack(push, 1)
-class CPlayerPed : public CEntity
+class CPlayerPed
 {
 public:
 	CPlayerPed();
@@ -59,7 +58,7 @@ public:
 
 	uint8_t GetActionTrigger();
 	void SetActionTrigger(uint8_t action);
-	VEHICLE_TYPE* GetGtaVehicle();
+    CVehicleGTA* GetGtaVehicle();
 	void SetDead();
 	bool IsDead();
 	void SetHealth(float fHealth);
@@ -147,7 +146,7 @@ public:
 	CVector* GetCurrentWeaponFireOffset();
 	void ProcessBulletData(BULLET_DATA* btData);
 
-	ENTITY_TYPE* GetEntityUnderPlayer();
+    CEntityGTA* GetEntityUnderPlayer();
 
 	CVehicle* GetCurrentVehicle();
 
@@ -196,8 +195,8 @@ public:
 	bool IsTakeDamageFallTask();
 	bool IsSitTask();
 
-	VEHICLE_TYPE* GetGtaContactVehicle();
-	ENTITY_TYPE* GetGtaContactEntity();
+    CVehicleGTA* GetGtaContactVehicle();
+    CEntityGTA* GetGtaContactEntity();
 
 	void ClearAllTasks();
 
@@ -263,5 +262,7 @@ public:
 	bool IsInPassengerDriveByMode();
 
     void SetWeaponSkill(uint32_t iWeaponType, uint16_t byteSkill);
+
+    uintptr		m_dwGTAId;
 };
 #pragma pack(pop)

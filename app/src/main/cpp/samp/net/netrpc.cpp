@@ -812,13 +812,12 @@ void WorldVehicleRemove(RPCParameters* rpcParams)
 
 	if (pPlayerPed->IsInVehicle())
 	{
-		VEHICLE_TYPE* pGtaVehicle = pPlayerPed->GetGtaVehicle();
+        CVehicleGTA* pGtaVehicle = pPlayerPed->GetGtaVehicle();
 		PLAYERID MyVehicleID = pVehiclePool->FindIDFromGtaPtr(pGtaVehicle);
 
 		if (MyVehicleID == VehicleID)
 		{
-			RwMatrix matPlayer;
-			pPlayerPed->GetMatrix(&matPlayer);
+			RwMatrix matPlayer = pPlayerPed->m_pPed->GetMatrix().ToRwMatrix();
 			pPlayerPed->RemoveFromVehicleAndPutAt(
 				matPlayer.pos.x,
 				matPlayer.pos.y,
@@ -854,7 +853,7 @@ void WorldVehicleRemove(RPCParameters* rpcParams)
 		}
 	}
 
-	int iModel = pVehicle->GetModelIndex();
+	int iModel = pVehicle->m_pVehicle->GetModelId();
 	pVehiclePool->Delete(VehicleID);
 
 	if (iModel == 537 || iModel == 538)
