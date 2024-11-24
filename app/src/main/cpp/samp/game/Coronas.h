@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "RegisteredCorona.h"
+#include "../Entity/CEntityGTA.h"
 
 class CCoronas {
 public:
@@ -41,10 +42,10 @@ public:
     static void Render();
     static void RenderReflections();
     static void RenderSunReflection();
-    static void RegisterCorona(uint32 id, ENTITY_TYPE* attachTo, uint8 red, uint8 green, uint8 blue, uint8 alpha, const CVector& posn,
+    static void RegisterCorona(uint32 id, CEntityGTA* attachTo, uint8 red, uint8 green, uint8 blue, uint8 alpha, const CVector& posn,
                                float radius, float farClip, RwTexture* texture, eCoronaFlareType flareType, bool enableReflection, bool checkObstacles, int32 _param_not_used,
                                float angle, bool longDistance, float nearClip, uint8 fadeState, float fadeSpeed, bool onlyFromBelow, bool reflectionDelay);
-    static void RegisterCorona(uint32 id, ENTITY_TYPE* attachTo, uint8 red, uint8 green, uint8 blue, uint8 alpha, const CVector* posn,
+    static void RegisterCorona(uint32 id, CEntityGTA* attachTo, uint8 red, uint8 green, uint8 blue, uint8 alpha, const CVector* posn,
                                float radius, float farClip, eCoronaType coronaType, eCoronaFlareType flareType, bool enableReflection, bool checkObstacles, int32 _param_not_used,
                                float angle, bool longDistance, float nearClip, uint8 fadeState, float fadeSpeed, bool onlyFromBelow, bool reflectionDelay);
 

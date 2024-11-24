@@ -63,6 +63,7 @@ public:
 	bool		m_bAttachedToPed;
 	bool		m_bForceRender;
 
+    ENTITY_TYPE		*m_pEntity;
     uint8_t		m_byteMoving;
 
 	void InstantRotate(float x, float y, float z);

@@ -1,8 +1,6 @@
 #include "../main.h"
 #include "game.h"
 #include "../net/netgame.h"
-#include "Streaming.h"
-#include "game/Models/ModelInfo.h"
 #include <cmath>
 
 extern CGame* pGame;
@@ -11,44 +9,44 @@ extern CNetGame *pNetGame;
 // 0.3.7
 void CEntity::GetMatrix(RwMatrix* Matrix)
 {
-	if (!m_pEntity || !m_pEntity->m_matrix) return;
+	if (!m_pEntity || !m_pEntity->mat) return;
 
-	Matrix->right.x = m_pEntity->m_matrix->m_right.x;
-	Matrix->right.y = m_pEntity->m_matrix->m_right.y;
-	Matrix->right.z = m_pEntity->m_matrix->m_right.z;
+	Matrix->right.x = m_pEntity->mat->right.x;
+	Matrix->right.y = m_pEntity->mat->right.y;
+	Matrix->right.z = m_pEntity->mat->right.z;
 
-	Matrix->up.x = m_pEntity->m_matrix->m_up.x;
-	Matrix->up.y = m_pEntity->m_matrix->m_up.y;
-	Matrix->up.z = m_pEntity->m_matrix->m_up.z;
+	Matrix->up.x = m_pEntity->mat->up.x;
+	Matrix->up.y = m_pEntity->mat->up.y;
+	Matrix->up.z = m_pEntity->mat->up.z;
 
-	Matrix->at.x = m_pEntity->m_matrix->m_forward.x;
-	Matrix->at.y = m_pEntity->m_matrix->m_forward.y;
-	Matrix->at.z = m_pEntity->m_matrix->m_forward.z;
+	Matrix->at.x = m_pEntity->mat->at.x;
+	Matrix->at.y = m_pEntity->mat->at.y;
+	Matrix->at.z = m_pEntity->mat->at.z;
 
-	Matrix->pos.x = m_pEntity->m_matrix->m_pos.x;
-	Matrix->pos.y = m_pEntity->m_matrix->m_pos.y;
-	Matrix->pos.z = m_pEntity->m_matrix->m_pos.z;
+	Matrix->pos.x = m_pEntity->mat->pos.x;
+	Matrix->pos.y = m_pEntity->mat->pos.y;
+	Matrix->pos.z = m_pEntity->mat->pos.z;
 }
 // 0.3.7
 void CEntity::SetMatrix(RwMatrix Matrix)
 {
-	if (!m_pEntity || !m_pEntity->m_matrix) return;
+	if (!m_pEntity || !m_pEntity->mat) return;
 
-	m_pEntity->m_matrix->m_right.x = Matrix.right.x;
-	m_pEntity->m_matrix->m_right.y = Matrix.right.y;
-	m_pEntity->m_matrix->m_right.z = Matrix.right.z;
+	m_pEntity->mat->right.x = Matrix.right.x;
+	m_pEntity->mat->right.y = Matrix.right.y;
+	m_pEntity->mat->right.z = Matrix.right.z;
 
-	m_pEntity->m_matrix->m_up.x = Matrix.up.x;
-	m_pEntity->m_matrix->m_up.y = Matrix.up.y;
-	m_pEntity->m_matrix->m_up.z = Matrix.up.z;
+	m_pEntity->mat->up.x = Matrix.up.x;
+	m_pEntity->mat->up.y = Matrix.up.y;
+	m_pEntity->mat->up.z = Matrix.up.z;
 
-	m_pEntity->m_matrix->m_forward.x = Matrix.at.x;
-	m_pEntity->m_matrix->m_forward.y = Matrix.at.y;
-	m_pEntity->m_matrix->m_forward.z = Matrix.at.z;
+	m_pEntity->mat->at.x = Matrix.at.x;
+	m_pEntity->mat->at.y = Matrix.at.y;
+	m_pEntity->mat->at.z = Matrix.at.z;
 
-	m_pEntity->m_matrix->m_pos.x = Matrix.pos.x;
-	m_pEntity->m_matrix->m_pos.y = Matrix.pos.y;
-	m_pEntity->m_matrix->m_pos.z = Matrix.pos.z;
+	m_pEntity->mat->pos.x = Matrix.pos.x;
+	m_pEntity->mat->pos.y = Matrix.pos.y;
+	m_pEntity->mat->pos.z = Matrix.pos.z;
 }
 // 0.3.7
 void CEntity::GetMoveSpeedVector(CVector* Vector)
@@ -84,43 +82,41 @@ uint CEntity::GetModelIndex()
 	return m_pEntity->nModelIndex;
 }
 // 0.3.7
-
-bool IsPedModel(unsigned int iModelID)
-{
-    if(iModelID < 0 || iModelID > 20000) return false;
-    auto dwModelArray = CModelInfo::ms_modelInfoPtrs;
-
-    uintptr_t ModelInfo = reinterpret_cast<uintptr_t>(dwModelArray[iModelID]);
-    if(ModelInfo && *(uintptr_t*)ModelInfo == (uintptr_t)g_libGTASA + (VER_x32 ? 0x00667658 : 0x82F310))
-        return true;
-
-    return false;
-}
 void CEntity::SetModelIndex(uint uiModel)
 {
-    if(!GamePool_Ped_GetAt(m_dwGTAId)) return;
-    if(!IsPedModel(uiModel))
-        uiModel = 0;
+	if (!m_pEntity) return;
 
-    if(m_pEntity)
-    {
-        auto oldModelId = m_pEntity->m_nModelIndex;
+	int iTryCount = 0;
+	if (!pGame->IsModelLoaded(uiModel))
+	{
+		pGame->RequestModel(uiModel);
+		pGame->LoadRequestedModels();
+		while (!pGame->IsModelLoaded(uiModel))
+		{
+			sleep(1);
+			if (iTryCount > 200)
+			{
+				//if (gui) gui->chat()->addDebugMessage("Warning: Model %u wouldn't load in time!", uiModel);
+				return;
+			}
 
-        if (!CStreaming::TryLoadModel(uiModel))
-            return;
+			iTryCount++;
+		}
+	}
 
-        // CEntity::DeleteRwObject();
-        m_pEntity->m_nModelIndex = uiModel;
 
-        CStreaming::RemoveModelIfNoRefs(oldModelId);
-    }
+	// CEntity::DeleteRWObject
+	//((void (*)(ENTITY_TYPE*))(*(void**)(m_pEntity->vtable + 36)))(m_pEntity);
+	m_pEntity->nModelIndex = uiModel;
+	// CEntity::SetModelIndex
+	//((void (*)(ENTITY_TYPE*, unsigned int))(*(void**)(m_pEntity->vtable + 24)))(m_pEntity, uiModel);
 }
 // 0.3.7
 void CEntity::TeleportTo(float fX, float fY, float fZ)
 {
 	RwMatrix mat;
 
-	if (m_pEntity && *(uint32_t*)m_pEntity != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098))) /* CPlaceable */
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098))) /* CPlaceable */
 	{
 		uint16_t modelIndex = m_pEntity->nModelIndex;
 		if (modelIndex != TRAIN_PASSENGER_LOCO &&
@@ -128,7 +124,8 @@ void CEntity::TeleportTo(float fX, float fY, float fZ)
 			modelIndex != TRAIN_TRAM)
 			//((void(*)(ENTITY_TYPE*, float, float, float, bool))(*(void**)(m_pEntity->vtable + 0x3C)))(m_pEntity, fX, fY, fZ, 0);
 		{
-            ((void(*)(ENTITY_TYPE*, float, float, float))(*(void**)(m_pEntity + (VER_x32 ? 0x3C : 0x3C*2))))(m_pEntity, fX, fY, fZ);
+            LOGI("TeleportTo 0x%llx", m_pEntity->vtable + 0x3C);
+			((void(*)(ENTITY_TYPE*, float, float, float))(*(void**)(m_pEntity->vtable + (VER_x32 ? 0x3C:0x3C*2))))(m_pEntity, fX, fY, fZ);
 		}
 		else
 			ScriptCommand(&put_train_at, m_dwGTAId, fX, fY, fZ);
@@ -139,10 +136,10 @@ bool CEntity::IsAdded()
 {
 	if (m_pEntity)
 	{
-		if (*(uint32_t*)m_pEntity == (g_libGTASA + /*0x5C7358*/(VER_x32 ? 0x667D14 : 0x830098))) // CPlaceable
+		if (m_pEntity->vtable == (g_libGTASA + /*0x5C7358*/0x667D14)) // CPlaceable
 			return false;
 
-		if (m_pEntity->m_pMovingList)
+		if (m_pEntity->dwUnkModelRel)
 			return true;
 	}
 
@@ -151,11 +148,11 @@ bool CEntity::IsAdded()
 // 0.3.7
 void CEntity::Add()
 {
-	if (!m_pEntity || *(uint32_t*)m_pEntity == (g_libGTASA + /*0x5C7358*/(VER_x32 ? 0x667D14 : 0x830098))) { // CPlaceable
+	if (!m_pEntity || m_pEntity->vtable == (g_libGTASA + /*0x5C7358*/0x667D14)) { // CPlaceable
 		return;
 	}
 
-	if (!m_pEntity->m_pMovingList) {
+	if (!m_pEntity->dwUnkModelRel) {
 
 		CVector vec = { 0.0f, 0.0f, 0.0f };
 
@@ -163,7 +160,7 @@ void CEntity::Add()
 		SetTurnSpeedVector(vec);
 
 		// CWorld::Add
-		((void(*)(ENTITY_TYPE*))(g_libGTASA + (VER_x32 ? 0x423418 + 1:0x507518)))(m_pEntity);
+		((void(*)(ENTITY_TYPE*))(g_libGTASA + /*0x3C14B0*/0x4233C8 + 1))(m_pEntity);
 
 		RwMatrix mat;
 		GetMatrix(&mat);
@@ -173,25 +170,29 @@ void CEntity::Add()
 // 0.3.7
 void CEntity::Remove()
 {
-	if (!m_pEntity || *(uint32_t*)m_pEntity == (g_libGTASA + /*0x5C7358*/(VER_x32 ? 0x667D14 : 0x830098))) { // CPlaceable
+	if (!m_pEntity || m_pEntity->vtable == (g_libGTASA + /*0x5C7358*/0x667D14)) { // CPlaceable
 		return;
 	}
 
-	if (m_pEntity->m_pMovingList) {
+	if (m_pEntity->dwUnkModelRel) {
 		// CWorld::Remove
-		((void(*)(ENTITY_TYPE*))(g_libGTASA + (VER_x32 ? 0x42330C + 1:0x5073A0)))(m_pEntity);
+		((void(*)(ENTITY_TYPE*))(g_libGTASA + /*0x3C1500*/0x4232BC + 1))(m_pEntity);
 	}
 }
 
 float CEntity::GetDistanceFromCamera()
 {
-    if(!this)
-        return 0;
+	RwMatrix matEnt;
+	if (!m_pEntity || m_pEntity->vtable == 0x667D14) // CPlaceable
+		return 100000.0f;
 
-    CCamera& TheCamera = *reinterpret_cast<CCamera*>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
-    RwMatrix matPos;
-    GetMatrix(&matPos);
-    return DistanceBetweenPoints(matPos.pos, TheCamera.GetPosition());
+	GetMatrix(&matEnt);
+
+	float tmpX = (matEnt.pos.x - *(float*)(g_libGTASA + 0x9528D4));
+	float tmpY = (matEnt.pos.y - *(float*)(g_libGTASA + 0x9528D8));
+	float tmpZ = (matEnt.pos.z - *(float*)(g_libGTASA + 0x9528DC));
+
+	return sqrt(tmpX * tmpX + tmpY * tmpY + tmpZ * tmpZ);
 }
 
 // 0.3.7
@@ -211,7 +212,7 @@ float CEntity::GetDistanceFromPoint(CVector Vector)
 uintptr_t CEntity::GetRWObject()
 {
 	if (m_pEntity)
-		return reinterpret_cast<uintptr_t>(m_pEntity->pRwObject);
+		return m_pEntity->pRwObject;
 
 	return 0;
 }
@@ -253,7 +254,7 @@ float CEntity::GetDistanceFromLocalPlayerPed()
 
 void CEntity::SetCollisionChecking(bool bCheck)
 {
-	if (m_pEntity && *(uint32_t*)m_pEntity != (g_libGTASA + /*0x5C7358*/(VER_x32 ? 0x667D14 : 0x830098)))
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D14))
 	{
 		if (bCheck)
 			m_pEntity->dwProcessingFlags |= 1;
@@ -264,7 +265,7 @@ void CEntity::SetCollisionChecking(bool bCheck)
 
 bool CEntity::GetCollisionChecking()
 {
-	if (m_pEntity && *(uint32_t*)m_pEntity != (g_libGTASA + /*0x5C7358*/(VER_x32 ? 0x667D14 : 0x830098)))
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D14))
 		return m_pEntity->dwProcessingFlags & 1;
 
 	return true;
@@ -272,7 +273,7 @@ bool CEntity::GetCollisionChecking()
 
 void CEntity::SetGravityProcessing(bool state)
 {
-	if (m_pEntity && *(uint32_t*)m_pEntity != (g_libGTASA + /*0x5C7358*/(VER_x32 ? 0x667D14 : 0x830098)))
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + /*0x5C7358*/0x667D14))
 	{
 		if (state)
 			m_pEntity->dwProcessingFlags &= 0x7FFFFFFD;
@@ -283,36 +284,35 @@ void CEntity::SetGravityProcessing(bool state)
 // 0.3.7
 void CEntity::UpdateMatrix(RwMatrix matrix)
 {
-	if (m_pEntity && m_pEntity->m_matrix)
+	if (m_pEntity && m_pEntity->mat)
 	{
 		// CPhysical::Remove
-		((void (*)(ENTITY_TYPE*))(*(uintptr_t*)(*(uint32_t*)m_pEntity + (VER_x32 ? 0x10 : 0x10*2))))(m_pEntity);
+		((void (*)(ENTITY_TYPE*))(*(uintptr_t*)(m_pEntity->vtable + 0x10)))(m_pEntity);
 
 		this->SetMatrix(matrix);
 		this->UpdateRwMatrixAndFrame();
 
 		// CPhysical::Add
-		((void (*)(ENTITY_TYPE*))(*(uintptr_t*)(*(uint32_t*)m_pEntity + (VER_x32 ? 0x8 : 0x8*2))))(m_pEntity);
+		((void (*)(ENTITY_TYPE*))(*(uintptr_t*)(m_pEntity->vtable + 0x8)))(m_pEntity);
 	}
 }
 
 // 0.3.7
 void CEntity::UpdateRwMatrixAndFrame()
 {
-	if (m_pEntity && *(uint32_t*)m_pEntity != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098))) // CPlaceable
+	if (m_pEntity && m_pEntity->vtable != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098))) // CPlaceable
 	{
 		if (m_pEntity->pRwObject)
 		{
-			if (m_pEntity->m_matrix)
+			if (m_pEntity->mat)
 			{
 				uintptr_t pRwMatrix = *(uintptr_t*)(m_pEntity->pRwObject + 4) + 0x10;
 
 				// CMatrix::UpdateRwMatrix
-				((void (*)(RwMatrix*, uintptr_t))(g_libGTASA + (VER_x32 ? 0x44EE3E + 1 : 0x537688)))(
-                        reinterpret_cast<RwMatrix *>(m_pEntity->m_matrix), pRwMatrix);
+				((void (*)(RwMatrix*, uintptr_t))(g_libGTASA + 0x44EDEE + 1))(m_pEntity->mat, pRwMatrix);
 
 				// CEntity::UpdateRwFrame
-				((void (*)(ENTITY_TYPE*))(g_libGTASA + (VER_x32 ? 0x3EC038 + 1:0x4CBAEC)))(m_pEntity);
+				((void (*)(ENTITY_TYPE*))(g_libGTASA + 0x3EBFE8 + 1))(m_pEntity);
 			}
 		}
 	}
@@ -332,25 +332,24 @@ void CEntity::Render()
 	}
 
 	// CEntity::PreRender
-	((void (*)(ENTITY_TYPE*))(*(void**)(*(uint32_t*)m_pEntity + (VER_x32 ? 0x48: 0x48*2))))(m_pEntity);
+	((void (*)(ENTITY_TYPE*))(*(void**)(m_pEntity->vtable + 0x48)))(m_pEntity);
 
 	if (pRwObject) {
 		// CRenderer::RenderOneNonRoad
-		((void (*)(ENTITY_TYPE*))(g_libGTASA + (VER_x32 ? 0x41030C + 1:0x4F56E0)))(m_pEntity);
+		((void (*)(ENTITY_TYPE*))(g_libGTASA + 0x4102BC + 1))(m_pEntity);
 	}
 }
 
 RpHAnimHierarchy* CEntity::GetAnimHierarchyFromSkinClump() 
 {
-    return nullptr;
-	//return ((RpHAnimHierarchy* (*)(uint32_t))(g_libGTASA+0x5D1021))(*(uint32_t *)(*((uint32_t *)this+1) + 24));
+	return ((RpHAnimHierarchy* (*)(uint32_t))(g_libGTASA+0x5D1021))(*(uint32_t *)(*((uint32_t *)this+1) + 24));
 }
 
 void CEntity::UpdateRpHAnim()
 {
 	if(!m_pEntity) return;
 
-	((void (*)(uint32_t))(g_libGTASA + (VER_x32 ? 0x3EC046 + 1:0x4CBB00)))(*((uint32_t *)this+1));
+	((void (*)(uint32_t))(g_libGTASA + 0x3EBFF6 + 1))(*((uint32_t *)this+1));
 }
 
 bool CEntity::IsStationary()

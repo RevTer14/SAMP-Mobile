@@ -77,7 +77,7 @@ extern bool DriveBy;
 
 bool CLocalPlayer::Process()
 {
-
+    FLog("CLocalPlayer::Process");
 	//UpdateVoice();
 
 	if (m_bIsActive && m_pPlayerPed != nullptr)
@@ -308,7 +308,7 @@ bool CLocalPlayer::Process()
 
             if((dwThisTick - m_dwLastSendTick) < 1000)
             {
-                if(IS_TARGETING(m_pPlayerPed->m_pPed) && IS_FIRING(m_pPlayerPed->m_pPed))
+                if(IS_TARGETING(wKeys) && IS_FIRING(wKeys))
                 {
                     if(g_iLagCompensationMode == 2)
                     {
@@ -594,12 +594,13 @@ bool CLocalPlayer::Spawn()
 
 	FLog("Spawn localplayer");
 
-    CCamera& TheCamera = *reinterpret_cast<CCamera*>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
-    //TheCamera.Restore();
     CCamera::SetBehindPlayer();
+    FLog("Spawn localplayer1");
 	pGame->DisplayHUD(true);
+    FLog("Spawn localplayer2");
 	m_pPlayerPed->TogglePlayerControllable(true);
 
+    FLog("Spawn localplayer1");
 	if (!bFirstSpawn) {
 		m_pPlayerPed->SetInitialState();
 	}
@@ -607,18 +608,24 @@ bool CLocalPlayer::Spawn()
 		bFirstSpawn = false;
 	}
 
+    FLog("Spawn localplayer2");
+
 	pGame->RefreshStreamingAt(m_SpawnInfo.vecPos.x, m_SpawnInfo.vecPos.y);
 
 	if (m_pPlayerPed->IsCuffed()) {
 	//	m_pPlayerPed->ToggleCuffed(false);
 	}
 
+    FLog("Spawn localplayer3");
 	m_pPlayerPed->RestartIfWastedAt(&m_SpawnInfo.vecPos, m_SpawnInfo.fRotation);
+    FLog("Spawn localplayer4");
 	m_pPlayerPed->SetModelIndex(m_SpawnInfo.iSkin);
+    FLog("Spawn localplayer5");
 	m_pPlayerPed->ClearWeapons();
+    FLog("Spawn localplayer6");
 	m_pPlayerPed->ResetDamageEntity();
 
-	ApplySpecialAction(0);
+	//ApplySpecialAction(0);
 
 	//_this->field_2DE = 0;
 
@@ -966,11 +973,11 @@ void CLocalPlayer::SendAimSyncData()
 	aimSync.aspect_ratio = GameGetAspectRatio() * 255.0;
 	aimSync.byteCamExtZoom = static_cast<unsigned char>(m_pPlayerPed->GetCameraExtendedZoom() * 63.0f) & 63;
 
-	WEAPON_SLOT_TYPE* pwstWeapon = m_pPlayerPed->GetCurrentWeaponSlot();
+    CWeapon* pwstWeapon = m_pPlayerPed->GetCurrentWeaponSlot();
 	if (pwstWeapon->dwState == 2)
-		aimSync.byteWeaponState = WS_RELOADING;
+		aimSync.byteWeaponState = WEAPONSTATE_RELOADING;
 	else
-		aimSync.byteWeaponState = (pwstWeapon->dwAmmoInClip > 1) ? WS_MORE_BULLETS : pwstWeapon->dwAmmoInClip;
+		aimSync.byteWeaponState = (pwstWeapon->dwAmmoInClip > 1) ? WEAPONSTATE_FIRING : pwstWeapon->dwAmmoInClip;
 
 	if ((GetTickCount() - m_dwLastSendSyncTick) > 500 || memcmp(&m_aimSync, &aimSync, sizeof(AIM_SYNC_DATA)))
 	{
@@ -1008,11 +1015,11 @@ void CLocalPlayer::CheckWeapons()
 
 	for (int i = 0; i < 13; i++) {
 
-		if (m_byteLastWeapon[i] != m_pPlayerPed->m_pPed->WeaponSlots[i].dwType ||
-			m_dwLastAmmo[i] != m_pPlayerPed->m_pPed->WeaponSlots[i].dwAmmo)
+		if (m_byteLastWeapon[i] != m_pPlayerPed->m_pPed->m_aWeapons[i].dwType ||
+			m_dwLastAmmo[i] != m_pPlayerPed->m_pPed->m_aWeapons[i].dwAmmo)
 		{
-			m_byteLastWeapon[i] = m_pPlayerPed->m_pPed->WeaponSlots[i].dwType;
-			m_dwLastAmmo[i] = m_pPlayerPed->m_pPed->WeaponSlots[i].dwAmmo;
+			m_byteLastWeapon[i] = m_pPlayerPed->m_pPed->m_aWeapons[i].dwType;
+			m_dwLastAmmo[i] = m_pPlayerPed->m_pPed->m_aWeapons[i].dwAmmo;
 
 			bMSend = true;
 			break;
@@ -2017,8 +2024,8 @@ bool CLocalPlayer::ProcessUnoccupiedSync(VEHICLEID vehicleId, CVehicle *pVehicle
 		if(pVehicleType && m_pPlayerPed && !pVehicle->IsATrainPart() &&
 		   !pVehicle->IsATrailer() && !pVehicle->GetTractor())
 		{
-			PED_TYPE *pDriver = pVehicleType->pDriver;
-			if(pDriver && IN_VEHICLE(pDriver) ||
+			CPedGTA *pDriver = pVehicleType->pDriver;
+			if(pDriver && pDriver->IsInVehicle() ||
 			   pVehicle->GetDistanceFromLocalPlayerPed() > 90.0f ||
 			   pVehicle->IsStationary())
 			{
@@ -2030,8 +2037,8 @@ bool CLocalPlayer::ProcessUnoccupiedSync(VEHICLEID vehicleId, CVehicle *pVehicle
 
 			for(int i = 0; i < 7; i++)
 			{
-				PED_TYPE *pPassenger = pVehicleType->pPassengers[i];
-				if(pPassenger && pPassenger->dwPedType == 0)
+				CPedGTA *pPassenger = pVehicleType->pPassengers[i];
+				if(pPassenger && pPassenger->m_nPedType == (ePedType)0)
 				{
 					if(pPassenger == m_pPlayerPed->m_pPed) goto sync;
 					return false;

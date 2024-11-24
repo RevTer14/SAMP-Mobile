@@ -6,6 +6,7 @@
 
 #include "game/SimpleTransform.h"
 #include "game/Core/MatrixLink.h"
+#define VALIDATE_SIZE(struc, size) static_assert(sizeof(struc) == size, "Invalid structure size of " #struc)
 
 #pragma pack(push, 1)
 class CPlaceable
@@ -52,7 +53,7 @@ public:
     bool IsPointInRange(const CVector& point, float range);
     bool IsEntityInRange(const CPlaceable* entity, float range) { return IsPointInRange(entity->GetPosition(), range); }
 public:
-    static constexpr uint32 NUM_MATRICES_TO_CREATE = 10000;
+    static constexpr uint32_t NUM_MATRICES_TO_CREATE = 10000;
 
     inline CVector& GetRight() const { return m_matrix->GetRight(); }
     inline CVector& GetForward() const { return m_matrix->GetForward(); }

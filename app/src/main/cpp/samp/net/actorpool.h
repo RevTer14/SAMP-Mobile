@@ -31,7 +31,7 @@ public:
 		}
 	}
 	// 0.3.7
-	PLAYERID FindIDFromGtaPtr(PED_TYPE* pPed) {
+	PLAYERID FindIDFromGtaPtr(CPedGTA* pPed) {
 		for (PLAYERID i = 0; i < MAX_ACTORS; i++) {
 			if (m_pGtaPed[i] == pPed) {
 				return i;
@@ -44,5 +44,5 @@ public:
 private:
 	CActor* m_pActors[MAX_ACTORS];
 	bool m_bActorSlotState[MAX_ACTORS];
-    PED_TYPE* m_pGtaPed[MAX_ACTORS];
+    CPedGTA* m_pGtaPed[MAX_ACTORS];
 };

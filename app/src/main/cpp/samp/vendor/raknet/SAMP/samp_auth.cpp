@@ -1,6 +1,6 @@
 // https://github.com/P3ti/RakSAMP/blob/master/raknet/SAMP/samp_auth.cpp
 #include "..//..//..//main.h"
-#include "str_obfuscator.hpp"
+#include <cstdlib>
 
 #define endian_swap8(x) (x)
 #define endian_swap16(x) ((x>>8) | (x<<8))
@@ -14,110 +14,111 @@
 #define ROTR(value, shift) ((value >> shift) | (value << (sizeof(value)*8 - shift)))
 #define swap(x,y,T) {T tmp = x; x = y; y = tmp;}
 
-void SHA1(char *message, unsigned long *out)
-{	
-	unsigned long h0 = 0x67452301;
-	unsigned long h1 = 0xEFCDAB89;
-	unsigned long h2 = 0x98BADCFE;
-	unsigned long h3 = 0x10325476;
-	unsigned long h4 = 0xC3D2E1F0;
+#ifdef VER_x32
+// Use uint32_t for 32-bit architecture
+typedef uint32_t arch_ulong;
+typedef uint64_t arch_ulonglong;
+#else
+// Use uint64_t for 64-bit architecture
+typedef uint64_t arch_ulong;
+typedef uint64_t arch_ulonglong;
+#endif
 
-	unsigned long len = 0;
-	unsigned long long bitlen = 0;
-	
-	while (message[len])
-	{
-		len++;
-		bitlen += 8;
-	}
-	
-	unsigned long complement = (55 - (len%56)) + 8*(((len+8)/64));
-	unsigned long newlen = len + complement + 8 + 1;
-	char *pMessage = new char[newlen];
-	if (!pMessage)
-		return;
+void SHA1(const char *message, arch_ulong *out) {
+    arch_ulong h0 = 0x67452301;
+    arch_ulong h1 = 0xEFCDAB89;
+    arch_ulong h2 = 0x98BADCFE;
+    arch_ulong h3 = 0x10325476;
+    arch_ulong h4 = 0xC3D2E1F0;
 
-	memcpy(pMessage, message, len);
-	pMessage[len] = -128;
-	memset(pMessage+len+1, 0, complement);
+    arch_ulong len = 0;
+    arch_ulonglong bitlen = 0;
 
-	*(unsigned long long*)&pMessage[len + 1 + complement] = endian_swap64(bitlen);
+    while (message[len]) {
+        len++;
+        bitlen += 8;
+    }
 
-	unsigned long chunks = newlen/64;
-	unsigned long w[80];
+    arch_ulong complement = (55 - (len % 64)) + 8 * (((len + 8) / 64));
+    arch_ulong newlen = len + complement + 8 + 1;
 
-	for (unsigned long x = 0; x < chunks; x++)
-	{
-		for (unsigned long i = 0; i < 16; i++)
-			w[i] = endian_swap32(*(unsigned long*)(&pMessage[x*64 + i*4]));
+    // Aligned memory allocation
+    char *pMessage = (char *)aligned_alloc(8, newlen);
+    if (!pMessage)
+        return;
 
-		memset(&w[16], 0, 64*4);
+    memcpy(pMessage, message, len);
+    pMessage[len] = -128; // Append '1' bit
+    memset(pMessage + len + 1, 0, complement);
 
-		for (unsigned long i = 16; i <= 79; i++)
-			w[i] = ROTL((w[i-3] ^ w[i-8] ^ w[i-14] ^ w[i-16]), 1);
+    // Write bit length in big-endian format
+    arch_ulonglong bitlen_be = endian_swap64(bitlen);
+    memcpy(pMessage + len + 1 + complement, &bitlen_be, sizeof(bitlen_be));
 
-		unsigned long a = h0;
-		unsigned long b = h1;
-		unsigned long c = h2;
-		unsigned long d = h3;
-		unsigned long e = h4;
+    arch_ulong chunks = newlen / 64;
+    arch_ulong w[80];
 
-		for (unsigned long i = 0; i <= 79; i++)
-		{
-			unsigned long f;
-			unsigned long k;
+    for (arch_ulong x = 0; x < chunks; x++) {
+        for (arch_ulong i = 0; i < 16; i++) {
+            memcpy(&w[i], pMessage + x * 64 + i * 4, 4);
+            w[i] = endian_swap32(w[i]);
+        }
 
-			if (0 <= i && i <= 19)
-			{
-				f = (b & c) | ((~b) & d);
-				k = 0x5A827999;
-			}
-			else if (20 <= i && i <= 39)
-			{
-				f = b ^ c ^ d;
-				k = 0x6ED9EBA1;
-			}
-			else if (40 <= i && i <= 59)
-			{
-				f = (b & c) | (b & d) | (c & d);
-				k = 0x8F1BBCDC;
-			}
-			else if (60 <= i && i <= 79)
-			{
-				f = b ^ c ^ d;
-				k = 0xCA62C1D6;
-			}
+        for (arch_ulong i = 16; i < 80; i++) {
+            w[i] = ROTL((w[i - 3] ^ w[i - 8] ^ w[i - 14] ^ w[i - 16]), 1);
+        }
 
-			unsigned long temp = (ROTL(a, 5) + f + e + k + w[i])&0xFFFFFFFF;
-			e = d;
-			d = c;
-			c = ROTL(b, 30);
-			b = a;
-			a = temp;
-		}
+        arch_ulong a = h0;
+        arch_ulong b = h1;
+        arch_ulong c = h2;
+        arch_ulong d = h3;
+        arch_ulong e = h4;
 
-		h0 = (h0 + a)&0xFFFFFFFF;
-		h1 = (h1 + b)&0xFFFFFFFF;
-		h2 = (h2 + c)&0xFFFFFFFF;
-		h3 = (h3 + d)&0xFFFFFFFF;
-		h4 = (h4 + e)&0xFFFFFFFF;
-	}
+        for (arch_ulong i = 0; i < 80; i++) {
+            arch_ulong f, k;
+            if (i < 20) {
+                f = (b & c) | ((~b) & d);
+                k = 0x5A827999;
+            } else if (i < 40) {
+                f = b ^ c ^ d;
+                k = 0x6ED9EBA1;
+            } else if (i < 60) {
+                f = (b & c) | (b & d) | (c & d);
+                k = 0x8F1BBCDC;
+            } else {
+                f = b ^ c ^ d;
+                k = 0xCA62C1D6;
+            }
 
-	delete [] pMessage;
+            arch_ulong temp = (ROTL(a, 5) + f + e + k + w[i]) & 0xFFFFFFFF;
+            e = d;
+            d = c;
+            c = ROTL(b, 30);
+            b = a;
+            a = temp;
+        }
 
-	out[0] = h0;
-	out[1] = h1;
-	out[2] = h2;
-	out[3] = h3;
-	out[4] = h4;
+        h0 = (h0 + a) & 0xFFFFFFFF;
+        h1 = (h1 + b) & 0xFFFFFFFF;
+        h2 = (h2 + c) & 0xFFFFFFFF;
+        h3 = (h3 + d) & 0xFFFFFFFF;
+        h4 = (h4 + e) & 0xFFFFFFFF;
+    }
+
+    free(pMessage);
+
+    out[0] = h0;
+    out[1] = h1;
+    out[2] = h2;
+    out[3] = h3;
+    out[4] = h4;
 }
 
-void SHA1(char *message, char buf[64])
-{
-	if (!buf) return;
-	unsigned long out[5];
-	SHA1(message, out);
-	sprintf(buf, "%.8X%.8X%.8X%.8X%.8X", out[0], out[1], out[2], out[3], out[4]);
+void SHA1(const char *message, char buf[64]) {
+    if (!buf) return;
+    arch_ulong out[5];
+    SHA1(message, out);
+    sprintf(buf, "%.8X%.8X%.8X%.8X%.8X", out[0], out[1], out[2], out[3], out[4]);
 }
 
 /*
@@ -130,85 +131,86 @@ if ( v4 != -1 )
 
 // after version change, may need to dump this again, but wasn't changed yet afaik
 const static uint8_t auth_hash_transform_table[100] = {
-	0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
-	0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x80,
-	0x08, 0x06, 0x00, 0x00, 0x00, 0xE4, 0xB5, 0xB7, 0x0A, 0x00, 0x00, 0x00,
-	0x09, 0x70, 0x48, 0x59, 0x73, 0x00, 0x00, 0x0B, 0x13, 0x00, 0x00, 0x0B,
-	0x13, 0x01, 0x00, 0x9A, 0x9C, 0x18, 0x00, 0x00, 0x00, 0x04, 0x67, 0x41,
-	0x4D, 0x41, 0x00, 0x00, 0xB1, 0x8E, 0x7C, 0xFB, 0x51, 0x93, 0x00, 0x00,
-	0x00, 0x20, 0x63, 0x48, 0x52, 0x4D, 0x00, 0x00, 0x7A, 0x25, 0x00, 0x00,
-	0x80, 0x83, 0x00, 0x00, 0xF9, 0xFF, 0x00, 0x00, 0x80, 0xE9, 0x00, 0x00,
-	0x75, 0x30, 0x00, 0x00
+        0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
+        0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x80,
+        0x08, 0x06, 0x00, 0x00, 0x00, 0xE4, 0xB5, 0xB7, 0x0A, 0x00, 0x00, 0x00,
+        0x09, 0x70, 0x48, 0x59, 0x73, 0x00, 0x00, 0x0B, 0x13, 0x00, 0x00, 0x0B,
+        0x13, 0x01, 0x00, 0x9A, 0x9C, 0x18, 0x00, 0x00, 0x00, 0x04, 0x67, 0x41,
+        0x4D, 0x41, 0x00, 0x00, 0xB1, 0x8E, 0x7C, 0xFB, 0x51, 0x93, 0x00, 0x00,
+        0x00, 0x20, 0x63, 0x48, 0x52, 0x4D, 0x00, 0x00, 0x7A, 0x25, 0x00, 0x00,
+        0x80, 0x83, 0x00, 0x00, 0xF9, 0xFF, 0x00, 0x00, 0x80, 0xE9, 0x00, 0x00,
+        0x75, 0x30, 0x00, 0x00
 };
 
 uint8_t transform_auth_sha1(uint8_t value, uint8_t _xor)
 {
-	uint8_t result = value;
+    uint8_t result = value;
 
-	for(uint8_t i = 0; i < 100; i++)
-	{
-		result = result ^ auth_hash_transform_table[i] ^ _xor;
-	}
+    for(uint8_t i = 0; i < 100; i++)
+    {
+        result = result ^ auth_hash_transform_table[i] ^ _xor;
+    }
 
-	return result;
+    return result;
 }
 
 // CAnimManager::AddAnimation has been hooked by kye, but resolved jmp address isn't in samp.dll
 const static uint8_t code_from_CAnimManager_AddAnimation[20] = {
-	0xFF, 0x25, 0x34, 0x39, // gta_sa.exe + 0x4D3AA0
-	0x4D, 0x00, 0x90, 0x90, // gta_sa.exe + 0x4D3AA4
-	0x90, 0x90, 0x56, 0x57, // gta_sa.exe + 0x4D3AAC
-	0x50, 0x8B, 0x44, 0x24, // gta_sa.exe + 0x4D3AA8
-	0x14, 0x8D, 0x0C, 0x80  // gta_sa.exe + 0x4D3AB0
+        0xFF, 0x25, 0x34, 0x39, // gta_sa.exe + 0x4D3AA0
+        0x4D, 0x00, 0x90, 0x90, // gta_sa.exe + 0x4D3AA4
+        0x90, 0x90, 0x56, 0x57, // gta_sa.exe + 0x4D3AAC
+        0x50, 0x8B, 0x44, 0x24, // gta_sa.exe + 0x4D3AA8
+        0x14, 0x8D, 0x0C, 0x80  // gta_sa.exe + 0x4D3AB0
 };
 
 char samp_sub_100517E0(uint8_t a1)
 {
-	char result = a1 + '0';
+    char result = a1 + '0';
 
-	if(a1 + '0' > '9')
-	{
-		result = a1 + '7';
-	}
+    if(a1 + '0' > '9')
+    {
+        result = a1 + '7';
+    }
 
-	return result;
+    return result;
 }
 
 void auth_stringify(char *out, uint8_t* hash)
 {
-	uint8_t i = 0;
-	uint8_t* j = hash;
+    uint8_t i = 0;
+    uint8_t* j = hash;
 
-	do
-	{
-		out[i] = samp_sub_100517E0(*j >> 4); i++;
-		out[i] = samp_sub_100517E0(*j & 0xF); i++;
+    do
+    {
+        out[i] = samp_sub_100517E0(*j >> 4); i++;
+        out[i] = samp_sub_100517E0(*j & 0xF); i++;
 
-		j++;
-	}
-	while(i < 40);
+        j++;
+    }
+    while(i < 40);
 
-	out[i] = '\0';
+    out[i] = '\0';
 }
 
 void gen_auth_key(char* buf, char* auth_in)
 {
-	char message[260];
-	if(!auth_in) return;
-	sprintf(message, "%s", auth_in);
+    if (!auth_in || !buf) return;
 
-	unsigned long out[5];
-	uint8_t *pb_out = (uint8_t*)&out;
+    char message[260];
+    sprintf(message, "%s", auth_in);
 
-	SHA1(message, out);
+    arch_ulong out[5];
+    uint8_t *pb_out = reinterpret_cast<uint8_t *>(&out);
 
-	for(uint8_t i = 0; i < 5; i++) { pb_out[i] = transform_auth_sha1(pb_out[i], 0x2F); }
-	for(uint8_t i = 5; i < 10; i++) { pb_out[i] = transform_auth_sha1(pb_out[i], 0x45); }
-	for(uint8_t i = 10; i < 15; i++) { pb_out[i] = transform_auth_sha1(pb_out[i], 0x6F); }
-	for(uint8_t i = 15; i < 20; i++) { pb_out[i] = transform_auth_sha1(pb_out[i], 0xDB); }
-	for(uint8_t i = 0; i < 20; i++) { pb_out[i] ^= code_from_CAnimManager_AddAnimation[i]; }
+    SHA1(message, out);
 
-	auth_stringify(buf, pb_out);
+    for (uint8_t i = 0; i < 5; i++) { pb_out[i] = transform_auth_sha1(pb_out[i], 0x2F); }
+    for (uint8_t i = 5; i < 10; i++) { pb_out[i] = transform_auth_sha1(pb_out[i], 0x45); }
+    for (uint8_t i = 10; i < 15; i++) { pb_out[i] = transform_auth_sha1(pb_out[i], 0x6F); }
+    for (uint8_t i = 15; i < 20; i++) { pb_out[i] = transform_auth_sha1(pb_out[i], 0xDB); }
+    for (uint8_t i = 0; i < 20; i++) { pb_out[i] ^= code_from_CAnimManager_AddAnimation[i]; }
+
+    auth_stringify(buf, pb_out);
 }
 
 #define AAAstringA(x) encoder<sizeCalculate(x)>(x).decode().c_str()
@@ -512,10 +514,10 @@ static const AuthEntry AuthTable[] = {
 //};
 
 const char* findKey(const char* sendValue) {
-	for (size_t i = 0; i < std::size(AuthTable); ++i) {
-		if (strcmp(AuthTable[i].send, sendValue) == 0) {
-			return AuthTable[i].recv; // Найдено соответствие, возвращаем recv
-		}
-	}
-	return nullptr; // Если не найдено соответствие, возвращаем nullptr или другое значение по умолчанию
+    for (size_t i = 0; i < std::size(AuthTable); ++i) {
+        if (strcmp(AuthTable[i].send, sendValue) == 0) {
+            return AuthTable[i].recv; // РќР°Р№РґРµРЅРѕ СЃРѕРѕС‚РІРµС‚СЃС‚РІРёРµ, РІРѕР·РІСЂР°С‰Р°РµРј recv
+        }
+    }
+    return nullptr; // Р•СЃР»Рё РЅРµ РЅР°Р№РґРµРЅРѕ СЃРѕРѕС‚РІРµС‚СЃС‚РІРёРµ, РІРѕР·РІСЂР°С‰Р°РµРј nullptr РёР»Рё РґСЂСѓРіРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
 }

@@ -1143,6 +1143,7 @@ ImGuiStyle::ImGuiStyle()
     ItemSpacing             = ImVec2(13,5);      // Horizontal and vertical spacing between widgets/lines
     ItemInnerSpacing        = ImVec2(12,7);      // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
     TouchExtraPadding       = ImVec2(10,4);      // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
+    WindowMenuButtonPosition= ImGuiDir_Left;    // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
     IndentSpacing           = 21.0f;            // Horizontal spacing when e.g. entering a tree node. Generally == (FontSize + FramePadding.x*2).
     ColumnsMinSpacing       = 7.5f;             // Minimum horizontal spacing between two columns
     ScrollbarSize           = 24.0f;            // Width of the vertical scrollbar, Height of the horizontal scrollbar

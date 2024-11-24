@@ -43,7 +43,6 @@ public:
 
 	RpHAnimHierarchy* GetAnimHierarchyFromSkinClump();
 
-	ENTITY_TYPE*	m_pEntity;
 	uint32_t		m_dwGTAId;
 
     bool IsStationary();
@@ -52,4 +51,6 @@ public:
 	bool HasExceededWorldBoundries(float fPX, float fZX, float fPY, float fNY);
 
     void UpdateRpHAnim();
+
+    ENTITY_TYPE* m_pEntity;
 };

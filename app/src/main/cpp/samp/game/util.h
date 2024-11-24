@@ -22,9 +22,9 @@ enum eWidgetState {
 
 extern uintptr_t g_pWidgets[TYPE_SIZE];
 
-PED_TYPE* GamePool_FindPlayerPed();
-PED_TYPE* GamePool_Ped_GetAt(int iID);
-int GamePool_Ped_GetIndex(PED_TYPE* pActor);
+CPedGTA* GamePool_FindPlayerPed();
+CPedGTA* GamePool_Ped_GetAt(int iID);
+int GamePool_Ped_GetIndex(CPedGTA* pActor);
 ENTITY_TYPE *GamePool_Object_GetAt(int iID);
 uintptr_t GamePool_Vehicle_GetIndex(VEHICLE_TYPE* pGtaVehicle);
 VEHICLE_TYPE* GamePool_Vehicle_GetAt(int iID);
@@ -53,8 +53,8 @@ float DegToRad(float fDegress);
 float fixAngle(float angle);
 float subAngle(float a1, float a2);
 
-void SetPlayerPedPtrRecord(uint8_t bytePlayer, PED_TYPE* pPed);
-uint8_t FindPlayerNumFromPedPtr(PED_TYPE* dwPedPtr);
+void SetPlayerPedPtrRecord(uint8_t bytePlayer, CPedGTA* pPed);
+uint8_t FindPlayerNumFromPedPtr(CPedGTA* dwPedPtr);
 
 int GameGetWeaponModelIDFromWeaponID(int iWeaponID);
 
@@ -130,3 +130,5 @@ RpAtomic* ObjectMaterialTextCallBack(RpAtomic* rpAtomic, CObject* pObject);
 bool GetAnimationIndexFromName(const char* szName);
 
 void SetScissorRect(void* pRect);
+
+bool IsValidGamePed(CPedGTA* pPed);

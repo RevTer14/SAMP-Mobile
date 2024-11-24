@@ -11,6 +11,7 @@
 #include "QueuedMode.h"
 #include "Matrix.h"
 #include "game/Entity/Placeable.h"
+#include "game/Entity/CEntityGTA.h"
 
 enum class eFadeFlag : uint16 {
     FADE_IN,
@@ -389,7 +390,7 @@ public:
     void RestoreCameraAfterMirror();
     void RestoreWithJumpCut();
     void RenderMotionBlur();
-    void ResetDuckingSystem(PED_TYPE *ped);
+    void ResetDuckingSystem(CPedGTA *ped);
 
     void CalculateDerivedValues(bool bForMirror, bool bOriented);
     void CalculateFrustumPlanes(bool bForMirror);
@@ -403,7 +404,7 @@ public:
 public:
     static CCam& GetActiveCamera(); // TODO: Replace this with `TheCamera.GetActiveCam()`
     void SetRwCamera(RwCamera *pCamera);
-    void TakeControl(ENTITY_TYPE *target, eCamMode modeToGoTo, eSwitchType switchType, int32 whoIsInControlOfTheCamera);
+    void TakeControl(CEntityGTA *target, eCamMode modeToGoTo, eSwitchType switchType, int32 whoIsInControlOfTheCamera);
     CMatrix& GetViewMatrix() { return m_viewMatrix; }
 
 public:

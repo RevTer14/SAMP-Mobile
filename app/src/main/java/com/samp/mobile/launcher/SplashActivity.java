@@ -121,9 +121,7 @@ public class SplashActivity extends AppCompatActivity {
                 Log.e("x1y2z", "GPU type: " + egputype.name());
 
                 if(isPermissionsGranted()) {
-                    //mIsBind = bindService(new Intent(SplashActivity.this, UpdateService.class), mConnection, Context.BIND_AUTO_CREATE);
-                    startActivity(new Intent(SplashActivity.this, MainActivity.class));
-                    finish();
+                    mIsBind = bindService(new Intent(SplashActivity.this, UpdateService.class), mConnection, Context.BIND_AUTO_CREATE);
                 }
                 else {
                     ActivityCompat.requestPermissions(SplashActivity.this,

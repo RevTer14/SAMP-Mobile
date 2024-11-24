@@ -7,8 +7,6 @@
 extern CNetGame* pNetGame;
 extern CGame* pGame;
 
-#include "Models/ModelInfo.h"
-
 const char g_szAnimBlockNames[][40] = {
 "AIRPORT:thrw_barl_thrw",
 "ATTRACTORS:stepsit_in",
@@ -1863,27 +1861,26 @@ const char g_szAnimBlockNames[][40] = {
 
 extern char* WORLD_PLAYERS;
 
-PED_TYPE* GamePool_FindPlayerPed()
+CPedGTA* GamePool_FindPlayerPed()
 {
-	return *(PED_TYPE**)WORLD_PLAYERS;
+	return *(CPedGTA**)WORLD_PLAYERS;
 }
 
-PED_TYPE* GamePool_Ped_GetAt(int iID)
+CPedGTA* GamePool_Ped_GetAt(int iID)
 {
-	// GetPoolPed
-	return ((PED_TYPE* (*)(int))(g_libGTASA + /*0x41DD7C*/(VER_x32 ? 0x00483DB8 + 1 : 0x575D0C)))(iID);
+    return (( CPedGTA* (*)(int))(g_libGTASA + (VER_x32 ? 0x00483DB8 + 1 : 0x575D0C)))(iID);
 }
 
-int GamePool_Ped_GetIndex(PED_TYPE* pActor)
+int GamePool_Ped_GetIndex(CPedGTA* pActor)
 {
-	// GettPoolPedRef
-	return ((int (*)(PED_TYPE*))(g_libGTASA + (VER_x32 ? 0x483DAA + 1:0x575CFC)))(pActor);
+	// GettPoolPedRef GettPoolPedRef(CPed *)	00483DAA
+	return ((int (*)(CPedGTA*))(g_libGTASA + (VER_x32? 0x483DAA + 1:0x575CFC)))(pActor);
 }
 
 ENTITY_TYPE *GamePool_Object_GetAt(int iID)
 {
 	// GetPoolObj
-	return ((ENTITY_TYPE* (*)(int))(g_libGTASA + /*0x41DDB4*/(VER_x32 ? 0x00483DD2 + 1 : 0x575D30)))(iID);
+	return ((ENTITY_TYPE* (*)(int))(g_libGTASA + (VER_x32 ? 0x00483DD2 + 1 : 0x575D30)))(iID);
 }
 
 uintptr_t GamePool_Vehicle_GetIndex(VEHICLE_TYPE* pGtaVehicle)
@@ -1928,13 +1925,14 @@ int GetVehicleSubtype(VEHICLE_TYPE* pGtaVehicle)
     return 0;
 }
 
+#include "Models/ModelInfo.h"
 uintptr_t GetModelInfoByID(int iModelID)
 {
 	if (iModelID < 0 || iModelID > 20000) {
 		return false;
 	}
 
-	uintptr_t *dwModelArray = (uintptr_t*)CModelInfo::ms_modelInfoPtrs[iModelID];
+	uintptr_t *dwModelArray = reinterpret_cast<uintptr_t *>(CModelInfo::ms_modelInfoPtrs);
 	return dwModelArray[iModelID];
 }
 
@@ -1956,27 +1954,26 @@ bool IsValidModel(int iModelID)
 // 0.3.7
 int GetModelRefCounts(int iModel)
 {
-	return CModelInfo::GetModelInfo(iModel)->m_nRefCount;
+	uint16_t* p = (uint16_t*)(GetModelInfoByID(iModel) + 30);
+	return *p;
 }
 // 0.3.7
 bool IsValidPedModel(uint modelID)
 {
-	if (modelID >= 0 && modelID <= 30000)
-	{
-		uintptr_t modelInfo = GetModelInfoByID(modelID);
-		if (modelInfo)
-		{
-			if ( (*(uintptr_t*)modelInfo) == (g_libGTASA + (VER_x32 ? 0x667658 : 0x82F310)))
-				return true;
-		}
-	}
+    if(modelID < 0 || modelID > 20000) return false;
+    auto dwModelArray = CModelInfo::ms_modelInfoPtrs;
 
-	return false;
+    uintptr_t ModelInfo = reinterpret_cast<uintptr_t>(dwModelArray[modelID]);
+    if(ModelInfo && *(uintptr_t*)ModelInfo == (uintptr_t)g_libGTASA + (VER_x32 ? 0x00667658 : 0x82F310))
+        return true;
+
+    return false;
 }
 
 uintptr_t GetModelRWObject(uint uiModel)
 {
-	return reinterpret_cast<uintptr_t>(CModelInfo::GetModelInfo(uiModel)->m_pRwObject);
+	uintptr_t modelInfo = GetModelInfoByID(uiModel);
+	return *(uintptr_t*)(modelInfo + 0x34); /* pRWObject */
 }
 /*
 uintptr_t LoadTexture(const char* texname)
@@ -2016,7 +2013,6 @@ uintptr_t LoadTexture(const char* texname)
 // 0.3.7 
 #include "sprite2d.h"
 #include "armhook/patch.h"
-#include "Scene.h"
 #include <algorithm>
 
 RwTexture* LoadTextureFromTxd(const char* txdname, const char* texturename)
@@ -2122,9 +2118,9 @@ float subAngle(float a1, float a2)
 
 void HideEntity(ENTITY_TYPE *pEntity)
 {
-    pEntity->m_placement.m_vPosn.z -= 2000.0;
+    pEntity->vPos.z -= 2000.0;
 
-    RwMatrix *matrix = reinterpret_cast<RwMatrix *>(pEntity->m_matrix);
+    RwMatrix *matrix = pEntity->mat;
     if(matrix) matrix->pos.y -= 2000.0;
 }
 
@@ -2149,18 +2145,18 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
     RemoveOccludersInRadius(vecPos, 500.0);
 
     // CPools::ms_pBuildingPool
-    uintptr_t *pBuildingPool = *(uintptr_t**)(g_libGTASA+(VER_x32 ? 0x95AC4C : 0xBC3BC8));
+    uintptr_t *pBuildingPool = *(uintptr_t**)(g_libGTASA+0x95AC4C);
     for(int i = 0; i < 20000; i++)
     {
-        ENTITY_TYPE *pEntity = (ENTITY_TYPE*)((i * (VER_x32 ? 60: 120)) + *pBuildingPool);
+        ENTITY_TYPE *pEntity = (ENTITY_TYPE*)((i * 60) + *pBuildingPool);
         if(pEntity && !IsGameEntityArePlaceable(pEntity))
         {
             if(iModel == -1 || pEntity->nModelIndex == iModel)
             {
                 CVector vecPool = CVector { 0.0f, 0.0f, 0.0f };
-                memcpy(&vecPool, &pEntity->m_placement.m_vPosn, sizeof(CVector));
+                memcpy(&vecPool, &pEntity->vPos, sizeof(CVector));
 
-                RwMatrix *matrix = reinterpret_cast<RwMatrix *>(pEntity->m_matrix);
+                RwMatrix *matrix = pEntity->mat;
                 if(matrix) {
                     memcpy(&vecPool, &matrix->pos, sizeof(CVector));
                 }
@@ -2172,18 +2168,18 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
     }
 
     // CPools::ms_pDummyPool
-    uintptr_t *pDummyPool = *(uintptr_t**)(g_libGTASA+(VER_x32 ? 0x95AC54 : 0xBC3BD8));
+    uintptr_t *pDummyPool = *(uintptr_t**)(g_libGTASA+0x95AC54);
     for(int i = 0; i < 40000; i++)
     {
-        ENTITY_TYPE *pEntity = (ENTITY_TYPE*)((i * (VER_x32 ? 60 : 120)) + *pDummyPool);
+        ENTITY_TYPE *pEntity = (ENTITY_TYPE*)((i * 60) + *pDummyPool);
         if(pEntity && !IsGameEntityArePlaceable(pEntity))
         {
             if(iModel == -1 || pEntity->nModelIndex == iModel)
             {
                 CVector vecPool = CVector { 0.0f, 0.0f, 0.0f };
-                memcpy(&vecPool, &pEntity->m_placement.m_vPosn, sizeof(CVector));
+                memcpy(&vecPool, &pEntity->vPos, sizeof(CVector));
 
-                RwMatrix *matrix = reinterpret_cast<RwMatrix *>(pEntity->m_matrix);
+                RwMatrix *matrix = pEntity->mat;
                 if(matrix) {
                     memcpy(&vecPool, &matrix->pos, sizeof(CVector));
                 }
@@ -2195,18 +2191,18 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
     }
 
     // CPools::ms_pObjectPool
-    uintptr_t *pObjectPool = *(uintptr_t**)(g_libGTASA+(VER_x32 ? 0x95AC50 : 0xBC3BD0));
+    uintptr_t *pObjectPool = *(uintptr_t**)(g_libGTASA+0x95AC50);
     for(int i = 0; i < 3000; i++)
     {
-        ENTITY_TYPE *pEntity = (ENTITY_TYPE*)((i * (VER_x32 ? 420: 2*420)) + *pObjectPool);
+        ENTITY_TYPE *pEntity = (ENTITY_TYPE*)((i * 420) + *pObjectPool);
         if(pEntity && !IsGameEntityArePlaceable(pEntity))
         {
             if(iModel == -1 || pEntity->nModelIndex == iModel)
             {
                 CVector vecPool = CVector { 0.0f, 0.0f, 0.0f };
-                memcpy(&vecPool, &pEntity->m_placement.m_vPosn, sizeof(CVector));
+                memcpy(&vecPool, &pEntity->vPos, sizeof(CVector));
 
-                RwMatrix *matrix = reinterpret_cast<RwMatrix *>(pEntity->m_matrix);
+                RwMatrix *matrix = pEntity->mat;
                 if(matrix) {
                     memcpy(&vecPool, &matrix->pos, sizeof(CVector));
                 }
@@ -2234,14 +2230,13 @@ struct stOccluders {
 
 void RemoveOccludersInRadius(RwV3d vecPos, float fRadius)
 {
-    //COcclusion::NumOccludersOnMap	0000000000CE8538
-    int iOccludersOnMap = *(uint32_t *)(g_libGTASA+(VER_x32 ? 0xA45790:0xCE8538));
+    int iOccludersOnMap = *(uint32_t *)(g_libGTASA+0xA45790);
     if(iOccludersOnMap >= 1)
     {
-        uint32_t dwOccluders = g_libGTASA+(VER_x32 ? 0xA41140 : 0xCE3EE8);
+        uint32_t dwOccluders = g_libGTASA+0xA41140;
         for(int i = 0; i <= iOccludersOnMap; i++)
         {
-            stOccluders *aOccluders = (stOccluders*)((i * (VER_x32 ? 18:36)) + dwOccluders);
+            stOccluders *aOccluders = (stOccluders*)((i * 18) + dwOccluders);
 
             CVector vecOccluderPos;
             vecOccluderPos.x = (float)aOccluders->fMidX * 0.25;
@@ -2296,7 +2291,7 @@ void DestroyTextDrawTexture(int index)
 		pTexture = TextDrawTexture[index];
 		bTextDrawTextureSlotState[index] = false;
 		if (pTexture)
-            RwTextureDestroy(reinterpret_cast<RwTexture *>(pTexture));
+			DeleteRwTexture(pTexture);
 
 		TextDrawTexture[index] = 0;
 	}
@@ -2313,8 +2308,8 @@ void DeleteRwTexture(uintptr_t texture)
 void DrawRaster(RwRaster* raster, CRect const& rect)
 {
 	uint32_t white = 0xFFFFFFFF;
-	//CSprite2d::SetVertices(int,float *,float *,CRGBA const&)
-	((void(*)(RwRaster*, const CRect&, uint32_t, uint32_t, uint32_t, uint32_t))(g_libGTASA + (VER_x32 ? 0x5C9394 + 1:0x6ED590)))(raster, rect, white, white, white, white);
+	//CSprite2d::SetVertices(rect, color::White, color::White, color::White, color::White);
+	((void(*)(RwRaster*, const CRect&, uint32_t, uint32_t, uint32_t, uint32_t))(g_libGTASA + 0x5C9014 + 1))(raster, rect, white, white, white, white);
 	RwRenderStateSet(rwRENDERSTATETEXTURERASTER, raster);
 	RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, (void*)true);
 	RwIm2DRenderPrimitive(rwPRIMTYPETRIFAN, (RwIm2DVertex*)(g_libGTASA + 0xA7C264), 4);
@@ -2335,11 +2330,9 @@ void DrawTextureUV(uintptr_t texture, CRect* rect, uint32_t dwColor, float *uv)
 	if (texture)
 	{
 		RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
-
-        //CSprite2d::Draw(float,float,float,float,CRGBA const&)	005C8F20
 		// CSprite2d::Draw(CRect  const& posn, CRGBA  const& color, float u1, float v1, float u2, float v2, float u3, float v3, float u4, float v4);
 		((void(*)(uintptr_t, CRect*, uint32_t*, float, float, float, float, float, float, float, float))
-			(g_libGTASA + (VER_x32 ? 0x5C8F20 + 1:0x6ED6E0)))(texture, rect, &dwColor, uv[0], uv[1], uv[2], uv[3], uv[4], uv[5], uv[6], uv[7]);
+			(g_libGTASA + 0x5C95C0 + 1))(texture, rect, &dwColor, uv[0], uv[1], uv[2], uv[3], uv[4], uv[5], uv[6], uv[7]);
 	}
 }
 
@@ -2351,12 +2344,12 @@ float GetDistance(RwV3d vec1, RwV3d vec2)
 		(vec1.x - vec2.x) * (vec1.x - vec2.x));
 }
 
-PED_TYPE* dwPlayerPedPtrs[PLAYER_PED_SLOTS];
-void SetPlayerPedPtrRecord(uint8_t bytePlayer, PED_TYPE* dwPedPtr)
+CPedGTA* dwPlayerPedPtrs[PLAYER_PED_SLOTS];
+void SetPlayerPedPtrRecord(uint8_t bytePlayer, CPedGTA* dwPedPtr)
 {
 	dwPlayerPedPtrs[bytePlayer] = dwPedPtr;
 }
-uint8_t FindPlayerNumFromPedPtr(PED_TYPE* dwPedPtr)
+uint8_t FindPlayerNumFromPedPtr(CPedGTA* dwPedPtr)
 {
 	uint8_t x = 0;
 	while (x != PLAYER_PED_SLOTS)
@@ -2520,7 +2513,7 @@ uintptr_t ModelInfoCreateInstance(int iModel)
 	uintptr_t modelInfo = GetModelInfoByID(iModel);
 	if (modelInfo)
 	{
-		return ((uintptr_t(*)(uintptr_t))*(uintptr_t*)(*(uintptr_t*)modelInfo + (VER_x32 ? 0x2C:0x2C*2)))(modelInfo);
+		return ((uintptr_t(*)(uintptr_t))*(uintptr_t*)(*(uintptr_t*)modelInfo + 0x2C))(modelInfo);
 	}
 	
 	return 0;
@@ -2534,13 +2527,13 @@ void RenderClumpOrAtomic(uintptr_t rwObject)
 		{
 			// Atomic
 			FLog("Render Atomic!");
-			((void(*)(uintptr_t))( *(uintptr_t*)(rwObject+(VER_x32?0x48:0x48*2)) ))(rwObject);
+			((void(*)(uintptr_t))( *(uintptr_t*)(rwObject+0x48) ))(rwObject);
 		} 
 		else if (*(uint8_t*)rwObject == 2)
 		{
 			FLog("Render Clump!");
-            // rpClumpRender
-            ((void (*)(uintptr_t))(g_libGTASA + (VER_x32 ? 0x21425C + 1 : 0x2BA6A4))) (rwObject);
+			// rpClumpRender
+			((void(*)(uintptr_t))(g_libGTASA + 0x2142DC + 1))(rwObject);
 		}
 	}
 }
@@ -2552,9 +2545,9 @@ float GetModelColSphereRadius(int iModel)
 
 	if (modelInfo)
 	{
-		uintptr_t colModel = *(uintptr_t*)(modelInfo + (VER_x32 ? 0x2C:0x2C*2));
+		uintptr_t colModel = *(uintptr_t*)(modelInfo + 0x2C);
 		if (colModel != 0) {
-			return *(float*)(colModel + (VER_x32 ? 0x24:0x24*2));
+			return *(float*)(colModel + 0x24);
 		}
 	}
 
@@ -2568,9 +2561,9 @@ void GetModelColSphereVecCenter(int iModel, RwV3d* vec)
 
 	if (modelInfo)
 	{
-		uintptr_t colModel = *(uintptr_t*)(modelInfo + (VER_x32 ? 0x2C:0x2C*2));
+		uintptr_t colModel = *(uintptr_t*)(modelInfo + 0x2C);
 		if (colModel != 0) {
-            RwV3d* v = (RwV3d*)(colModel + (VER_x32 ? 0x18:0x18*2));
+            RwV3d* v = (RwV3d*)(colModel + 0x18);
 
 			vec->x = v->x;
 			vec->y = v->y;
@@ -2581,41 +2574,43 @@ void GetModelColSphereVecCenter(int iModel, RwV3d* vec)
 
 void DestroyAtomicOrClump(uintptr_t rwObject)
 {
-    if (rwObject)
-    {
-        int type = *(int *)(rwObject);
+	if (rwObject)
+	{
+		int type = *(int*)(rwObject);
 
-        if (type == 1)
-        {
-            RpAtomicDestroy(reinterpret_cast<RpAtomic *>(rwObject));
+		if (type == 1)
+		{
+			// RpAtomicDestroy
+			((void(*)(uintptr_t))(g_libGTASA + 0x2141EC + 1))(rwObject);
 
-            RwObject *pObject = reinterpret_cast<RwObject *>(rwObject);
-            auto parent = pObject->parent;
-            if (parent)
-            {
-                RwFrameDestroy(reinterpret_cast<RwFrame *>(parent));
-            }
+			uintptr_t parent = *(uintptr_t*)(rwObject + 4);
+			if (parent)
+			{
+				// RwFrameDestroy
+				((void(*)(uintptr_t))(g_libGTASA + 0x1D846C + 1))(parent);
+			}
 
-        }
-        else if (type == 2)
-        {
-            RpClumpDestroy(reinterpret_cast<RpClump *>(rwObject));
-        }
-    }
+		}
+		else if (type == 2)
+		{
+			// RpClumpDestroy
+			((void(*)(uintptr_t))(g_libGTASA + 0x21460C + 1))(rwObject);
+		}
+	}
 }
 
 void GamePrepareTrain(VEHICLE_TYPE* pGtaVehicle)
 {
 	FLog("GamePrepareTrain");
 
-	PED_TYPE* pDriver = pGtaVehicle->pDriver;
+	CPedGTA* pDriver = pGtaVehicle->pDriver;
 
 	if (pDriver)
 	{
-		if (pDriver->dwPedType != 0 && pDriver->dwPedType != 1)
+		if (pDriver->m_nPedType != (ePedType)0 && pDriver->m_nPedType != (ePedType)1)
 		{
 			// CPlayerPed::Destructor
-			((void (*)(PED_TYPE*))(*(void**)(*(uint32_t*)&pDriver->entity + (VER_x32 ?0x4:0x4*2))))(pDriver);
+			((void (*)(CPedGTA*))(*(void**)(pDriver + (VER_x32?0x4:0x4*2))))(pDriver);
 
 			pGtaVehicle->pDriver = nullptr;
 		}
@@ -2644,7 +2639,7 @@ static CVector _axis[3] = {
 // 0.3.7
 void RwMatrixRotate(RwMatrix* mat, int axis, float angle)
 {
-	((void (*) (RwMatrix*, RwV3d*, float, int))(g_libGTASA + (VER_x32 ? 0x001E38F4 + 1 : 0x27E710)))(mat, &_axis[axis], angle, 1);
+	((void (*) (RwMatrix*, RwV3d*, float, int))(g_libGTASA + 0x1E3974 + 1))(mat, &_axis[axis], angle, 1);
 }
 // 0.3.7
 void RwMatrixScale(RwMatrix* matrix, RwV3d* scale)
@@ -2672,37 +2667,37 @@ const char* getGameDataFolderDirectory()
 void RwFrameTranslate(uintptr_t parent, RwV3d* vec, int flag)
 {
 	// RwFrameTranslate
-	((void(*)(uintptr_t, RwV3d*, int))(g_libGTASA + (VER_x32 ? 0x001D8614 + 1 : 0x270060)))(parent, vec, flag);
+	((void(*)(uintptr_t, RwV3d*, int))(g_libGTASA + 0x1D8694 + 1))(parent, vec, flag);
 }
 // 0.3.7
 void RwFrameRotate(uintptr_t frame, int axis, float angle)
 {
 	// RwFrameRotate
-	((void(*)(uintptr_t, RwV3d*, float, int))(g_libGTASA + (VER_x32 ? 0x001D8728 + 1 : 0x270204)))(frame, &_axis[axis], angle, 1);
+	((void(*)(uintptr_t, RwV3d*, float, int))(g_libGTASA + 0x1D87A8 + 1))(frame, &_axis[axis], angle, 1);
 }
 // 0.3.7
 void RpWorldAddLight(uintptr_t light)
 {
-	uintptr_t pRwWorld = reinterpret_cast<uintptr_t>(Scene.m_pRpWorld);
+	uintptr_t pRwWorld = *(uintptr_t*)(g_libGTASA + 0x9FC938);
 	if (pRwWorld) {
 		// RpWorldAddLight
-		((void(*)(uintptr_t, uintptr_t))(g_libGTASA + (VER_x32 ? 0x0021E7B0 + 1 : 0x2C8588)))(pRwWorld, light);
+		((void(*)(uintptr_t, uintptr_t))(g_libGTASA + 0x21E830 + 1))(pRwWorld, light);
 	}
 }
 // 0.3.7
 void RpWorldRemoveLight(uintptr_t light)
 {
-    uintptr_t pRwWorld = reinterpret_cast<uintptr_t>(Scene.m_pRpWorld);
+	uintptr_t pRwWorld = *(uintptr_t*)(g_libGTASA + 0x9FC938);
 	if (pRwWorld) {
 		// RpWorldRemoveLight
-		((void(*)(uintptr_t, uintptr_t))(g_libGTASA + (VER_x32 ? 0x0021E7F4 + 1 : 0x2C85F4)))(pRwWorld, light);
+		((void(*)(uintptr_t, uintptr_t))(g_libGTASA + 0x21E874 + 1))(pRwWorld, light);
 	}
 }
 
 int LineOfSight(RwV3d* start, RwV3d* end, void* colpoint, uintptr_t ent, char buildings, char vehicles, char peds, char objects, char dummies, bool seeThrough, bool camera, bool unk)
 {
 	// CWorld::LineOfSight
-	return (( int (*)(RwV3d*, RwV3d*, void*, uintptr_t, char, char, char, char, char, char, char, char))(g_libGTASA+(VER_x32 ? 0x00423468 + 1 : 0x5075A4)))(start, end, colpoint, ent, buildings, vehicles, peds, objects, dummies, seeThrough, camera, unk);
+	return (( int (*)(RwV3d*, RwV3d*, void*, uintptr_t, char, char, char, char, char, char, char, char))(g_libGTASA+0x424B44+1))(start, end, colpoint, ent, buildings, vehicles, peds, objects, dummies, seeThrough, camera, unk);
 }
 
 void RwMatrixInvert(RwMatrix *matOut, RwMatrix *matIn)
@@ -2713,18 +2708,18 @@ void RwMatrixInvert(RwMatrix *matOut, RwMatrix *matIn)
 
 int GetTaskTypeFromTask(uint32_t *task)
 {
-	if(!task || *task < g_libGTASA+(VER_x32 ? 0x6653F4 : 0x82B828) || *task > g_libGTASA+(VER_x32 ? 0x66D641:0x83BA50))
+	if(!task || *task < g_libGTASA+0x6653F4 || *task > g_libGTASA+0x66D641) 
 		return 0;
 
 	uint32_t dwTaskVtbl = task[0];
-	return (( int (*)(uint32_t))(*(void**)(dwTaskVtbl+(VER_x32 ? 0x14 : 0x14*2))))(dwTaskVtbl); // CTask*:GetTaskType
+	return (( int (*)(uint32_t))(*(void**)(dwTaskVtbl+0x14)))(dwTaskVtbl); // CTask*:GetTaskType
 }
 
 int Game_PedStatPrim(int model_id)
 {
 	int *pStat;
-	uint32_t *d = (uint32_t *)(CModelInfo::ms_modelInfoPtrs[model_id]);
-	pStat = (int *)((*d)+(VER_x32 ? 40:40*2));
+	uint32_t *d = (uint32_t *)(g_libGTASA+0x91DCB8+(model_id*4));
+	pStat = (int *)((*d)+40);
 	return *pStat;	
 }
 
@@ -2734,8 +2729,8 @@ eWidgetType GetWidgetTypeFromWidget(uintptr_t pWidget)
 {	
 	if(pWidget)
 	{
-		//if(pWidget == *(uintptr_t*)(g_libGTASA+0x6F3798)) return TYPE_PUNCH;
-		//if(pWidget == *(uintptr_t*)(g_libGTASA+0x6F3810)) return TYPE_SPRINT;
+		if(pWidget == *(uintptr_t*)(g_libGTASA+0x6F3798)) return TYPE_PUNCH;
+		if(pWidget == *(uintptr_t*)(g_libGTASA+0x6F3810)) return TYPE_SPRINT;
 		if(pWidget == g_pWidgets[TYPE_ACCELERATE]) return TYPE_ACCELERATE;
 		if(pWidget == g_pWidgets[TYPE_ENTERCAR]) return TYPE_ENTERCAR;
 		if(pWidget == g_pWidgets[TYPE_BRAKE]) return TYPE_BRAKE;
@@ -2765,14 +2760,14 @@ eWidgetState ProcessFixedWidget(uintptr_t pWidget)
 	{
 		case TYPE_NONE:
 			return STATE_NONE;
-		//case TYPE_PUNCH:
-		/*case TYPE_SPRINT:
+		case TYPE_PUNCH:
+		case TYPE_SPRINT:
 			if(pPlayerPed->IsInVehicle() || 
 				pPlayerPed->IsInJetpackMode()) 
 			{
 				return STATE_FIXED;
 			}
-			break;*/
+			break;
 		case TYPE_ACCELERATE:
 		case TYPE_BRAKE:
 			if(!pPlayerPed->IsInVehicle() &&
@@ -2952,8 +2947,8 @@ bool IsGameEntityArePlaceable(ENTITY_TYPE *pEntity)
 {
     if(pEntity)
     {
-        if(*(uint32_t*)pEntity)
-            return (*(uint32_t*)pEntity == g_libGTASA+(VER_x32 ? 0x667D14 : 0x830098));
+        if(pEntity->vtable)
+            return (pEntity->vtable == g_libGTASA+0x667D14);
     }
 
     return false;
@@ -3006,4 +3001,14 @@ RpAtomic* ObjectMaterialTextCallBack(RpAtomic* rpAtomic, CObject* pObject)
 void SetScissorRect(void* pRect)
 {
     return ((void (*)(void*))(g_libGTASA + (VER_x32 ? 0x002B3EC4 + 1 : 0x373290)))(pRect);
+}
+
+#include "Entity/CPedGTA.h"
+bool IsValidGamePed(CPedGTA* pPed)
+{
+    //IsPedPointerValid(CPed *) � 0x00435614
+    if (((bool (*)(CPedGTA*))(g_libGTASA + (VER_x32 ? 0x004A72C4 + 1 : 0x59DE5C)))(pPed)) {
+        return true;
+    }
+    return false;
 }

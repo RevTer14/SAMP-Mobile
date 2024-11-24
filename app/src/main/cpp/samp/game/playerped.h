@@ -3,6 +3,7 @@
 #include "entity.h"
 #include "vehicle.h"
 #include "object.h"
+#include "game/Entity/CPedGTA.h"
 
 enum eStuffType {
 	STUFF_TYPE_NONE,
@@ -92,7 +93,7 @@ public:
 	int GetCurrentVehicleID();
 	void SetSkillLevel(int iSkillID, int iLevel);
 	void SetAmmo(uint8_t byteWeapon, uint16_t wAmmo);
-	WEAPON_SLOT_TYPE* FindWeaponSlot(uint8_t byteWeapon);
+    CWeapon* FindWeaponSlot(uint8_t byteWeapon);
 	int GetVehicleSeatID();
 
 	uint32_t GetStateFlags();
@@ -122,7 +123,7 @@ public:
 	float GetAimZ();
 	void SetAimZ(float fAimZ);
 
-	WEAPON_SLOT_TYPE* GetCurrentWeaponSlot();
+    CWeapon* GetCurrentWeaponSlot();
 
 	void SetKeys(uint16_t lrAnalog, uint16_t udAnalog, uint16_t wKeys);
 	uint16_t GetKeys(uint16_t *lrAnalog, uint16_t *udAnalog, bool clear = true);
@@ -237,7 +238,7 @@ private:
 	
 
 public:
-	PED_TYPE*	m_pPed;
+	CPedGTA*	m_pPed;
 	uint8_t		m_bytePlayerNumber;
 	uint32_t	m_dwArrow;
 	uint32_t	m_dwParachuteObject;

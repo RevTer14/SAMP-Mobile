@@ -180,7 +180,7 @@ void CPlayerPool::UpdatePlayerPing(PLAYERID playerId, int iPing)
 	}
 }
 // 0.3.7
-PLAYERID CPlayerPool::FindRemotePlayerIDFromGtaPtr(PED_TYPE* pActor)
+PLAYERID CPlayerPool::FindRemotePlayerIDFromGtaPtr(CPedGTA* pActor)
 {
 	for (int i = 0; i < MAX_PLAYERS; i++)
 	{

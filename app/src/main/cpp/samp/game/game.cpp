@@ -1,14 +1,6 @@
 #include "../main.h"
 #include "game.h"
 #include "../vendor/armhook/patch.h"
-#include "MemoryMgr.h"
-#include "constants.h"
-#include "CdStreamInfo.h"
-#include "TxdStore.h"
-#include "VisibilityPlugins.h"
-#include "game/Textures/TextureDatabaseRuntime.h"
-#include "game/Textures/TextureDatabase.h"
-#include "Scene.h"
 
 void ApplySAMPPatchesInGame();
 void InitScripting();
@@ -49,7 +41,6 @@ CGame::~CGame()
 
 void ApplyGlobalPatches();
 void InstallHooks();
-void InitGui();
 void CGame::StartGame()
 {
 	FLog("Starting game..");
@@ -627,45 +618,4 @@ void CGame::DisableEnterExits()
 void CGame::ToggleCJWalk(bool bUseCJWalk)
 {
         CHook::NOP(g_libGTASA + (VER_x32 ? 0x004C5F6A : 0x5C3970), 2);
-}
-
-void InitialiseOnceBeforeRW()
-{
-    CMemoryMgr::Init();
-    CHook::CallFunction<void>("_ZN14MobileSettings10InitializeEv"); // впадлу реверсить т.к. меню надо вообще удалить
-    CHook::CallFunction<void>("_ZN13CLocalisation10InitialiseEv");
-    CHook::CallFunction<void>("_ZN8CFileMgr10InitialiseEv");
-    CdStreamInit(TOTAL_IMG_ARCHIVES); // mb use TOTAL_IMG_ARCHIVES?
-    CHook::CallFunction<void>("_ZN4CPad10InitialiseEv");
-}
-
-void CGame::PostToMainThread(std::function<void()> task)
-{
-    std::lock_guard<std::mutex> lock(mtx);
-    tasks.push(std::move(task));
-}
-
-void CGame::ProcessMainThreadTasks()
-{
-    if (tasks.empty())
-        return;
-
-    std::function<void()> task;
-    {
-        std::lock_guard<std::mutex> lock(mtx);
-
-        task = std::move(tasks.front());
-        tasks.pop();
-    }
-    task();
-}
-
-void CGame_Process();
-void CGame::InjectHooks()
-{
-    CHook::Redirect("_ZN5CGame22InitialiseOnceBeforeRWEv", &InitialiseOnceBeforeRW);
-    CHook::Redirect("_ZN5CGame7ProcessEv", &CGame_Process);
-
-    CHook::Write(g_libGTASA + (VER_x32 ? 0x006796E8 : 0x850DF0), &CGame::m_pWorkingMatrix1);
-    CHook::Write(g_libGTASA + (VER_x32 ? 0x00677B38 : 0x84D6A0), &CGame::m_pWorkingMatrix2);
 }

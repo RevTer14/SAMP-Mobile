@@ -256,8 +256,7 @@ void DoInitStuff()
 		//ReadSettingFile();
 
 		pNetGame = new CNetGame(pSettings->Get().szHost, pSettings->Get().iPort, pSettings->Get().szNickName, pSettings->Get().szPassword/*g_pass*/);/*cryptor::create("H0ND4").decrypt()*//*""*/
-        //FLog("Info %s %s %s %s", pSettings->Get().szHost, pSettings->Get().iPort, pSettings->Get().szNickName, pSettings->Get().szPassword);
-        bNetworkInited = true;
+		bNetworkInited = true;
 
         FLog("DoInitStuff end");
 	}
@@ -307,14 +306,15 @@ void MainLoop()
 
 	DoInitStuff();
 
+    FLog("MainLoop go on");
+
 	if (bDebug) {
 		DoDebugLoop();
 	}
 
 	if (pNetGame) {
+        FLog("MainLoop process");
 		pNetGame->Process();
-
-        //FLog("connect %d", pNetGame->GetGameState());
 
 		//CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
 		//if(pTextDrawPool) pTextDrawPool->Draw();
@@ -341,7 +341,6 @@ void InitGui()
 #include "game/multitouch.h"
 #include "armhook/patch.h"
 #include "util/CUtil.h"
-#include "game/Timer.h"
 
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
@@ -423,7 +422,9 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 
 uint32_t GetTickCount()
 {
-    return CTimer::m_snTimeInMillisecondsNonClipped;
+	struct timeval tv;
+	gettimeofday(&tv, nullptr);
+	return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
 }	
 
 void FLog(const char* fmt, ...)

@@ -317,9 +317,9 @@ void CVehicle::RemoveEveryoneFromVehicle()
 	if (!m_pVehicle) return;
 	if (!GamePool_Vehicle_GetAt(m_dwGTAId)) return;
 
-	float fPosX = m_pVehicle->entity.m_matrix->m_pos.x;
-	float fPosY = m_pVehicle->entity.m_matrix->m_pos.y;
-	float fPosZ = m_pVehicle->entity.m_matrix->m_pos.z;
+	float fPosX = m_pVehicle->entity.mat->pos.x;
+	float fPosY = m_pVehicle->entity.mat->pos.y;
+	float fPosZ = m_pVehicle->entity.mat->pos.z;
 
 	int iPlayerID = 0;
 	if (m_pVehicle->pDriver) {
@@ -514,7 +514,7 @@ bool CVehicle::IsDriverLocalPlayer()
 // 0.3.7
 void CVehicle::SetInvulnerable(bool bInv)
 {
-	if (m_pVehicle && GamePool_Vehicle_GetAt(m_dwGTAId) && *(uint32_t*)&m_pVehicle->entity != (g_libGTASA + (VER_x32 ? 0x667D14:0x830098)))
+	if (m_pVehicle && GamePool_Vehicle_GetAt(m_dwGTAId) && m_pVehicle->entity.vtable != (g_libGTASA + (VER_x32 ? 0x667D14:0x830098)))
 	{
 		if (bInv)
 		{
@@ -546,8 +546,8 @@ bool CVehicle::HasADriver()
 	{
 		if (m_pVehicle->pDriver)
 		{
-			if (IN_VEHICLE(m_pVehicle->pDriver) && 
-				m_pVehicle->pDriver->dwPedType == 0)
+			if (m_pVehicle->pDriver->IsInVehicle() &&
+				m_pVehicle->pDriver->m_nPedType == (ePedType)0)
 				return true;
 		}
 	}
@@ -690,7 +690,7 @@ void CVehicle::UpdateDamageStatus(uint32_t dwPanelDamage, uint32_t dwDoorDamage,
 				if(GetPanelDamageStatus() || GetDoorDamageStatus() || GetLightDamageStatus())
 				{
 					// CAutoMobile::Fix
-					(( void (*)(VEHICLE_TYPE*))(g_libGTASA+(VER_x32 ? 0x55D5C0+1:0x67DF0C)))(m_pVehicle);
+					(( void (*)(VEHICLE_TYPE*))(g_libGTASA+0x55D550+1))(m_pVehicle);
 					return;
 				}
 			}
@@ -700,7 +700,7 @@ void CVehicle::UpdateDamageStatus(uint32_t dwPanelDamage, uint32_t dwDoorDamage,
 			SetLightDamageStatus(byteLightDamage);
 
 			// CAutomobile::SetupDamageAfterLoad
-			(( void (*)(VEHICLE_TYPE*))(g_libGTASA+(VER_x32 ? 0x55D886+1:0x67E368)) )(m_pVehicle);
+			(( void (*)(VEHICLE_TYPE*))(g_libGTASA+0x55D816+1))(m_pVehicle);
 		}
 	}
 }

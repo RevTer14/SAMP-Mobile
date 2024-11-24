@@ -32,10 +32,11 @@ CActor::CActor(int iSkin, float fX, float fY, float fZ, float fAngle)
 CActor::~CActor()
 {
 	if (m_pPed && GamePool_Ped_GetAt(m_dwGTAId) &&
-		*(uint32_t*)&m_pPed->entity != (g_libGTASA + (VER_x32 ? 0x667D14 : 0x830098)))
+		IsValidGamePed(m_pPed))
 	{
 		// CPlayerPed::Destructor
-		((void (*)(PED_TYPE*))(*(void**)(*(uint32_t*)&m_pPed->entity + (VER_x32 ? 0x4:0x4*2))))(m_pPed);
+        // CPopulation::RemovePed
+        ((void (*)(uintptr_t))(g_libGTASA + (VER_x32 ? 0x004CE6A0 + 1 : 0x5CDC64)))((uintptr_t)m_pPed);
 		m_pPed = nullptr;
 		m_pEntity = nullptr;
 	}
@@ -50,9 +51,9 @@ CActor::~CActor()
 void CActor::SetHealth(float fHealth)
 {
 	if (m_pPed) {
-		m_pPed->fHealth = fHealth;
+		m_pPed->m_fHealth = fHealth;
 
-		if (m_pPed->fHealth <= 0.0f) {
+		if (m_pPed->m_fHealth <= 0.0f) {
 			ScriptCommand(&kill_actor, m_dwGTAId);
 		}
 	}
@@ -97,6 +98,6 @@ void CActor::ClearAnimation()
 void CActor::SetFacingAngle(float fAngle)
 {
 	if (m_pPed && GamePool_Ped_GetAt(m_dwGTAId)) {
-		m_pPed->fRotation2 = DegToRad(fAngle);
+		m_pPed->m_fAimingRotation = DegToRad(fAngle);
 	}
 }

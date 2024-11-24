@@ -17,8 +17,6 @@
 #include "snapshothelper.h"
 #include "materialtextgenerator.h"
 #include "../game/Core/Quaternion.h"
-#include <queue>
-#include <mutex>
 
 class CGame
 {
@@ -103,19 +101,9 @@ public:
 	void ToggleCJWalk(bool bUseCJWalk);
 
 	bool bIsGameExiting = false;
-
-    static void InjectHooks();
-
-    static void PostToMainThread(std::function<void()> task);
-    static void ProcessMainThreadTasks();
-    static inline std::queue<std::function<void()>> tasks;
-    static inline std::mutex mtx;
 public:
 	bool m_bCheckpointsEnabled;
 	bool m_bRaceCheckpointsEnabled;
-
-    inline static RwMatrix* m_pWorkingMatrix1;
-    inline static RwMatrix* m_pWorkingMatrix2;
 
 private:
 	CPlayerPed* m_pGamePlayer;

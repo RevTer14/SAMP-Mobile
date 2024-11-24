@@ -51,6 +51,7 @@ CRemotePlayer::~CRemotePlayer()
 
 void CRemotePlayer::Process()
 {
+    FLog("CRemotePlayer::Process");
 	CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
 	CVehiclePool* pVehiclePool = pNetGame->GetVehiclePool();
 	CLocalPlayer* pLocalPlayer = pPlayerPool->GetLocalPlayer();
@@ -81,7 +82,7 @@ void CRemotePlayer::Process()
 				}
 			}
 
-			if(IS_TARGETING(m_pPlayerPed->m_pPed) &&
+			if(IS_TARGETING(m_ofSync.wKeys) && 
 				(m_pPlayerPed->GetCurrentWeapon() == 34 ||
 				m_pPlayerPed->GetCurrentWeapon() == 35 ||
 				m_pPlayerPed->GetCurrentWeapon() == 36))
@@ -684,11 +685,11 @@ void CRemotePlayer::StoreAimFullSyncData(AIM_SYNC_DATA* paimSync)
 
 	m_pPlayerPed->SetCameraZoomAndAspect(fExtZoom, fAspect);
 
-	WEAPON_SLOT_TYPE* pwstWeapon = m_pPlayerPed->GetCurrentWeaponSlot();
-	if (paimSync->byteWeaponState == WS_RELOADING)
-		pwstWeapon->dwState = 2;		// Reloading
+    CWeapon* pwstWeapon = m_pPlayerPed->GetCurrentWeaponSlot();
+	if (paimSync->byteWeaponState == WEAPONSTATE_RELOADING)
+		pwstWeapon->dwState = (eWeaponState)2;		// Reloading
 	else
-		if (paimSync->byteWeaponState != WS_MORE_BULLETS)
+		if (paimSync->byteWeaponState != WEAPONSTATE_FIRING)
 			pwstWeapon->dwAmmoInClip = (uint32_t)paimSync->byteWeaponState;
 		else
 			if (pwstWeapon->dwAmmoInClip < 2)
@@ -763,7 +764,7 @@ void CRemotePlayer::StoreBulletFullSyncData(BULLET_SYNC_DATA* btSync)
 			{
 				if (btSync->PlayerID == pPlayerPool->GetLocalPlayerID())
 				{
-					pEntity = &pGame->FindPlayerPed()->m_pPed->entity;
+					pEntity = reinterpret_cast<ENTITY_TYPE *>(&pGame->FindPlayerPed()->m_pPed);
 				}
 				else if (btSync->PlayerID == m_PlayerID)
 				{
@@ -773,7 +774,7 @@ void CRemotePlayer::StoreBulletFullSyncData(BULLET_SYNC_DATA* btSync)
 				{
 					CPlayerPed* pPlayerPed = pPlayerPool->GetAt(btSync->PlayerID)->GetPlayerPed();
 					if (pPlayerPed) {
-						pEntity = &pPlayerPed->m_pPed->entity;
+						pEntity = reinterpret_cast<ENTITY_TYPE *>(&pPlayerPed->m_pPed);
 					}
 				}
 			}

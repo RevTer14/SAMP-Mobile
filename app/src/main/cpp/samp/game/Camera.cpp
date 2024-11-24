@@ -24,7 +24,7 @@ void CCamera::SetRwCamera(RwCamera *pCamera) {
     CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x003E161C + 1 : 0x4BF318), this, pCamera);
 }
 
-void CCamera::TakeControl(ENTITY_TYPE *target, eCamMode modeToGoTo, eSwitchType switchType, int32 whoIsInControlOfTheCamera) {
+void CCamera::TakeControl(CEntityGTA *target, eCamMode modeToGoTo, eSwitchType switchType, int32 whoIsInControlOfTheCamera) {
     CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x003E1714 + 1 : 0x4BF474), this, target, modeToGoTo, switchType, whoIsInControlOfTheCamera);
 }
 

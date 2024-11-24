@@ -8,6 +8,7 @@
 
 #include "ColModel.h"
 #include "ColPoint.h"
+#include "../Entity/CEntityGTA.h"
 #include "../Core/LinkList.h"
 #include <array>
 
@@ -138,9 +139,9 @@ public:
     static bool SphereCastVsEntity(
             const CColSphere& spAws,
             const CColSphere& spBws,
-            ENTITY_TYPE* entity
+            CEntityGTA* entity
     );
-    static bool SphereVsEntity(CColSphere* sphere, ENTITY_TYPE* entity);
+    static bool SphereVsEntity(CColSphere* sphere, CEntityGTA* entity);
 
     /*!
     * @param X      Sector X

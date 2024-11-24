@@ -1144,8 +1144,8 @@ void ScrSetPlayerVelocity(RPCParameters* rpcParams)
 	if (!pPlayerPed) return;
 
 	if (pPlayerPed->IsOnGround()) {
-		uint32_t dwState = pPlayerPed->GetStateFlags();
-		pPlayerPed->SetStateFlags(dwState ^ 3);
+		//uint32_t dwState = pPlayerPed->GetStateFlags();
+		//pPlayerPed->SetStateFlags(dwState ^ 3);
 	}
 
 	pPlayerPed->SetMoveSpeedVector(vecVelocity);

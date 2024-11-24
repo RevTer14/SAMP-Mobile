@@ -56,7 +56,7 @@ public:
 		return m_bPlayerSlotState[playerId];
 	}
 
-	PLAYERID FindRemotePlayerIDFromGtaPtr(PED_TYPE* pActor);
+	PLAYERID FindRemotePlayerIDFromGtaPtr(CPedGTA* pActor);
 
 	int GetPlayerScore(PLAYERID playerId);
 	int GetPlayerPing(PLAYERID playerId);

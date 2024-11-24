@@ -14,6 +14,6 @@ public:
 	void SetFacingAngle(float fAngle);
 
 public:
-	PED_TYPE* m_pPed;
+	CPedGTA* m_pPed;
 	bool m_bInvulnerable;
 };
