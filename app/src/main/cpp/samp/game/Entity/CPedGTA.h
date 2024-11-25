@@ -16,6 +16,7 @@
 #include "CVehicleGTA.h"
 #include "game/PlayerPedData.h"
 #include "../PedIK.h"
+#include "game/Animation/AnimBlendFrameData.h"
 
 enum ePedNode : int32 {
     PED_NODE_UPPER_TORSO     = 1,

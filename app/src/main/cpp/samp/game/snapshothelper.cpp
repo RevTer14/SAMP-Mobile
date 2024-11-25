@@ -1,6 +1,7 @@
 #include "../main.h"
 #include "game.h"
 #include "RW/RenderWare.h"
+#include "Streaming.h"
 #include <GLES2/gl2.h>
 
 extern CGame* pGame;
@@ -85,14 +86,8 @@ uintptr_t CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, CV
 	if (iModel == 1373 || iModel == 3118 || iModel == 3552 || iModel == 3553)
 		iModel = 18631;
 
-	bool bNeedRemoveModel = false;
-	if (!pGame->IsModelLoaded(iModel))
-	{
-		bNeedRemoveModel = true;
-		pGame->RequestModel(iModel);
-		pGame->LoadRequestedModels();
-		while (!pGame->IsModelLoaded(iModel)) usleep(1000);
-	}
+    if (!CStreaming::TryLoadModel(iModel))
+        throw std::runtime_error("Model not loaded");
 
 	uintptr_t atomic = ModelInfoCreateInstance(iModel);
 	if (!atomic) return bufferTexture;
@@ -154,9 +149,8 @@ uintptr_t CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, CV
 	RwCameraEndUpdate((RwCamera*)m_camera);
 	RpWorldRemoveLight(m_light);
 	DestroyAtomicOrClump(atomic);
-	
-	if (bNeedRemoveModel)
-		pGame->RemoveModel(iModel, false);
+
+    CStreaming::RemoveModelIfNoRefs(iModel);
 
 	return bufferTexture;
 }

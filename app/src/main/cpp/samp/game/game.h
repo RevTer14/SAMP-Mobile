@@ -16,6 +16,8 @@
 #include "pad.h"
 #include "snapshothelper.h"
 #include "materialtextgenerator.h"
+#include <queue>
+#include <mutex>
 #include "../game/Core/Quaternion.h"
 
 class CGame
@@ -100,11 +102,25 @@ public:
 
 	void ToggleCJWalk(bool bUseCJWalk);
 
-	bool bIsGameExiting = false;
+	static bool bIsGameExiting;
 
     static void InjectHooks();
 
     inline static int32 currArea;
+    inline static RwMatrix* m_pWorkingMatrix1;
+    inline static RwMatrix* m_pWorkingMatrix2;
+
+    static bool CanSeeOutSideFromCurrArea();
+
+    static void InitialiseOnceBeforeRW();
+
+    static bool InitialiseRenderWare();
+
+    static void PostToMainThread(std::function<void()> task);
+    static void ProcessMainThreadTasks();
+    static inline std::queue<std::function<void()>> tasks;
+    static inline std::mutex mtx;
+    static void Process();
 public:
 	bool m_bCheckpointsEnabled;
 	bool m_bRaceCheckpointsEnabled;

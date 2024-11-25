@@ -5,9 +5,6 @@
     Do not delete this comment block. Respect others' work!
 */
 #include "PtrNodeDoubleLink.h"
-#include "PtrNode.h"
-#include "PtrListDoubleLink.h"
-#include "game/Pools.h"
 
 void CPtrNodeDoubleLink::InjectHooks() {
 

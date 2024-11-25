@@ -6,6 +6,7 @@ class CObject;
 struct CVehicleGTA;
 struct CPhysical;
 struct CEntityGTA;
+struct CPedGTA;
 #include "../game/Core/Rect.h"
 
 enum eWidgetType {

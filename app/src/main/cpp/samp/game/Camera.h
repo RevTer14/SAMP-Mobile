@@ -13,6 +13,7 @@
 #include "game/Entity/Placeable.h"
 #include "game/Entity/CEntityGTA.h"
 
+struct CPedGTA;
 enum class eFadeFlag : uint16 {
     FADE_IN,
     FADE_OUT

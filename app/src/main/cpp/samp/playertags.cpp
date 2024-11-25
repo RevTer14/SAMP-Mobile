@@ -14,7 +14,8 @@ CPlayerTags::CPlayerTags()
 	FLog("Loading AFK icon..");
 	m_pAFKIconTexture = CUtil::LoadTextureFromDB("samp", "afk_icon");
     FLog("Loading AFK icon1..");
-	m_pMicroIconTexture = CUtil::LoadTextureFromDB("samp", "icon_micro");
+	m_pMicroIconTexture = CUtil::LoadTextureFromDB("samp", "afk_icon");
+    FLog("Loading AFK icon2..");
 }
 
 CPlayerTags::~CPlayerTags() {}

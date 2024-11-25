@@ -86,24 +86,6 @@ void CStream_InitImageList()
 	((uintptr_t(*)(const char*, int))(g_libGTASA + (VER_x32 ? 0x2CF7D0 + 1:0x39155C)))("TEXDB\\SAMP.IMG", 1);
 }
 
-void InitGui();
-uint32_t (*CGame__InitialiseRenderWare)();
-uint32_t CGame__InitialiseRenderWare_hook()
-{
-	FLog("Loading SAMP texture database..");
-	uint32_t result = CGame__InitialiseRenderWare();
-
-	// TextureDatabaseRuntime::Load()
-	((void(*)(const char*, int, int))(g_libGTASA + (VER_x32 ? 0x1EA864 + 1:0x28771C)))("samp", 0, 5);
-	/*((void(*)(const char*, int, int))(g_libGTASA + 0x1EA8E4 + 1))("gui", 0, 5);//gui
-	((void(*)(const char*, int, int))(g_libGTASA + 0x1EA8E4 + 1))("gtasa", 0, 5);//gtasa
-	((void(*)(const char*, int, int))(g_libGTASA + 0x1EA8E4 + 1))("game", 0, 5);//game
-	((void(*)(const char*, int, int))(g_libGTASA + 0x1EA8E4 + 1))("fm", 0, 5);//game*/
-
-	InitGui();
-	return result;
-}
-
 /* =============================================================================== */
 
 void MainLoop();
@@ -1431,6 +1413,9 @@ void CCamera__Process_hook(uintptr_t thiz)
 #include "Streaming.h"
 #include "References.h"
 #include "VisibilityPlugins.h"
+#include "game/Animation/AnimManager.h"
+#include "FileLoader.h"
+#include "Renderer.h"
 
 extern CJavaWrapper* pJavaWrapper;
 void (*MainMenuScreen__OnExit)();
@@ -1958,31 +1943,77 @@ void StartGameScreen__OnNewGameCheck_hook()
 
     StartGameScreen__OnNewGameCheck();
 }
+#include "Textures/TextureDatabase.h"
+#include "Textures/TextureDatabaseEntry.h"
+#include "Textures/TextureDatabaseRuntime.h"
+#include "Scene.h"
 
 void InjectHooks()
 {
+    FLog("InjectHooks");
+    CHook::Write(g_libGTASA + (VER_x32 ? 0x678954 : 0x84F2D0), &Scene);
+
 #if !VER_x32 // mb all.. wtf crash x64?
     CHook::RET("_ZN11CPlayerInfo14LoadPlayerSkinEv");
     CHook::RET("_ZN11CPopulation10InitialiseEv");
 #endif
+    CCamera::InjectHooks(); //
+    CReferences::InjectHooks(); //
     CModelInfo::injectHooks(); //
+    CTimer::InjectHooks(); //
+    //cTransmission::InjectHooks(); //
+    CAnimBlendAssociation::InjectHooks(); //
+    //cHandlingDataMgr::InjectHooks(); //
+    //CPools::InjectHooks(); //
+    CVehicleGTA::InjectHooks(); //
     CMatrixLink::InjectHooks(); //
     CMatrixLinkList::InjectHooks(); //
+    CStreaming::InjectHooks();
+    CPlaceable::InjectHooks(); //
     CMatrix::InjectHooks(); //
     CCollision::InjectHooks(); //
-    CTxdStore::InjectHooks();
-    CVehicleModelInfo::InjectHooks();
-    CPlaceable::InjectHooks();
-    CCoronas::InjectHooks();
-    //CPathFind::InjectHooks();
+    //CIdleCam::InjectHooks(); //
+    //CTouchInterface::InjectHooks(); //
+    //CWidgetGta::InjectHooks();
+    CEntityGTA::InjectHooks(); //
+    CPhysical::InjectHooks(); //
+    CAnimManager::InjectHooks(); //
+    //CCarEnterExit::InjectHooks();
+    //CPlayerPedGta::InjectHooks(); //
+    //CTaskManager::InjectHooks(); //
+    //CPedIntelligence::InjectHooks(); //
+    //CWorld::InjectHooks(); //
     CGame::InjectHooks();
-    CStreaming::InjectHooks();
-    CStreamingInfo::InjectHooks();
-    CBoundingBox::InjectHooks();
-    CCollision::InjectHooks();
-    CReferences::InjectHooks();
+    //ES2VertexBuffer::InjectHooks();
+    //CRQ_Commands::InjectHooks();
+    CTxdStore::InjectHooks();
     CVisibilityPlugins::InjectHooks();
-    CTimer::InjectHooks();
+    //CAdjustableHUD::InjectHooks();
+
+    // new
+    //CClouds::InjectHooks();
+    //CWeather::InjectHooks();
+    //RenderBuffer::InjectHooks();
+    //CTimeCycle::InjectHooks();
+    CCoronas::InjectHooks();
+    //CDraw::InjectHooks();
+    //CClock::InjectHooks();
+    //CBirds::Init();
+    CVehicleModelInfo::InjectHooks();
+    //CPathFind::InjectHooks();
+    //CSprite2d::InjectHooks();
+    //CFileLoader::InjectHooks();
+    //CShadows::InjectHooks();
+    //CPickups::InjectHooks();
+    CRenderer::InjectHooks();
+    CStreamingInfo::InjectHooks();
+    TextureDatabase::InjectHooks();
+    TextureDatabaseEntry::InjectHooks();
+    TextureDatabaseRuntime::InjectHooks();
+    //CCustomBuildingDNPipeline::InjectHooks();
+    //CWidgetRadar::InjectHooks();
+
+    //CRealTimeShadowManager::InjectHooks();
 }
 
 void InstallSpecialHooks()
@@ -2001,8 +2032,6 @@ void InstallSpecialHooks()
 
     //CHook::Redirect("_ZN10CStreaming13InitImageListEv", &CStream_InitImageList);
     CHook::Redirect("_ZN6CPools10InitialiseEv", &CPools_Initialise);
-
-    CHook::InlineHook("_ZN5CGame20InitialiseRenderWareEv", &CGame__InitialiseRenderWare_hook, &CGame__InitialiseRenderWare);
 
     MultiTouch::initialize();
 }

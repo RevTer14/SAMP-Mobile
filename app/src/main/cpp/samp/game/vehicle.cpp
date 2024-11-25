@@ -2,6 +2,7 @@
 #include "game.h"
 #include "../net/netgame.h"
 #include "vehicle.h"
+#include "Streaming.h"
 
 extern CGame* pGame;
 extern CNetGame* pNetGame;
@@ -24,11 +25,8 @@ CVehicle::CVehicle(int iType, float fX, float fY, float fZ, float fRotation, boo
 		(iType != TRAIN_FREIGHT) &&
 		(iType != TRAIN_TRAM)) {
 
-		if (!pGame->IsModelLoaded(iType)) {
-			pGame->RequestModel(iType);
-			pGame->LoadRequestedModels();
-			while (!pGame->IsModelLoaded(iType)) usleep(100);
-		}
+        if (!CStreaming::TryLoadModel(iType))
+            throw std::runtime_error("Model not loaded");
 
 		ScriptCommand(&create_car, iType, fX, fY, fZ, &dwRetID);
 		ScriptCommand(&set_car_z_angle, dwRetID, fRotation);
@@ -73,18 +71,19 @@ CVehicle::CVehicle(int iType, float fX, float fY, float fZ, float fRotation, boo
 			dwDirection = 1;
 		}
 
-		pGame->RequestModel(TRAIN_PASSENGER_LOCO);
-		pGame->RequestModel(TRAIN_PASSENGER);
-		pGame->RequestModel(TRAIN_FREIGHT_LOCO);
-		pGame->RequestModel(TRAIN_FREIGHT);
-		pGame->RequestModel(TRAIN_TRAM);
-		pGame->LoadRequestedModels();
+        if (!CStreaming::TryLoadModel(TRAIN_PASSENGER_LOCO))
+            throw std::runtime_error("Model not loaded");
 
-		while (!pGame->IsModelLoaded(TRAIN_PASSENGER_LOCO)) usleep(1000);
-		while (!pGame->IsModelLoaded(TRAIN_PASSENGER)) usleep(1000);
-		while (!pGame->IsModelLoaded(TRAIN_FREIGHT_LOCO)) usleep(1000);
-		while (!pGame->IsModelLoaded(TRAIN_FREIGHT)) usleep(1000);
-		while (!pGame->IsModelLoaded(TRAIN_TRAM)) usleep(1000);
+        if (!CStreaming::TryLoadModel(TRAIN_PASSENGER))
+            throw std::runtime_error("Model not loaded");
+
+        if (!CStreaming::TryLoadModel(TRAIN_FREIGHT_LOCO))
+            throw std::runtime_error("Model not loaded");
+
+        if (!CStreaming::TryLoadModel(TRAIN_FREIGHT))
+            throw std::runtime_error("Model not loaded");
+        if (!CStreaming::TryLoadModel(TRAIN_TRAM))
+            throw std::runtime_error("Model not loaded");
 
 		ScriptCommand(&create_train, iType, fX, fY, fZ, dwDirection, &dwRetID);
 		m_pVehicle = GamePool_Vehicle_GetAt(dwRetID);
@@ -214,21 +213,8 @@ void CVehicle::AddComponent(int iComponentID)
 	if (!m_pVehicle || !GamePool_Vehicle_GetAt(m_dwGTAId)) return;
 	if (GetVehicleSubtype() != VEHICLE_SUBTYPE_CAR) return;
 
-	if (!ScriptCommand(&is_component_available, iComponentID))
-	{
-		pGame->RequestModel(iComponentID);
-		pGame->LoadRequestedModels();
-		ScriptCommand(&request_car_component, iComponentID);
-
-		int dwTime = 0;
-		while (dwTime < 20) {
-			if (ScriptCommand(&is_component_available, iComponentID)) {
-				break;
-			}
-			usleep(1000);
-			dwTime++;
-		}
-	}
+    if (!CStreaming::TryLoadModel(iComponentID))
+        throw std::runtime_error("Model not loaded");
 
 	if (!ScriptCommand(&is_component_available, iComponentID)) {
 		return;

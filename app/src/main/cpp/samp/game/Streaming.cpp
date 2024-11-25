@@ -14,7 +14,6 @@
 #include "IplStore.h"
 #include "Camera.h"
 #include "Renderer.h"
-#include "World.h"
 #include <algorithm>
 #include <functional>
 #include <vector>
@@ -23,10 +22,13 @@
 extern UI *pUI;
 
 bool CStreaming::TryLoadModel(int modelId) {
+    FLog("TryLoadModel %d", modelId);
     if(!CStreaming::GetInfo(modelId).IsLoaded()) {
+        FLog("TryLoadModel 1");
         CStreaming::RequestModel(modelId, STREAMING_GAME_REQUIRED | STREAMING_KEEP_IN_MEMORY);
+        FLog("TryLoadModel 11");
         CStreaming::LoadAllRequestedModels(false);
-
+        FLog("TryLoadModel 2");
         uint32 count = 0;
         while (!CStreaming::GetInfo(modelId).IsLoaded()) {
             count++;
@@ -37,7 +39,9 @@ bool CStreaming::TryLoadModel(int modelId) {
                 return false;
             }
         }
+        FLog("TryLoadModel 3");
     }
+    FLog("TryLoadModel 4");
     return true;
 }
 
@@ -260,6 +264,7 @@ void CStreaming::InitImageList() {
     //CStreaming::AddImageToList("TEXDB\\SKINS.IMG", true);
     //CStreaming::AddImageToList("TEXDB\\CARS.IMG", true);
     CStreaming::AddImageToList("TEXDB\\SAMP.IMG", true);
+    CStreaming::AddImageToList("TEXDB\\PLAYER.IMG", true);
     CStreaming::AddImageToList("TEXDB\\SAMPCOL.IMG", true);
 #endif
 }
@@ -401,7 +406,7 @@ void CStreaming::Update() {
     if(!pNetGame || !pNetGame->GetPlayerPool()->GetLocalPlayer())
         return;
 
-    auto pLocalPed = CPlayerPool::GetLocalPlayer()->GetPlayerPed()->m_pPed;
+    auto pLocalPed = pNetGame->GetPlayerPool()->GetLocalPlayer()->GetPlayerPed()->m_pPed;
     const CVector& playerPos = pLocalPed->GetPosition();
 //    if (!ms_disableStreaming
 //        && !CCutsceneMgr::IsCutsceneProcessing()

@@ -3,6 +3,9 @@
 #include "../net/netgame.h"
 #include "../vendor/armhook/patch.h"
 #include <cmath>
+// 0.3.7
+#include "Entity/CPedGta.h"
+#include "Streaming.h"
 
 extern CGame* pGame;
 extern CNetGame* pNetGame;
@@ -117,6 +120,7 @@ CPlayerPed::CPlayerPed(int iNum, int iSkin, float fX, float fY, float fZ, float 
 
 CPlayerPed::~CPlayerPed()
 {
+    auto modelId = m_pPed->m_nModelIndex;
 	FLog("Destroying PlayerPed(%d)", m_bytePlayerNumber);
 
 	memset(&RemotePlayerKeys[m_bytePlayerNumber], 0, sizeof(PAD_KEYS));
@@ -155,11 +159,13 @@ CPlayerPed::~CPlayerPed()
 	{
 		m_pPed = nullptr;
 		m_dwGTAId = 0;
+
 	}
+
+    CStreaming::RemoveModelIfNoRefs(modelId);
 }
 
-// 0.3.7
-#include "Entity/CPedGta.h"
+
 bool CPlayerPed::IsInVehicle()
 {
 	if (!m_pPed) return false;
@@ -488,19 +494,28 @@ void CPlayerPed::SetModelIndex(uint uiModel)
 {
 	FLog("SetModelIndex");
 
-	if (!GamePool_Ped_GetAt(m_dwGTAId)) return;
+    if(!GamePool_Ped_GetAt(m_dwGTAId)) return;
+    if(!IsValidPedModel(uiModel))
+        uiModel = 0;
 
-	if (!IsValidPedModel(uiModel)) uiModel = 0;
+    if(m_pPed)
+    {
+        FLog("SetModelIndex1");
+        auto oldModelId = m_pPed->m_nModelIndex;
 
-	if (m_pPed)
-	{
-		// CClothes::RebuildPlayer
-		//CHook::RET(g_libGTASA + 0x45751C);
-		DestroyFollowPedTask();
+        if (!CStreaming::TryLoadModel(uiModel))
+        {
+            FLog("No model");
+            return;
+        }
+        FLog("SetModelIndex2");
+        // CEntity::DeleteRwObject();
         m_pPed->m_nModelIndex = uiModel;
-		// CAEPedSpeechAudioEntity::Initialise
-		//((void (*)(uintptr_t, uintptr_t))(g_libGTASA + 0x39CE68 + 1))(((uintptr_t)m_pPed + 664), (uintptr_t)m_pPed);
-	}
+        FLog("SetModelIndex3");
+        m_pPed->SetModelIndex(uiModel);
+        FLog("SetModelIndex4");
+        CStreaming::RemoveModelIfNoRefs(oldModelId);
+    }
 }
 
 void CPlayerPed::ClearWeapons()
@@ -526,13 +541,8 @@ void CPlayerPed::GiveWeapon(int iWeaponId, int iAmmo)
 		int iWeaponModelID = GameGetWeaponModelIDFromWeaponID(iWeaponId);
 		if (iWeaponModelID != -1)
 		{
-			if (!pGame->IsModelLoaded(iWeaponModelID))
-			{
-				pGame->RequestModel(iWeaponModelID);
-				pGame->LoadRequestedModels();
-				while (!pGame->IsModelLoaded(iWeaponModelID))
-					sleep(1);
-			}
+            if (!CStreaming::TryLoadModel(iWeaponModelID))
+                throw std::runtime_error("Model not loaded");
 
 			// sub_1009C420()
 			// sub_1009C610()

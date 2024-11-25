@@ -209,62 +209,8 @@ static_assert(sizeof(CWeapon) == (VER_x32 ? 0x1C : 0x20), "Invalid size CPlaceab
 
 //-----------------------------------------------------------
 
-#pragma pack(push, 1)
-typedef struct _ENTITY_TYPE
-{
-	// ENTITY STUFF
-	uint32_t vtable; 			// 0-4		;vtable				- 2.0
-	CVector vPos;				// 4-16
-	float fRotZBeforeMat;		// 16-20
-	RwMatrix *mat; 			// 20-24	;mat				- 2.0
-    union {
-		uintptr_t pRwObject;
-		uintptr_t pRpClump;
-		uintptr_t pRpAtomic;
-	};							// 24-28	;pRWObject			- 2.0
-	uint32_t dwProcessingFlags;			// 28-32	;dwProcessingFlags
-	PADDING(_pad92, 6);			// 32-38
-	uint16_t nModelIndex; 		// 38-40	;ModelIndex			- 2.0
-    PADDING(_pad93__, 11);		// 40-51
-    uint8_t byteAreaCode;		// 51-52
-    PADDING(_pad93, 6);			// 52-58
-	uint8_t nControlFlags;		// 58-59	;nControlFlags		- 2.0
-	PADDING(_pad95, 9);			// 59-68
-	uint32_t flags;				// 68-72
-	CVector vecMoveSpeed;		// 72-84	;vecMoveSpeed		- 2.0
-    CVector vecTurnSpeed; 		// 84-96	;vecTurnSpeed		- 2.0
-	PADDING(_pad96, 88);		// 96-184
-	uintptr_t dwUnkModelRel;	// 184-188	;dwUnkModelRel		- 2.0
-} ENTITY_TYPE;
-#pragma pack(pop)
-
 //-----------------------------------------------------------
 
-class AnimBlendFrameData
-{
-public:
-    union {
-        struct {
-            uint8 m_bf1 : 1;                                    // doesn't seem to be used
-            uint8 m_IsIFrameOrientationToAffectedByNodes : 1;   // m_IFrame orientation will be affected
-            uint8 m_IsIFrameTranslationToAffectedByNodes : 1;   // m_IFrame translation will be affected
-            uint8 m_bIsInitialized : 1;
-            uint8 m_bUpdateSkinnedWith3dVelocityExtraction : 1;
-            uint8 m_bCheckBlendNodeClumpKeyFrames : 1;          // key frames of CAnimBlendNode bones will be checked
-            uint8 m_bIsCompressed : 1;
-            uint8 m_bUpdatingFrame : 1;                         // doesn't seem to be used
-        };
-        uint8 m_nFlags;
-    };
-    uint8 pad0[3];
-	CVector vOffset;
-    union {
-        uintptr_t m_pIFrame; // TODO: Rename to `m_pStdKeyFrame`
-        RwFrame*                 m_pFrame;
-    };
-    uint32                   m_nNodeId;
-};
-VALIDATE_SIZE(AnimBlendFrameData, (VER_x32 ? 0x18 : 0x20));
 
 struct VehicleAudioPropertiesStruct
 {
@@ -285,138 +231,6 @@ struct VehicleAudioPropertiesStruct
 	char field_15[3];			// 15: + 29, zeros
 	float field_16;			// 16: + 32
 };
-//-----------------------------------------------------------
-struct CPedGTA;
-#pragma pack(push, 1)
-typedef struct _VEHICLE_TYPE
-{
-	ENTITY_TYPE entity;				// 0000-0188	;entity
-	PADDING(_pad99_9, 128);				// 0188-0316
-	uintptr_t pVehicleAudio;			// 0316-0320
-	PADDING(_pad200, 748);			// 0320-1068
-	union {
-		uint8_t byteFlags;				// 1068-1076	;byteFlags
-		struct {
-			unsigned char bIsLawEnforcer : 1;
-			unsigned char bIsAmbulanceOnDuty : 1;
-			unsigned char bIsFireTruckOnDuty : 1;
-			unsigned char bIsLocked : 1;
-			unsigned char bEngineOn : 1;
-			unsigned char bIsHandbrakeOn : 1;
-			unsigned char bLightsOn : 1;
-			unsigned char bFreebies : 1;
-
-			unsigned char bIsVan : 1;
-			unsigned char bIsBus : 1;
-			unsigned char bIsBig : 1;
-			unsigned char bLowVehicle : 1;
-			unsigned char bComedyControls : 1;
-			unsigned char bWarnedPeds : 1;
-			unsigned char bCraneMessageDone : 1;
-			unsigned char bTakeLessDamage : 1;
-
-			unsigned char bIsDamaged : 1;
-			unsigned char bHasBeenOwnedByPlayer : 1;
-			unsigned char bFadeOut : 1;
-			unsigned char bIsBeingCarJacked : 1;
-			unsigned char bCreateRoadBlockPeds : 1;
-			unsigned char bCanBeDamaged : 1;
-			unsigned char bOccupantsHaveBeenGenerated : 1;
-			unsigned char bGunSwitchedOff : 1;
-
-			unsigned char bVehicleColProcessed : 1;
-			unsigned char bIsCarParkVehicle : 1;
-			unsigned char bHasAlreadyBeenRecorded : 1;
-			unsigned char bPartOfConvoy : 1;
-			unsigned char bHeliMinimumTilt : 1;
-			unsigned char bAudioChangingGear : 1;
-			unsigned char bIsDrowning : 1;
-			unsigned char bTyresDontBurst : 1;
-
-			unsigned char bCreatedAsPoliceVehicle : 1;
-			unsigned char bRestingOnPhysical : 1;
-			unsigned char bParking : 1;
-			unsigned char bCanPark : 1;
-			unsigned char bFireGun : 1;
-			unsigned char bDriverLastFrame : 1;
-			unsigned char bNeverUseSmallerRemovalRange : 1;
-			unsigned char bIsRCVehicle : 1;
-
-			unsigned char bAlwaysSkidMarks : 1;
-			unsigned char bEngineBroken : 1;
-			unsigned char bVehicleCanBeTargetted : 1;
-			unsigned char bPartOfAttackWave : 1;
-			unsigned char bWinchCanPickMeUp : 1;
-			unsigned char bImpounded : 1;
-			unsigned char bVehicleCanBeTargettedByHS : 1;
-			unsigned char bSirenOrAlarm : 1;
-
-			unsigned char bHasGangLeaningOn : 1;
-			unsigned char bGangMembersForRoadBlock : 1;
-			unsigned char bDoesProvideCover : 1;
-			unsigned char bMadDriver : 1;
-			unsigned char bUpgradedStereo : 1;
-			unsigned char bConsideredByPlayer : 1;
-			unsigned char bPetrolTankIsWeakPoint : 1;
-			unsigned char bDisableParticles : 1;
-
-			unsigned char bHasBeenResprayed : 1;
-			unsigned char bUseCarCheats : 1;
-			unsigned char bDontSetColourWhenRemapping : 1;
-			unsigned char bUsedForReplay : 1;
-		} dwFlags;
-	};
-
-	uint32_t dwCreationTime;			// 1076-1080
-	uint8_t byteColor1;				// 1080-1081	;byteColor1			- 2.0
-	uint8_t byteColor2;				// 1081-1082	;byteColor2			- 2.0
-	uint8_t byteColor3;				// 1082-1083	;byteColor3			- 2.0
-	uint8_t byteColor4;				// 1083-1084	;byteColor4			- 2.0
-	PADDING(_pad206, 36);			// 1084-1124
-	uint16_t wAlarmState;			// 1120-1122	;wAlarmState		- 2.0
-	PADDING(_pad207, 2);			// 1122-1124
-	CPedGTA *pDriver;				// 1124-1128	;driver				- 2.0
-	CPedGTA *pPassengers[7];		// 1128-1156	;pPassengers		- 2.0
-	PADDING(_pad201, 8);			// 1156-1164
-	uint8_t byteMaxPassengers;		// 1164-1165	;byteMaxPassengers	- 2.0
-	PADDING(_pad236, 7); 			// 1165-1172
-	uint32_t pFireObject;			// 1172-1176
-	PADDING(_pad241__, 20); 		// 1176-1196
-	uint8_t byteMoreFlags;			// 1196-1197
-	PADDING(_pad275_, 31); 			// 1197-1228
-	float fHealth;					// 1228-1232	;fHealth			- 2.0
-	_VEHICLE_TYPE* pTractor;		// 1232-1236	;pTractor			- 2.0
-	_VEHICLE_TYPE* pTrailer;		// 1236-1240	;pTrailer			- 2.0
-	PADDING(_pad208, 48);			// 1240-1288
-	uint32_t dwDoorsLocked;			// 1288-1292	;dwDoorsLocked		- 2.0
-	PADDING(_pad202, 172);			// 1292-1464
-	union {
-		struct {
-			PADDING(_pad245, 1);		// 1464-1465
-			uint8_t byteWheelStatus[4]; // 1465-1469
-			uint8_t byteDoorStatus[6];	// 1469-1475
-			uint8_t byteDamageUnk;		// 1475-1476
-			uint32_t dwLightStatus;		// 1476-1480
-			uint32_t dwPanelStatus;		// 1480-1484
-		};
-		struct {
-			float fTrainSpeed;			// 1464-1468
-			PADDING(_pad212, 16);		// 1468-1484
-		};
-	};
-	PADDING(_pad213, 28);				// 1484-1512
-	_VEHICLE_TYPE* pNextCarriage;	// 1512-1516	;pNextCarriage		- 2.0
-	PADDING(_pad211, 112);				// 1516-1628
-	float fBikeLean;					// 1628-1632
-	uint32_t dwBikeUnk;					// 1632-1636
-	PADDING(pad211_, 12);				// 1636-1648
-	uint8_t byteBikeWheelStatus[2];		// 1648-1650
-	PADDING(_pad21331, 526);			// 1650-2176
-	uint16_t wHydraThrusters;		// 2176-2178	;wHydraThrusters
-	PADDING(_pad245123, 350);  			// 2178-2528
-	float fPlaneLandingGear;			// 2528-2532
-} VEHICLE_TYPE;
-#pragma pack(pop)
 
 struct BULLET_SYNC
 {
@@ -435,38 +249,6 @@ typedef struct _REMOVEBUILDING_DATA {
 	float fRange;
 } REMOVEBUILDING_DATA;
 #pragma pack(pop)
-
-enum ePedBones
-{
-	BONE_PELVIS1 = 1,
-	BONE_PELVIS = 2,
-	BONE_SPINE1 = 3,
-	BONE_UPPERTORSO = 4,
-	BONE_NECK = 5,
-	BONE_HEAD2 = 6,
-	BONE_HEAD1 = 7,
-	BONE_HEAD = 8,
-	BONE_RIGHTUPPERTORSO = 21,
-	BONE_RIGHTSHOULDER = 22,
-	BONE_RIGHTELBOW = 23,
-	BONE_RIGHTWRIST = 24,
-	BONE_RIGHTHAND = 25,
-	BONE_RIGHTTHUMB = 26,
-	BONE_LEFTUPPERTORSO = 31,
-	BONE_LEFTSHOULDER = 32,
-	BONE_LEFTELBOW = 33,
-	BONE_LEFTWRIST = 34,
-	BONE_LEFTHAND = 35,
-	BONE_LEFTTHUMB = 36,
-	BONE_LEFTHIP = 41,
-	BONE_LEFTKNEE = 42,
-	BONE_LEFTANKLE = 43,
-	BONE_LEFTFOOT = 44,
-	BONE_RIGHTHIP = 51,
-	BONE_RIGHTKNEE = 52,
-	BONE_RIGHTANKLE = 53,
-	BONE_RIGHTFOOT = 54,
-};
 
 //-----------------------------------------------------------
 
@@ -603,3 +385,13 @@ enum ePedBones
 #define OBJECT_DYN_BEER_1				1486
 #define OBJECT_CJ_BEER_B_2				1543
 #define OBJECT_CJ_PINT_GLASS			1546
+#include <cassert>
+namespace notsa {
+    namespace detail {
+        static void VerifyMacroImpl(bool result) {
+            assert(result); // In release mode this won't do anything
+        }
+    };
+};
+//! Macro for passing a string var to *scanf_s function.
+#define VERIFY notsa::detail::VerifyMacroImpl

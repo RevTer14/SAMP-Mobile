@@ -75,7 +75,7 @@ void CEntityGTA::SetInterior(int interiorId, bool needRefresh)
 {
     m_nAreaCode = static_cast<eAreaCodes>(interiorId);
 
-    if ( this == pGame->FindPlayerPed()->m_pPed )
+    if ( this == (CEntityGTA*)pGame->FindPlayerPed()->m_pPed )
     {
         CGame::currArea = interiorId;
 

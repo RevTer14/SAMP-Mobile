@@ -3,6 +3,7 @@
 #include "../net/netgame.h"
 
 #include "RW/RenderWare.h"
+#include "Streaming.h"
 
 #include <cmath>
 
@@ -89,12 +90,7 @@ CObject::~CObject()
 			pGame->GetCamera()->AttachToEntity(0);
 	}*/
 
-	if (m_pEntity) /* CPlaceable */
-	{
-		ScriptCommand(&destroy_object, m_dwGTAId);
-		if (GetModelRefCounts(m_iModel) == 0)
-			pGame->RemoveModel(m_iModel, false);
-	}
+    CStreaming::RemoveModelIfNoRefs(m_pEntity->m_nModelIndex);
 
 	for (int i = 0; i < 16; i++)
 	{

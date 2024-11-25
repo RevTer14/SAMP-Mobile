@@ -3,7 +3,7 @@
 //
 
 #include "CdStreamInfo.h"
-#include "../util/patch.h"
+#include "../vendor/armhook/patch.h"
 
 void CdStreamInit(int32 streamCount) {
     CHook::CallFunction<void>("_Z12CdStreamIniti", streamCount);

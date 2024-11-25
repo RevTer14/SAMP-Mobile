@@ -1,5 +1,6 @@
 #include "../main.h"
 #include "game.h"
+#include "Streaming.h"
 
 extern CGame* pGame;
 
@@ -10,12 +11,8 @@ CActor::CActor(int iSkin, float fX, float fY, float fZ, float fAngle)
 	m_dwGTAId = 0;
 	m_bInvulnerable = false;
 
-	if (!pGame->IsModelLoaded(iSkin))
-	{
-		pGame->RequestModel(iSkin);
-		pGame->LoadRequestedModels();
-		while (!pGame->IsModelLoaded(iSkin)) usleep(1000);
-	}
+    if (!CStreaming::TryLoadModel(iSkin))
+        throw std::runtime_error("Model not loaded");
 
 	uint32_t dwRet;
 	ScriptCommand(&create_actor, 5, iSkin, fX, fY, fZ - 1.0f, &dwRet);
@@ -26,6 +23,8 @@ CActor::CActor(int iSkin, float fX, float fY, float fZ, float fAngle)
 
 	ScriptCommand(&set_actor_can_be_decapitated, m_dwGTAId, 0);
 	ScriptCommand(&set_actor_decision_marker, m_dwGTAId, 0x10006);
+
+    CStreaming::RemoveModelIfNoRefs(iSkin);
 }
 // 0.3.7
 CActor::~CActor()
