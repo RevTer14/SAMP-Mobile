@@ -12,6 +12,7 @@ public:
 		int bLoop, int bLockX, int bLockY, int bFreeze, int iTime);
 	void ClearAnimation();
 	void SetFacingAngle(float fAngle);
+    void ForceTargetRotation(float fRotation);
 
 public:
 	CPedGTA* m_pPed;

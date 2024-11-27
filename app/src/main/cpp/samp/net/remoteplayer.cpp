@@ -573,11 +573,11 @@ void CRemotePlayer::Remove()
 // 0.3.7
 void CRemotePlayer::HandleDeath()
 {
-	if (m_pPlayerPed)
-	{
-		m_pPlayerPed->SetKeys(0, 0, 0);
-		m_pPlayerPed->SetDead();
-	}
+    if (GetPlayerPed())
+    {
+        GetPlayerPed()->SetKeys(0, 0, 0);
+        GetPlayerPed()->SetDead();
+    }
 
 	SetState(PLAYER_STATE_WASTED);
 	ResetAllSyncAttributes();

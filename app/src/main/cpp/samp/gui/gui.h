@@ -27,6 +27,15 @@
 
 #include "samp_widgets/dialogs/dialog.h"
 
+#include "..//vendor/raknet/SingleProducerConsumer.h"
+
+#pragma pack(push, 1)
+struct BUFFERED_COMMAND_TEXTDRAW
+{
+    uint16_t textdrawId;
+};
+#pragma pack(pop)
+
 class UI : public Widget, public ImGuiWrapper
 {
 public:
@@ -68,6 +77,11 @@ public:
 
 	bool OnTouchEvent(int type, bool multi, int x, int y);
 
+    void renderDebug();
+
+    void ProcessPushedTextdraws();
+    void PushToBufferedQueueTextDrawPressed(uint16_t textdrawId);
+
 protected:
 	void drawList() override;
 
@@ -80,7 +94,12 @@ private:
 	ButtonPanel* m_buttonPanel;
 	PlayerTabList* m_playerTabList;
 	VoiceButton* m_voiceButton;
-	Label* d_label;
+	Label* label;
+    Label* label2;
+    Label* label3;
+    Label* label4;
 
 	bool m_bNeedClearMousePos = false;
+
+    DataStructures::SingleProducerConsumer<BUFFERED_COMMAND_TEXTDRAW> m_BufferedCommandTextdraws;
 };

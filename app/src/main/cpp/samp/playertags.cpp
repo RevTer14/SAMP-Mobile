@@ -5,6 +5,7 @@
 #include "gui/gui.h"
 #include "playertags.h"
 #include "util/CUtil.h"
+#include "game/World.h"
 
 extern CGame* pGame;
 extern CNetGame* pNetGame;
@@ -26,6 +27,8 @@ void CPlayerTags::Render(ImGuiRenderer* renderer)
 	RwMatrix matLocal, matPlayer;
 	int dwHitEntity;
 	char szNickBuf[64];
+
+    static CCamera& TheCamera = *reinterpret_cast<CCamera*>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
 
 	if (pNetGame && pNetGame->m_pNetSet->bShowNameTags)
 	{
@@ -67,8 +70,7 @@ void CPlayerTags::Render(ImGuiRenderer* renderer)
 
 						if (pNetGame->m_pNetSet->bNameTagLOS)
 						{
-							dwHitEntity = ScriptCommand(&get_line_of_sight, vecPos.x, vecPos.y, vecPos.z,
-								pCam->pos1x, pCam->pos1y, pCam->pos1z, 1, 0, 0, 1, 0);
+							dwHitEntity = CWorld::GetIsLineOfSightClear(vecPos, TheCamera.GetPosition(), true, false, false, true, false, false, false);
 						}
 
 						if (!pNetGame->m_pNetSet->bNameTagLOS || dwHitEntity && !pRemotePlayer->IsNPC())

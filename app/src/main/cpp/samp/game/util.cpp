@@ -2119,9 +2119,6 @@ float subAngle(float a1, float a2)
 void HideEntity(CEntityGTA *pEntity)
 {
     pEntity->GetPosition().z -= 2000.0;
-
-    RwMatrix matrix = pEntity->GetMatrix().ToRwMatrix();
-    matrix.pos.y -= 2000.0;
 }
 
 /* =========== RemoveBuildings ============= */
@@ -2152,12 +2149,7 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
         {
             if(iModel == -1 || pEntity->m_nModelIndex == iModel)
             {
-                CVector vecPool = CVector { 0.0f, 0.0f, 0.0f };
-                memcpy(&vecPool, &pEntity->GetPosition(), sizeof(CVector));
-
-                memcpy(&vecPool, &pEntity->GetMatrix().m_pos, sizeof(CVector));
-
-                float fDistance = GetDistance(vecPool, vecPos);
+                float fDistance = GetDistance(pEntity->GetPosition(), vecPos);
                 if(fDistance <= fRange) HideEntity(pEntity);
             }
         }
@@ -2171,12 +2163,7 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
         {
             if(iModel == -1 || pEntity->m_nModelIndex == iModel)
             {
-                CVector vecPool = CVector { 0.0f, 0.0f, 0.0f };
-                memcpy(&vecPool, &pEntity->GetPosition(), sizeof(CVector));
-
-                memcpy(&vecPool, &pEntity->GetMatrix().m_pos, sizeof(CVector));
-
-                float fDistance = GetDistance(vecPool, vecPos);
+                float fDistance = GetDistance(pEntity->GetPosition(), vecPos);
                 if(fDistance <= fRange) HideEntity(pEntity);
             }
         }
@@ -2190,12 +2177,7 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
         {
             if(iModel == -1 || pEntity->m_nModelIndex == iModel)
             {
-                CVector vecPool = CVector { 0.0f, 0.0f, 0.0f };
-                memcpy(&vecPool, &pEntity->GetPosition(), sizeof(CVector));
-
-                memcpy(&vecPool, &pEntity->GetMatrix().m_pos, sizeof(CVector));
-
-                float fDistance = GetDistance(vecPool, vecPos);
+                float fDistance = GetDistance(pEntity->GetPosition(), vecPos);
                 if(fDistance <= fRange) HideEntity(pEntity);
             }
         }
@@ -2224,7 +2206,8 @@ void RemoveOccludersInRadius(RwV3d vecPos, float fRadius)
         uint32_t dwOccluders = g_libGTASA+(VER_x32 ? 0xA41140:0xCE3EE8);
         for(int i = 0; i <= iOccludersOnMap; i++)
         {
-            stOccluders *aOccluders = (stOccluders*)((i * (VER_x32 ? 18:18*2)) + dwOccluders);
+            stOccluders *aOccluders = (stOccluders*)((i * (VER_x32 ? 18:18)) + dwOccluders);
+            if(!aOccluders) return;
 
             CVector vecOccluderPos;
             vecOccluderPos.x = (float)aOccluders->fMidX * 0.25;
@@ -2320,7 +2303,7 @@ void DrawTextureUV(uintptr_t texture, CRect* rect, uint32_t dwColor, float *uv)
 		RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, (void*)rwFILTERLINEAR);
 		// CSprite2d::Draw(CRect  const& posn, CRGBA  const& color, float u1, float v1, float u2, float v2, float u3, float v3, float u4, float v4);
 		((void(*)(uintptr_t, CRect*, uint32_t*, float, float, float, float, float, float, float, float))
-			(g_libGTASA + 0x5C95C0 + 1))(texture, rect, &dwColor, uv[0], uv[1], uv[2], uv[3], uv[4], uv[5], uv[6], uv[7]);
+			(g_libGTASA + (VER_x32?0x1974EC + 1:0x6EDC5C)))(texture, rect, &dwColor, uv[0], uv[1], uv[2], uv[3], uv[4], uv[5], uv[6], uv[7]);
 	}
 }
 
@@ -2496,34 +2479,32 @@ bool IsPointInRect(float x, float y, CRect* rect)
 	return false;
 }
 
-uintptr_t ModelInfoCreateInstance(int iModel)
+RwObject* ModelInfoCreateInstance(int iModel)
 {
-	uintptr_t modelInfo = GetModelInfoByID(iModel);
-	if (modelInfo)
-	{
-		return ((uintptr_t(*)(uintptr_t))*(uintptr_t*)(*(uintptr_t*)modelInfo + 0x2C))(modelInfo);
-	}
-	
-	return 0;
+    auto modelInfo = CModelInfo::GetModelInfo(iModel);
+    if (modelInfo)
+    {
+        return ((RwObject*(*)(CBaseModelInfo*))(*(uintptr_t*)(modelInfo->vtable + (VER_x32 ? 0x2C : 0x2C*2))))(modelInfo);
+    }
+
+    return nullptr;
 }
 
 void RenderClumpOrAtomic(uintptr_t rwObject)
 {
-	if (rwObject)
-	{
-		if (*(uint8_t*)rwObject == 1)
-		{
-			// Atomic
-			FLog("Render Atomic!");
-			((void(*)(uintptr_t))( *(uintptr_t*)(rwObject+0x48) ))(rwObject);
-		} 
-		else if (*(uint8_t*)rwObject == 2)
-		{
-			FLog("Render Clump!");
-			// rpClumpRender
-			((void(*)(uintptr_t))(g_libGTASA + 0x2142DC + 1))(rwObject);
-		}
-	}
+    if (rwObject)
+    {
+        if (*(uint8_t *) rwObject == 1)
+        {
+            // Atomic
+            ((void (*)(uintptr_t))(*(uintptr_t *) (rwObject + (VER_x32 ? 0x48 : 0x48*2)))) (rwObject);
+        }
+        else if (*(uint8_t *) rwObject == 2)
+        {
+            // rpClumpRender
+            ((void (*)(uintptr_t))(g_libGTASA + (VER_x32 ? 0x21425C + 1 : 0x2BA6A4))) (rwObject);
+        }
+    }
 }
 
 
@@ -2562,29 +2543,26 @@ void GetModelColSphereVecCenter(int iModel, RwV3d* vec)
 
 void DestroyAtomicOrClump(uintptr_t rwObject)
 {
-	if (rwObject)
-	{
-		int type = *(int*)(rwObject);
+    if (rwObject)
+    {
+        int type = *(int *)(rwObject);
 
-		if (type == 1)
-		{
-			// RpAtomicDestroy
-			((void(*)(uintptr_t))(g_libGTASA + 0x2141EC + 1))(rwObject);
+        if (type == 1)
+        {
+            RpAtomicDestroy(reinterpret_cast<RpAtomic *>(rwObject));
 
-			uintptr_t parent = *(uintptr_t*)(rwObject + 4);
-			if (parent)
-			{
-				// RwFrameDestroy
-				((void(*)(uintptr_t))(g_libGTASA + 0x1D846C + 1))(parent);
-			}
+            auto parent = ((RwObject*)rwObject)->parent;
+            if (parent)
+            {
+                RwFrameDestroy(reinterpret_cast<RwFrame *>(parent));
+            }
 
-		}
-		else if (type == 2)
-		{
-			// RpClumpDestroy
-			((void(*)(uintptr_t))(g_libGTASA + 0x21460C + 1))(rwObject);
-		}
-	}
+        }
+        else if (type == 2)
+        {
+            RpClumpDestroy(reinterpret_cast<RpClump *>(rwObject));
+        }
+    }
 }
 
 void GamePrepareTrain(CVehicleGTA* pGtaVehicle)
@@ -2652,35 +2630,7 @@ const char* getGameDataFolderDirectory()
 	return (const char*)(g_libGTASA + /*0x63C4B8*/0x6D687C);
 }
 // 0.3.7
-void RwFrameTranslate(uintptr_t parent, RwV3d* vec, int flag)
-{
-	// RwFrameTranslate
-	((void(*)(uintptr_t, RwV3d*, int))(g_libGTASA + 0x1D8694 + 1))(parent, vec, flag);
-}
 // 0.3.7
-void RwFrameRotate(uintptr_t frame, int axis, float angle)
-{
-	// RwFrameRotate
-	((void(*)(uintptr_t, RwV3d*, float, int))(g_libGTASA + 0x1D87A8 + 1))(frame, &_axis[axis], angle, 1);
-}
-// 0.3.7
-void RpWorldAddLight(uintptr_t light)
-{
-	uintptr_t pRwWorld = *(uintptr_t*)(g_libGTASA + 0x9FC938);
-	if (pRwWorld) {
-		// RpWorldAddLight
-		((void(*)(uintptr_t, uintptr_t))(g_libGTASA + 0x21E830 + 1))(pRwWorld, light);
-	}
-}
-// 0.3.7
-void RpWorldRemoveLight(uintptr_t light)
-{
-	uintptr_t pRwWorld = *(uintptr_t*)(g_libGTASA + 0x9FC938);
-	if (pRwWorld) {
-		// RpWorldRemoveLight
-		((void(*)(uintptr_t, uintptr_t))(g_libGTASA + 0x21E874 + 1))(pRwWorld, light);
-	}
-}
 
 int LineOfSight(RwV3d* start, RwV3d* end, void* colpoint, uintptr_t ent, char buildings, char vehicles, char peds, char objects, char dummies, bool seeThrough, bool camera, bool unk)
 {
@@ -2988,6 +2938,9 @@ void SetScissorRect(void* pRect)
 }
 
 #include "Entity/CPedGTA.h"
+#include "TimeCycle.h"
+#include "VisibilityPlugins.h"
+
 bool IsValidGamePed(CPedGTA* pPed)
 {
     //IsPedPointerValid(CPed *) � 0x00435614
@@ -2995,4 +2948,56 @@ bool IsValidGamePed(CPedGTA* pPed)
         return true;
     }
     return false;
+}
+
+void DefinedState2d() {
+    RwRenderStateSet(rwRENDERSTATETEXTUREADDRESS, RWRSTATE(TRUE));
+    RwRenderStateSet(rwRENDERSTATETEXTUREPERSPECTIVE, RWRSTATE(FALSE));
+    RwRenderStateSet(rwRENDERSTATEZTESTENABLE, RWRSTATE(FALSE));
+    RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, RWRSTATE(FALSE));
+    RwRenderStateSet(rwRENDERSTATESHADEMODE, RWRSTATE(rwSHADEMODEGOURAUD));
+    RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, RWRSTATE(rwFILTERLINEAR));
+    RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, RWRSTATE(FALSE));
+    RwRenderStateSet(rwRENDERSTATESRCBLEND, RWRSTATE(rwBLENDSRCALPHA));
+    RwRenderStateSet(rwRENDERSTATEDESTBLEND, RWRSTATE(rwBLENDINVSRCALPHA));
+    RwRenderStateSet(rwRENDERSTATEBORDERCOLOR, RWRSTATE((RWRGBALONG(0, 0, 0, 255))));
+    RwRenderStateSet(rwRENDERSTATEFOGENABLE, RWRSTATE(FALSE));
+    RwRenderStateSet(rwRENDERSTATECULLMODE, RWRSTATE(rwCULLMODECULLNONE));
+    RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTION, RWRSTATE(rwALPHATESTFUNCTIONGREATER));
+    RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, RWRSTATE(2)); // TODO: ?
+}
+
+void DefinedState() {
+    CRGBA rgbaFog((uint8)CTimeCycle::m_CurrentColours.m_nSkyBottomRed, (uint8)CTimeCycle::m_CurrentColours.m_nSkyBottomGreen, (uint8)CTimeCycle::m_CurrentColours.m_nSkyBottomBlue);
+
+    RwRenderStateSet(rwRENDERSTATETEXTUREADDRESS, RWRSTATE(TRUE));
+    RwRenderStateSet(rwRENDERSTATETEXTUREPERSPECTIVE, RWRSTATE(TRUE));
+    RwRenderStateSet(rwRENDERSTATEZTESTENABLE, RWRSTATE(TRUE));
+    RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, RWRSTATE(TRUE));
+    RwRenderStateSet(rwRENDERSTATESHADEMODE, RWRSTATE(rwSHADEMODEGOURAUD));
+    RwRenderStateSet(rwRENDERSTATETEXTUREFILTER, RWRSTATE(rwFILTERLINEAR));
+    RwRenderStateSet(rwRENDERSTATEVERTEXALPHAENABLE, RWRSTATE(FALSE));
+    RwRenderStateSet(rwRENDERSTATESRCBLEND, RWRSTATE(rwBLENDSRCALPHA));
+    RwRenderStateSet(rwRENDERSTATEDESTBLEND, RWRSTATE(rwBLENDINVSRCALPHA));
+    RwRenderStateSet(rwRENDERSTATEBORDERCOLOR, RWRSTATE((RWRGBALONG(0, 0, 0, 255))));
+    RwRenderStateSet(rwRENDERSTATEFOGENABLE, RWRSTATE(FALSE));
+    RwRenderStateSet(rwRENDERSTATEFOGCOLOR, RWRSTATE(rgbaFog.ToIntARGB()));
+    RwRenderStateSet(rwRENDERSTATEFOGTYPE, RWRSTATE(rwFOGTYPELINEAR));
+    RwRenderStateSet(rwRENDERSTATECULLMODE, RWRSTATE(rwCULLMODECULLNONE));
+    RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTION, RWRSTATE(rwALPHATESTFUNCTIONGREATER));
+    RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, RWRSTATE(2)); // TODO: ?
+}
+
+void RenderEntity(CEntityGTA* entity)
+{
+    if(entity->IsVehicle())
+    {
+        CVisibilityPlugins::SetupVehicleVariables(entity->m_pRwClump);
+    }
+
+    // CEntity::PreRender
+    ((void (*)(CEntityGTA*))(*(uintptr_t*)( *(uintptr*)(entity) + (VER_x32 ? 0x48 : 0x48*2) )))(entity);
+
+    // CRenderer::RenderOneNonRoad
+    (( void (*)(CEntityGTA*))(g_libGTASA + (VER_x32 ? 0x0041030C + 1 : 0x4F56E0)))(entity);
 }

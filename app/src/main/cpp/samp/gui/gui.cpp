@@ -12,6 +12,9 @@
 #include "../voice_new/Network.h"
 
 #include "../gui/samp_widgets/voicebutton.h"
+#include "game/Textures/TextureDatabaseRuntime.h"
+#include "game/Streaming.h"
+#include "game/Pools.h"
 
 extern CNetGame* pNetGame;
 extern CPlayerTags* pPlayerTags;
@@ -77,6 +80,18 @@ bool UI::initialize()
 	m_playerTabList->setMaxSize(UISettings::dialogMaxSize());
 	m_playerTabList->setVisible(false);
 
+    label = new Label(" ", ImColor(1.0f, 1.0f, 1.0f), true, UISettings::fontSize() / 2);
+    pUI->addChild(label);
+
+    label2 = new Label(" ", ImColor(1.0f, 1.0f, 1.0f), true, UISettings::fontSize() / 2);
+    pUI->addChild(label2);
+
+    label3 = new Label(" ", ImColor(1.0f, 1.0f, 1.0f), true, UISettings::fontSize() / 2);
+    pUI->addChild(label3);
+
+    label4 = new Label(" ", ImColor(1.0f, 1.0f, 1.0f), true, UISettings::fontSize() / 2);
+    pUI->addChild(label4);
+
 	// mem
 	Label* d_label1;
 
@@ -103,6 +118,10 @@ void UI::render()
     std::string str = string_format(std::string ("%d/%d"), ms_memoryUsed>>20, ms_memoryAvailable>>20);
     //d_label->setText(str);
 
+    renderDebug();
+
+    ProcessPushedTextdraws();
+
 	if (m_bNeedClearMousePos) {
 		ImGuiIO& io = ImGui::GetIO();
 		io.MousePos = ImVec2(-1, -1);
@@ -123,12 +142,6 @@ void UI::drawList()
 	label = new Label("1.0.11", ImColor(1.0f, 1.0f, 1.0f), true, UISettings::fontSize() / 2);
 	label->setPosition(ImVec2(0.0, 0.0));
 	this->addChild(label);*/
-
-	if (pNetGame) //render custom gui
-	{
-		CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
-		if (pTextDrawPool) pTextDrawPool->DrawImage();
-	}
 
 	if (pPlayerTags) pPlayerTags->Render(renderer());
 	if (pNetGame && pNetGame->GetTextLabelPool()) pNetGame->GetTextLabelPool()->Render(renderer());
@@ -212,4 +225,89 @@ bool UI::OnTouchEvent(int type, bool multi, int x, int y)
 	}
 
 	return true;
+}
+
+extern CGame *pGame;
+void UI::renderDebug()
+{
+    char szStr[30];
+    char szStrMem[64];
+    char szStrPos[64];
+
+    ImVec2 pos = ImVec2(pUI->ScaleX(40.0f), pUI->ScaleY(1080.0f - UISettings::fontSize() * 10));
+
+    static float fps = 60.f;
+        static auto lastTick = CTimer::m_snTimeInMillisecondsNonClipped;
+        if(CTimer::m_snTimeInMillisecondsNonClipped - lastTick > 500) {
+            lastTick = CTimer::m_snTimeInMillisecondsNonClipped;
+            fps = std::clamp(CTimer::game_FPS, 10.f, (float) 120);
+        }
+        snprintf(&szStr[0], sizeof(szStr), "FPS: %.0f", fps);
+
+        label->setText(&szStr[0]);
+        label->setPosition(pos);
+
+        auto &msUsed = CStreaming::ms_memoryUsed;
+        auto &msAvailable = CStreaming::ms_memoryAvailable;
+
+        struct mallinfo memInfo = mallinfo();
+        int totalAllocatedMB  = memInfo.uordblks / (1024 * 1024);
+
+        snprintf(&szStrMem[0], sizeof(szStrMem), "MEM: %d mb (stream %d/%d) (Tex %d MB)",
+                 totalAllocatedMB,
+                 msUsed / (1024 * 1024),
+                 msAvailable / (1024 * 1024),
+                 TextureDatabaseRuntime::storedTexels / (1024 * 1024)
+        );
+
+        pos = ImVec2(pUI->ScaleX(40.0f), pUI->ScaleY(1080.0f - UISettings::fontSize() * 9));
+
+        label2->setText(&szStrMem[0]);
+        label2->setPosition(pos);
+
+        if (pGame->FindPlayerPed()->m_pPed)
+        {
+            snprintf(&szStrPos[0], sizeof(szStrPos), "POS: %.2f, %.2f, %.2f", pGame->FindPlayerPed()->m_pPed->m_matrix->m_pos.x, pGame->FindPlayerPed()->m_pPed->m_matrix->m_pos.y, pGame->FindPlayerPed()->m_pPed->m_matrix->m_pos.z);
+            pos = ImVec2(pUI->ScaleX(40.0f), pUI->ScaleY(1080.0f - UISettings::fontSize() * 8));
+            label3->setText(&szStrPos[0]);
+            label3->setPosition(pos);
+        }
+        //Log("pools = %d mem = %d", GetPedPoolGta()->GetNoOfUsedSpaces(), totalAllocatedMB);
+        char debugPools[250];
+        snprintf(&debugPools[0], sizeof(debugPools), "NSingle: %d; NDouble: %d; Peds: %d; Veh's: %d; Obj: %d; EntryInf: %d; Dummies: %d, Buildings: %d",
+                 GetPtrNodeSingleLinkPool()->GetNoOfUsedSpaces(),
+                 GetPtrNodeDoubleLinkPool()->GetNoOfUsedSpaces(),
+                 GetPedPoolGta()->GetNoOfUsedSpaces(),
+                 GetVehiclePoolGta()->GetNoOfUsedSpaces(),
+                 GetObjectPoolGta()->GetNoOfUsedSpaces(),
+                 GetEntryInfoNodePool()->GetNoOfUsedSpaces(),
+                 GetDummyPool()->GetNoOfUsedSpaces(),
+                 GetBuildingPool()->GetNoOfUsedSpaces()
+                 );
+
+        pos = ImVec2(pUI->ScaleX(40.0f), pUI->ScaleY(1080.0f - UISettings::fontSize() * 1));
+
+        label4->setText(&debugPools[0]);
+        label4->setPosition(pos);
+}
+
+void UI::PushToBufferedQueueTextDrawPressed(uint16_t textdrawId)
+{
+    BUFFERED_COMMAND_TEXTDRAW* pCmd = m_BufferedCommandTextdraws.WriteLock();
+
+    pCmd->textdrawId = textdrawId;
+
+    m_BufferedCommandTextdraws.WriteUnlock();
+}
+
+void UI::ProcessPushedTextdraws()
+{
+    BUFFERED_COMMAND_TEXTDRAW* pCmd = nullptr;
+    while (pCmd = m_BufferedCommandTextdraws.ReadLock())
+    {
+        RakNet::BitStream bs;
+        bs.Write(pCmd->textdrawId);
+        pNetGame->GetRakClient()->RPC(&RPC_ClickTextDraw, &bs, HIGH_PRIORITY, RELIABLE_SEQUENCED, 0, false, UNASSIGNED_NETWORK_ID, 0);
+        m_BufferedCommandTextdraws.ReadUnlock();
+    }
 }

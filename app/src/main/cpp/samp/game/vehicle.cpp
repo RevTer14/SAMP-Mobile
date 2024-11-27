@@ -11,8 +11,7 @@ bool bInProcessDetachTrailer = false;
 
 CVehicle::CVehicle(int iType, float fX, float fY, float fZ, float fRotation, bool bPreloaded, bool bSiren)
 {
-	uint32_t dwRetID = 0;
-	CMatrix matEnt;
+	RwMatrix matEnt;
 	static CVehicleGTA* pCreatedTrain = nullptr;
 
 	m_pVehicle = nullptr;
@@ -28,30 +27,29 @@ CVehicle::CVehicle(int iType, float fX, float fY, float fZ, float fRotation, boo
         if (!CStreaming::TryLoadModel(iType))
             throw std::runtime_error("Model not loaded");
 
-		ScriptCommand(&create_car, iType, fX, fY, fZ, &dwRetID);
-		ScriptCommand(&set_car_z_angle, dwRetID, fRotation);
-		ScriptCommand(&car_gas_tank_explosion, dwRetID, 0);
-		ScriptCommand(&set_car_hydraulics, dwRetID, 0);
-		ScriptCommand(&toggle_car_tires_vulnerable, dwRetID, 0);
+		ScriptCommand(&create_car, iType, fX, fY, fZ, &m_dwGTAId);
+		ScriptCommand(&set_car_z_angle, m_dwGTAId, fRotation);
+		ScriptCommand(&car_gas_tank_explosion, m_dwGTAId, 0);
+		ScriptCommand(&set_car_hydraulics, m_dwGTAId, 0);
+		ScriptCommand(&toggle_car_tires_vulnerable, m_dwGTAId, 0);
 
-		m_pVehicle = GamePool_Vehicle_GetAt(dwRetID);
-		m_dwGTAId = dwRetID;
+		m_pVehicle = GamePool_Vehicle_GetAt(m_dwGTAId);
 
 		if (m_pVehicle) 
 		{
 			m_pVehicle->m_nDoorLock = (eCarLock)0;
 			m_bIsLocked = false;
 
-			m_pVehicle->GetMatrix(reinterpret_cast<RwMatrix *>(&matEnt));
-			matEnt.m_pos.x = fX;
-			matEnt.m_pos.y = fY;
-			matEnt.m_pos.z = fZ;
+			m_pVehicle->GetMatrix(&matEnt);
+			matEnt.pos.x = fX;
+			matEnt.pos.y = fY;
+			matEnt.pos.z = fZ;
 
 			if( GetVehicleSubtype() != VEHICLE_SUBTYPE_BIKE &&
 				GetVehicleSubtype() != VEHICLE_SUBTYPE_PUSHBIKE)
-				matEnt.m_pos.z += 0.25f;
+				matEnt.pos.z += 0.25f;
 
-			m_pVehicle->SetMatrix(matEnt);
+			m_pVehicle->SetMatrix((CMatrix&)matEnt);
 			m_bPreloaded = bPreloaded;
 		}
 
@@ -85,9 +83,8 @@ CVehicle::CVehicle(int iType, float fX, float fY, float fZ, float fRotation, boo
         if (!CStreaming::TryLoadModel(TRAIN_TRAM))
             throw std::runtime_error("Model not loaded");
 
-		ScriptCommand(&create_train, iType, fX, fY, fZ, dwDirection, &dwRetID);
-		m_pVehicle = GamePool_Vehicle_GetAt(dwRetID);
-		m_dwGTAId = dwRetID;
+		ScriptCommand(&create_train, iType, fX, fY, fZ, dwDirection, &m_dwGTAId);
+		m_pVehicle = GamePool_Vehicle_GetAt(m_dwGTAId);
 
 		pCreatedTrain = m_pVehicle;
 
@@ -129,6 +126,7 @@ CVehicle::~CVehicle()
 	m_pVehicle = GamePool_Vehicle_GetAt(m_dwGTAId);
 
 	if (m_pVehicle) {
+        auto modelId = m_pVehicle->m_nModelIndex;
 		if(m_dwMarkerID)
 		{
 			pGame->DisableMarker(m_dwMarkerID);
@@ -152,13 +150,9 @@ CVehicle::~CVehicle()
 		else
 		{
 			ScriptCommand(&destroy_car, m_dwGTAId);
-			int iRefs = GetModelRefCounts(iModel);
-			FLog("Destroy car(%d): Refs: %d", iModel, iRefs);
-			if (!iRefs)
-			{
-				pGame->RemoveModel(iModel, true);
-			}
 		}
+
+        CStreaming::RemoveModelIfNoRefs(modelId);
 	}
 }
 // 0.3.7
@@ -270,9 +264,8 @@ void CVehicle::SetTrailer(CVehicle* pTrailer)
 // 0.3.7
 void CVehicle::LinkToInterior(int iInterior)
 {
-	if (GamePool_Vehicle_GetAt(m_dwGTAId)) {
-		ScriptCommand(&link_vehicle_to_interior, m_dwGTAId, iInterior);
-	}
+	if(m_pVehicle)
+        m_pVehicle->SetInterior(iInterior);
 }
 
 void CVehicle::SetDamageStatus(uint32_t dwPanelDamageStatus, uint32_t dwDoorDamageStatus, uint8_t byteLightDamageStatus)
@@ -290,22 +283,22 @@ void CVehicle::RemoveEveryoneFromVehicle()
 	if (!m_pVehicle) return;
 	if (!GamePool_Vehicle_GetAt(m_dwGTAId)) return;
 
-	float fPosX = m_pVehicle->GetPosition().x;
-	float fPosY = m_pVehicle->GetPosition().y;
-	float fPosZ = m_pVehicle->GetPosition().z;
+    if (!m_pVehicle) return;
+    if(!m_dwGTAId)return;
+    if (!GamePool_Vehicle_GetAt(m_dwGTAId)) return;
 
-	int iPlayerID = 0;
-	if (m_pVehicle->pDriver) {
-		iPlayerID = GamePool_Ped_GetIndex(m_pVehicle->pDriver);
-		ScriptCommand(&remove_actor_from_car_and_put_at, iPlayerID, fPosX, fPosY, fPosZ + 2);
-	}
+    if (m_pVehicle->pDriver)
+    {
+        m_pVehicle->pDriver->RemoveFromVehicle();
+    }
 
-	for (int i = 0; i < 7; i++) {
-		if (m_pVehicle->m_apPassengers[i] != NULL) {
-			iPlayerID = GamePool_Ped_GetIndex(m_pVehicle->m_apPassengers[i]);
-			ScriptCommand(&remove_actor_from_car_and_put_at, iPlayerID, fPosX, fPosY, fPosZ + 2);
-		}
-	}
+    for (int i = 0; i < 7; i++)
+    {
+        if (m_pVehicle->m_apPassengers[i] != nullptr)
+        {
+            m_pVehicle->m_apPassengers[i]->RemoveFromVehicle();
+        }
+    }
 }
 // 0.3.7
 CVehicle* CVehicle::GetTrailer()

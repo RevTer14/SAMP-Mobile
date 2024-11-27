@@ -445,7 +445,7 @@ void ScrRemoveBuilding(RPCParameters *rpcParams)
 	bsData.Read(fY);
 	bsData.Read(fZ);
 	bsData.Read(fRadius);
-	RemoveBuilding(iModel, CVector(fX, fY, fZ), fRadius);
+	//RemoveBuilding(iModel, CVector(fX, fY, fZ), fRadius);
 }
 // 0.3.7
 void ScrSetPlayerSkin(RPCParameters* rpcParams)
@@ -674,13 +674,19 @@ void ScrSetPlayerInterior(RPCParameters* rpcParams)
 	pGame->FindPlayerPed()->m_pPed->SetInterior(byteInteriorId, true);
 }
 // 0.3.7
+extern UI *pUI;
 void ScrShowTextDraw(RPCParameters* rpcParams)
 {
 	unsigned char* Data = reinterpret_cast<unsigned char*>(rpcParams->input);
 	int iBitLength = rpcParams->numberOfBitsOfData;
 
+    FLog("ScrShowTextDraw");
+
 	CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
-	if (pTextDrawPool == nullptr) return;
+	if (pTextDrawPool == nullptr) {
+        FLog("no textdraw pool");
+        return;
+    }
 
 	uint16_t wTextDrawID;
 	TEXT_DRAW_TRANSMIT textDrawTransmit;
@@ -699,7 +705,7 @@ void ScrShowTextDraw(RPCParameters* rpcParams)
 		pTextDrawPool->New(wTextDrawID, &textDrawTransmit, szText);
 	}
 	else {
-		//if (gui) gui->chat()->addInfoMessage("Warning: ignoring large TetDraw size=%u", wTextLength);
+		if (pUI) pUI->chat()->addInfoMessage("Warning: ignoring large TetDraw size=%u", wTextLength);
 	}
 }
 // 0.3.7

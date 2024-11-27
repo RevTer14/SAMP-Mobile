@@ -166,10 +166,11 @@ void ImGuiWrapper::checkVertexBuffer(ImDrawData* draw_data)
 
 }
 
+#include "../game/sprite2d.h"
 void ImGuiWrapper::renderDrawData(ImDrawData* draw_data)
 {
-	const RwReal nearScreenZ = *(RwReal*)(g_libGTASA + (VER_x32 ? 0x00675F8C : 0x849FA0));
-	const RwReal recipNearClip = *(RwReal*)(g_libGTASA + (VER_x32 ? 0x006766AC : 0x84ADC8));
+	const RwReal nearScreenZ = CSprite2d::NearScreenZ;
+	const RwReal recipNearClip = CSprite2d::RecipNearClip;
 
 	checkVertexBuffer(draw_data);
 	setupRenderState(draw_data);

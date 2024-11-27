@@ -207,7 +207,7 @@ void CNetGame::Process()
 		pGame->SetWorldTime(m_pNetSet->byteWorldTime_Hour, m_pNetSet->byteWorldTime_Minute);
 	}
 
-	pGame->PreloadObjectsAnims();
+	//pGame->PreloadObjectsAnims();
 
 	if (GetGameState() == GAMESTATE_CONNECTED) {
 		ProcessPools();

@@ -1,6 +1,7 @@
 #include "../main.h"
 #include "../game/game.h"
 #include "netgame.h"
+#include "game/World.h"
 
 extern CGame* pGame;
 extern CNetGame* pNetGame;
@@ -74,6 +75,8 @@ void C3DTextLabelPool::Render(ImGuiRenderer* renderer)
 	CPlayerPed *pPlayerPed = pGame->FindPlayerPed();
 	if(!pPlayerPed) return;
 
+    static CCamera& TheCamera = *reinterpret_cast<CCamera*>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
+
 	for (int i = 0; i < MAX_TEXT_LABELS; i++)
 	{
 		if (m_bSlotUsed[i]) {
@@ -138,6 +141,8 @@ void C3DTextLabelPool::Draw(ImGuiRenderer* renderer, TEXT_LABEL* label, CVector 
 	vPos.y = vecPos.y;
 	vPos.z = vecPos.z;
 
+    static CCamera& TheCamera = *reinterpret_cast<CCamera*>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
+
 	int hitEntity = 0;
     if (label->bTestLOS) {
 		CAMERA_AIM *pCam = GameGetInternalAim();
@@ -155,10 +160,7 @@ void C3DTextLabelPool::Draw(ImGuiRenderer* renderer, TEXT_LABEL* label, CVector 
 
 		//bool isLineOfSightClear = ((bool (*)(CVector*, CVector*, int, int, int, int, int, int, int))(g_libGTASA + 0x423418 + 1))(&vec, &matPlayer.pos, 1, 0, 0, 1, 0, 0, 0);
 
-		hitEntity = ScriptCommand(&get_line_of_sight,
-								  vecPos.x, vecPos.y, vecPos.z,
-								  pCam->pos1x, pCam->pos1y, pCam->pos1z,
-								  1, 0, 0, 1, 0);
+        hitEntity = CWorld::GetIsLineOfSightClear(vecPos, TheCamera.GetPosition(), true, false, false, true, false, false, false);
 		/*if(!isLineOfSightClear)
 		{
 			LOGI("labelpool draw ok no render fuck you bitch");

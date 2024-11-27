@@ -2,6 +2,8 @@
 #include "game.h"
 #include "../gui/gui.h"
 #include "RW/RenderWare.h"
+#include "Scene.h"
+#include "VisibilityPlugins.h"
 
 extern UI* pUI;
 
@@ -15,32 +17,19 @@ MaterialTextGenerator::MaterialTextGenerator()
 
 void MaterialTextGenerator::SetUpScene()
 {
-	// RwCameraCreate
-	m_camera = ((uintptr_t(*)())(g_libGTASA + 0x1D5F60 + 1))();
-	// RwFrameCreate
-	m_frame = ((uintptr_t(*)())(g_libGTASA + 0x1D822C + 1))();
+	m_camera = RwCameraCreate();
+	m_frame = RwFrameCreate();
 
 	if (!m_camera) return;
 	if (!m_frame) return;
 
-	// RwObjectHasFrameSetFrame
-	((void(*)(uintptr_t, uintptr_t))(g_libGTASA + 0x1DCFE4 + 1))(m_camera, m_frame);
-	// RwCameraSetFarClipPlane
-	((void(*)(uintptr_t, float))(g_libGTASA + 0x1D5B4C + 1))(m_camera, 300.0f);
-	// RwCameraSetNearClipPlane
-	((void(*)(uintptr_t, float))(g_libGTASA + 0x1D5AB8 + 1))(m_camera, 0.01f);
-	// RwCameraSetViewWindow
-	float view[2] = { 0.5f, 0.5f };
-	((void(*)(uintptr_t, float*))(g_libGTASA + 0x1D5E84 + 1))(m_camera, view);
-
-	// RwCameraSetProjection
-	((void(*)(uintptr_t, int))(g_libGTASA + 0x1D5DA8 + 1))(m_camera, 1);
-
-	// RpWorldAddCamera
-	uintptr_t pRwWorld = *(uintptr_t*)(g_libGTASA + 0x9FC938);
-	if (pRwWorld) {
-		((void(*)(uintptr_t, uintptr_t))(g_libGTASA + 0x21E004 + 1))(pRwWorld, m_camera);
-	}
+    _rwObjectHasFrameSetFrame(m_camera, m_frame);
+    RwCameraSetFarClipPlane(m_camera, 300.0f);
+    RwCameraSetNearClipPlane(m_camera, 0.01f);
+    RwV2d view = { 0.5f, 0.5f };
+    RwCameraSetViewWindow(m_camera, &view);
+    RwCameraSetProjection(m_camera, rwPERSPECTIVE);
+    RpWorldAddCamera(Scene.m_pRpWorld, m_camera);
 }
 
 void MaterialTextGenerator::Render(const char* text, const ImVec2& size, int font_size, bool bold,
@@ -88,32 +77,31 @@ const ImColor fix_color(uint32_t color)
 	return col;
 }
 
-uintptr_t MaterialTextGenerator::Generate(const char* text, int size, int font_size, bool bold, uint32_t font_color, uint32_t background_color, int alignment)
+RwTexture* MaterialTextGenerator::Generate(const char* text, int size, int font_size, bool bold, uint32_t font_color, uint32_t background_color, int alignment)
 {
 	int width, height;
 	GetMaterialSize(size, &width, &height);
-
-	// RwRasterCreate
-	uintptr_t raster = (uintptr_t)RwRasterCreate(width, height, 32, rwRASTERFORMAT8888 | rwRASTERTYPECAMERATEXTURE);
-	// RwTextureCreate
-	uintptr_t bufferTexture = ((uintptr_t(*)(uintptr_t))(g_libGTASA + 0x1DB83C + 1))(raster);
+    FLog("MaterialTextGenerator::Generate");
+	RwRaster* raster = RwRasterCreate(width, height, 32, rwRASTERFORMAT8888 | rwRASTERTYPECAMERATEXTURE);
+    FLog("MaterialTextGenerator::Generate1");
+    RwTexture* bufferTexture = RwTextureCreate(raster);
+    FLog("MaterialTextGenerator::Generate2");
 
 	if (raster && bufferTexture)
 	{
-		*(uintptr_t*)(m_camera + 0x60) = raster;
-
-		// CVisibilityPlugins::SetRenderWareCamera
-		((void(*)(uintptr_t))(g_libGTASA + 0x5D61F8 + 1))(m_camera);
-
+        FLog("MaterialTextGenerator::Generate3");
+        m_camera->frameBuffer = raster;
+        FLog("MaterialTextGenerator::Generate4");
+        CVisibilityPlugins::SetRenderWareCamera(m_camera);
+        FLog("MaterialTextGenerator::Generate5");
 		// RwCameraClear
-		((void(*)(uintptr_t, uint32_t*, int))(g_libGTASA + 0x1D5D70 + 1))(m_camera, &background_color, 3);
-
+        RwCameraClear(m_camera, reinterpret_cast<RwRGBA *>(&background_color), 3);
+        FLog("MaterialTextGenerator::Generate6");
 		RwCameraBeginUpdate((RwCamera*)m_camera);
-		// DefinedState2d
-		((void(*) (void))(g_libGTASA + 0x5D0C64 + 1))();
-
+		DefinedState2d();
+        FLog("MaterialTextGenerator::Generate7");
 		Render(text, ImVec2(width, height), font_size, bold, fix_color(font_color), fix_color(background_color), alignment);
-
+        FLog("MaterialTextGenerator::Generate8");
 		RwCameraEndUpdate((RwCamera*)m_camera);
 	}
 

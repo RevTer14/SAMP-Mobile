@@ -76,6 +76,9 @@ void CWorld::ProcessPedsAfterPreRender() {
     {
         CPlayerPool* pPlayerPool = pNetGame->GetPlayerPool();
         if (pPlayerPool)
+        {
+            pPlayerPool->GetLocalPlayer()->GetPlayerPed()->m_pPed->GetIntelligence()->ProcessAfterPreRender();
             pPlayerPool->ProcessAttachedObjects();
+        }
     }
 }

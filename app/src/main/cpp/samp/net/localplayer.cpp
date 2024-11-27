@@ -23,6 +23,17 @@ extern bool bUsedPlayerSlots[];
 uint32_t dwEnterVehTimeElasped = -1;
 bool bFirstSpawn = true;
 bool g_bLockEnterVehicleWidget = false;
+uint32_t count = 0;
+
+bool IsLongTimeDead()
+{
+    if(pGame->FindPlayerPed()->IsDead()){
+        if ((GetTickCount()-count) > 5000) {
+            return true;
+        }
+    }
+    return false;
+}
 
 CLocalPlayer::CLocalPlayer()
 {
@@ -47,6 +58,7 @@ CLocalPlayer::CLocalPlayer()
 	m_dwLastSendTick = GetTickCount();
 	m_dwLastSendSpecTick = GetTickCount();
 	m_dwLastSendSyncTick = GetTickCount();
+    count = GetTickCount();
 	m_dwLastUpdateInCarData = GetTickCount();
 	m_dwLastSendAimSyncTick = GetTickCount();
 	m_dwLastStatsUpdateTick = GetTickCount();
@@ -83,14 +95,11 @@ bool CLocalPlayer::Process()
 		if (!m_bIsWasted && m_pPlayerPed->GetActionTrigger() == ACTION_DEATH || m_pPlayerPed->IsDead())
 		{
 			ToggleSpectating(false);
-
 			if(m_pPlayerPed->GetDanceStyle() != -1) m_pPlayerPed->StopDancing();
 			if(m_pPlayerPed->IsCellphoneEnabled()) m_pPlayerPed->ToggleCellphone(0);
 			if(m_pPlayerPed->IsPissing()) m_pPlayerPed->StopPissing();
 			if(m_pPlayerPed->GetStuff() != eStuffType::STUFF_TYPE_NONE) m_pPlayerPed->DropStuff();
-
 			m_pPlayerPed->TogglePlayerControllable(true);
-
 			if (m_bInRCMode)
 			{
 				m_bInRCMode = false;
@@ -102,8 +111,9 @@ bool CLocalPlayer::Process()
 				SendInCarFullSyncData(); // for explosion
 				m_LastVehicle = pNetGame->GetVehiclePool()->FindIDFromGtaPtr(m_pPlayerPed->GetGtaVehicle());
 			}
-
 			m_pPlayerPed->ExtinguishFire();
+            m_pPlayerPed->SetHealth(0.0f);
+            m_pPlayerPed->SetDead();
 			SendWastedNotification();
 			m_bIsActive = false;
 			m_bIsWasted = true;
@@ -279,7 +289,7 @@ bool CLocalPlayer::Process()
 				m_pPlayerPed->m_pPed->Add();
 			}
 
-			//HandlePassengerEntry();
+			HandlePassengerEntry();
 			ProcessOnFootWorldBounds();
 
 			if (m_CurrentVehicle != 0xFFFF)
@@ -543,7 +553,9 @@ void CLocalPlayer::ProcessSpectating()
 			if (pPlayerPed)
 			{
 				dwGTAId = pPlayerPed->m_dwGTAId;
-				ScriptCommand(&camera_on_actor, dwGTAId, m_byteSpectateMode, 2);
+                CCamera& TheCamera = *reinterpret_cast<CCamera*>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
+
+                TheCamera.TakeControl(pPlayerPed->m_pPed, static_cast<eCamMode>(m_byteSpectateMode), eSwitchType::JUMPCUT, 1);
 				//pGame->GetCamera()->AttachToEntity(m_pPlayerPed);
 				m_bSpectateProcessed = true;
 			}
@@ -558,7 +570,9 @@ void CLocalPlayer::ProcessSpectating()
 		if (pVehicle)
 		{
 			dwGTAId = pVehicle->m_dwGTAId;
-			ScriptCommand(&camera_on_vehicle, dwGTAId, m_byteSpectateMode, 2);
+            CCamera &TheCamera = *reinterpret_cast<CCamera *>(g_libGTASA + (VER_x32 ? 0x00951FA8 : 0xBBA8D0));
+
+            TheCamera.TakeControl(pVehicle->m_pVehicle, static_cast<eCamMode>(m_byteSpectateMode), eSwitchType::JUMPCUT, 1);
 			//pGame->GetCamera()->AttachToEntity(pVehicle);
 			m_bSpectateProcessed = true;
 		}
@@ -661,6 +675,7 @@ void CLocalPlayer::SendWastedNotification()
 	byteDeathReason = m_pPlayerPed->FindDeathReasonAndResponsiblePlayer(&WhoWasResponsible);
 	bsPlayerDeath.Write(byteDeathReason);
 	bsPlayerDeath.Write(WhoWasResponsible);
+    FLog("SendWastedNotification %d %d", byteDeathReason, WhoWasResponsible);
 	pNetGame->GetRakClient()->RPC(&RPC_Death, &bsPlayerDeath, HIGH_PRIORITY, RELIABLE_ORDERED, 0, false, UNASSIGNED_NETWORK_ID, nullptr);
 }
 // 0.3.7 (ํๅ๒ extKeys ่ this->field_104 = 1)

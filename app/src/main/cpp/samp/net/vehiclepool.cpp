@@ -209,14 +209,14 @@ void CVehiclePool::Process()
                         pVehicle->HasSunk()) {
                         NotifyVehicleDeath(VehicleID);
                     } else {
-                        if ((GetTickCount() - m_dwLastUndrivenProcessTick[VehicleID]) > 100 &&
+                        /*if ((GetTickCount() - m_dwLastUndrivenProcessTick[VehicleID]) > 100 &&
                             byteSentUndrivenSync < 3 &&
                             pLocalPlayer && pLocalPlayer->ProcessUnoccupiedSync(VehicleID,
                                                                                 m_pVehicles[VehicleID])) {
                             m_lastUndrivenId[VehicleID] = pNetGame->GetPlayerPool()->GetLocalPlayerID();
                             m_dwLastUndrivenProcessTick[VehicleID] = GetTickCount();
                             byteSentUndrivenSync++;
-                        }
+                        }*/
 
                         if (pNetGame->m_pNetSet->bManualVehicleEngineAndLight) {
                             pVehicle->ApplyEngineState(pVehicle->GetEngineState());

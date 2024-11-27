@@ -7,24 +7,22 @@ extern CGame* pGame;
 // 0.3.7
 CActor::CActor(int iSkin, float fX, float fY, float fZ, float fAngle)
 {
-	m_pPed = nullptr;
-	m_dwGTAId = 0;
-	m_bInvulnerable = false;
-
     if (!CStreaming::TryLoadModel(iSkin))
         throw std::runtime_error("Model not loaded");
 
-	uint32_t dwRet;
-	ScriptCommand(&create_actor, 5, iSkin, fX, fY, fZ - 1.0f, &dwRet);
-	ScriptCommand(&set_actor_z_angle, dwRet, fAngle);
+    if (!IsValidPedModel(iSkin))
+    {
+        iSkin = 0;
+    }
 
-	m_dwGTAId = dwRet;
-	m_pPed = GamePool_Ped_GetAt(m_dwGTAId);
+    ScriptCommand(&create_actor, 22, iSkin, fX, fY, fZ, &m_dwGTAId);
 
-	ScriptCommand(&set_actor_can_be_decapitated, m_dwGTAId, 0);
-	ScriptCommand(&set_actor_decision_marker, m_dwGTAId, 0x10006);
+    m_pPed = GamePool_Ped_GetAt(m_dwGTAId);
 
-    CStreaming::RemoveModelIfNoRefs(iSkin);
+    ForceTargetRotation(fAngle);
+    m_pPed->SetPosn(fX, fY, fZ);
+
+    ScriptCommand(&set_actor_can_be_decapitated, m_dwGTAId, 0);
 }
 // 0.3.7
 CActor::~CActor()
@@ -42,6 +40,22 @@ CActor::~CActor()
 		m_dwGTAId = 0;
 		m_pPed = nullptr;
 	}
+}
+void CActor::ForceTargetRotation(float fRotation)
+{
+
+    if (!m_pPed) return;
+    if (!GamePool_Ped_GetAt(m_dwGTAId)) return;
+
+    if (!IsValidGamePed(m_pPed))
+    {
+        return;
+    }
+
+    m_pPed->m_fCurrentRotation = DegToRad(fRotation);
+    m_pPed->m_fAimingRotation = DegToRad(fRotation);
+
+    ScriptCommand(&set_actor_z_angle, m_dwGTAId, fRotation);
 }
 // 0.3.7
 void CActor::SetHealth(float fHealth)
@@ -77,6 +91,8 @@ void CActor::ApplyAnimation(const char* szAnimName, const char* szAnimLib, float
 
 	if (!pGame->IsAnimationLoaded(szAnimLib)) {
 		pGame->RequestAnimation(szAnimLib);
+
+        ScriptCommand(&apply_animation, m_dwGTAId, szAnimName, szAnimLib, fDelta, bLoop, bLockX, bLockY, bFreeze, iTime);
 		return;
 	}
 

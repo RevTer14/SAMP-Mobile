@@ -71,6 +71,20 @@ void readVehiclesAudioSettings()
 	fclose(pFile);
 }
 
+void ApplyFPSPatch(uint8_t fps)
+{
+#if VER_x32
+    CHook::WriteMemory(g_libGTASA + 0x005E49E0, (uintptr_t)& fps, 1);
+	CHook::WriteMemory(g_libGTASA + 0x005E492E, (uintptr_t)& fps, 1);
+#else
+    CHook::WriteMemory(g_libGTASA + 0x70A38C, "\xE9\x0F\x1E\x32", 4);
+    CHook::WriteMemory(g_libGTASA + 0x70A43C, "\xE8\x0F\x1E\x32", 4);
+    CHook::WriteMemory(g_libGTASA + 0x70A458, "\xE9\x0F\x1E\x32", 4);
+#endif
+
+    FLog("New fps limit = %d", fps);
+}
+
 void DisableAutoAim()
 {
     CHook::RET("_ZN10CPlayerPed22FindWeaponLockOnTargetEv"); // CPedSamp::FindWeaponLockOnTarget
@@ -129,6 +143,8 @@ int32_t CWorld__FindPlayerSlotWithPedPointer(CPedGTA* pPlayersPed)
 void ApplyPatches_level0()
 {
     FLog("ApplyPatches_level0");
+
+    ApplyFPSPatch(60);
 
     CHook::Write(g_libGTASA + (VER_x32 ? 0x006783C0 : 0x84E7A8), &CWorld::Players);
     CHook::Write(g_libGTASA + (VER_x32 ? 0x00679B5C : 0x8516D8), &CWorld::PlayerInFocus);

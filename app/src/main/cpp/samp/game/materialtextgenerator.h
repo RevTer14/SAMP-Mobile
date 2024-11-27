@@ -23,7 +23,7 @@ class MaterialTextGenerator
 public:
 	MaterialTextGenerator();
 
-	uintptr_t Generate(const char* text, int size, int font_size, bool bold, uint32_t font_color, uint32_t background_color, int alignment);
+    RwTexture* Generate(const char* text, int size, int font_size, bool bold, uint32_t font_color, uint32_t background_color, int alignment);
 
 private:
 	void SetUpScene();
@@ -31,6 +31,6 @@ private:
 		const ImColor& font_color, const ImColor& background_color, int align);
 	void GetMaterialSize(int size, int* x, int* y);
 
-	uintptr_t m_camera;
-	uintptr_t m_frame;
+    RwCamera* m_camera;
+	RwFrame* m_frame;
 };

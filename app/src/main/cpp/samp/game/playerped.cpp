@@ -238,30 +238,32 @@ void CPlayerPed::SetActionTrigger(uint8_t action)
 
 void CPlayerPed::SetDead()
 {
-	RwMatrix mat;
+    if (!m_dwGTAId || !m_pPed)
+    {
+        return;
+    }
+    if (!GamePool_Ped_GetAt(m_dwGTAId))
+    {
+        return;
+    }
 
-	if (m_dwGTAId && m_pPed) {
-		if (!m_pPed->IsInVehicle())
-		{
+    RwMatrix mat;
+    m_pPed->GetMatrix(&mat);
+    // will reset the tasks
+    m_pPed->SetPosn(mat.pos.x, mat.pos.y, mat.pos.z);
+    SetHealth(0.f);
 
-		}
-
-		ExtinguishFire();
-        mat = m_pPed->GetMatrix().ToRwMatrix();
-        m_pPed->SetPosn(mat.pos.x, mat.pos.y, mat.pos.z);
-		m_pPed->m_fHealth = 0.0f;
-        uint8_t old = CWorld::PlayerInFocus;
-        CWorld::PlayerInFocus = m_bytePlayerNumber;
-        ScriptCommand(&kill_actor, m_dwGTAId);
-        CWorld::PlayerInFocus = 0;
-	}
+    uint8_t old = CWorld::PlayerInFocus;
+    CWorld::PlayerInFocus = m_bytePlayerNumber;
+    ScriptCommand(&kill_actor, m_dwGTAId);
+    CWorld::PlayerInFocus = 0;
 }
 // 0.3.7
 bool CPlayerPed::IsDead()
 {
-	if (!m_pPed) return true;
-	if (m_pPed->m_fHealth > 0.0f) return false;
-	return true;
+    if(!m_pPed) return false;
+
+    return m_pPed->m_fHealth <= 0.0f || m_pPed->m_nPedState == PEDSTATE_DIE || m_pPed->m_nPedState == PEDSTATE_DEAD;
 }
 // 0.3.7
 void CPlayerPed::TogglePlayerControllable(bool bControllable)
@@ -1039,7 +1041,7 @@ int CPlayerPed::GetCurrentVehicleID()
 		return 0;
 	}
 
-	return GamePool_Vehicle_GetIndex(reinterpret_cast<CVehicleGTA *>(m_pPed->pVehicle));
+	return GamePool_Vehicle_GetIndex(m_pPed->pVehicle);
 }
 
 void CPlayerPed::SetSkillLevel(int iSkillID, int iLevel)
@@ -1231,12 +1233,21 @@ void CPlayerPed::ProcessAttachedObjects()
                     boneMatrix.pos.y = vecOut.y;
                     boneMatrix.pos.z = vecOut.z;
 
+                    CVector axis { 1.0f, 0.0f, 0.0f };
                     if (m_attachedObjectInfo[i].vecRot.x != 0.0f)
-                        RwMatrixRotate(&boneMatrix, 0, m_attachedObjectInfo[i].vecRot.x);
+                    {
+                        RwMatrixRotate(&boneMatrix, &axis, m_attachedObjectInfo[i].vecRot.x);
+                    }
+                    axis.Set( 0.0f, 1.0f, 0.0f );
                     if (m_attachedObjectInfo[i].vecRot.y != 0.0f)
-                        RwMatrixRotate(&boneMatrix, 1, m_attachedObjectInfo[i].vecRot.y);
+                    {
+                        RwMatrixRotate(&boneMatrix, &axis, m_attachedObjectInfo[i].vecRot.y);
+                    }
+                    axis.Set( 0.0f, 0.0f, 1.0f );
                     if (m_attachedObjectInfo[i].vecRot.z != 0.0f)
-                        RwMatrixRotate(&boneMatrix, 2, m_attachedObjectInfo[i].vecRot.z);
+                    {
+                        RwMatrixRotate(&boneMatrix, &axis, m_attachedObjectInfo[i].vecRot.z);
+                    }
 
                     RwMatrixScale(&boneMatrix, &m_attachedObjectInfo[i].vecScale);
 
@@ -1522,97 +1533,101 @@ void CPlayerPed::ProcessBulletData(BULLET_DATA *btData)
 // 0.3.7
 uint8_t CPlayerPed::FindDeathReasonAndResponsiblePlayer(uint16_t *nPlayer)
 {
-	if(m_pPed)
-	{
-		if(pNetGame)
-		{
-			PLAYERID PlayerIDWhoKilled;
+    if(m_pPed)
+    {
+        if(pNetGame)
+        {
+            PLAYERID PlayerIDWhoKilled;
 
-			CVehiclePool *pVehiclePool = pNetGame->GetVehiclePool();
-			CPlayerPool *pPlayerPool = pNetGame->GetPlayerPool();
+            CVehiclePool *pVehiclePool = pNetGame->GetVehiclePool();
+            CPlayerPool *pPlayerPool = pNetGame->GetPlayerPool();
 
-			if(!pVehiclePool || !pPlayerPool)
-			{
-				*nPlayer = INVALID_PLAYER_ID;
-				return 255;
-			}
+            if(!pVehiclePool || !pPlayerPool)
+            {
+                *nPlayer = INVALID_PLAYER_ID;
+                return 255;
+            }
 
-			uint8_t byteDeathReason = (uint8_t)m_pPed->m_nLastDamagedWeaponType;
+            uint8_t byteDeathReason = (uint8_t)m_pPed->m_nLastDamagedWeaponType;
 
-			if(byteDeathReason == WEAPON_DROWNING)
-			{
-				// lol poor kid.
-				*nPlayer = INVALID_PLAYER_ID;
-				return WEAPON_DROWNING;
-			}
+            if(byteDeathReason == 53)
+            {
+                // lol poor kid.
+                *nPlayer = INVALID_PLAYER_ID;
+                return 53;
+            }
 
-			// check for a player pointer.
-			if(m_pPed->m_pLastEntityDamage)
-			{
-				// It's a weapon of some sort.
-				if(byteDeathReason < WEAPON_CAMERA || byteDeathReason == WEAPON_RUNOVERBYCAR || byteDeathReason == WEAPON_EXPLOSION)
-				{
-					PlayerIDWhoKilled = pPlayerPool->FindRemotePlayerIDFromGtaPtr((CPedGTA *)m_pPed->m_pLastEntityDamage);
-					if(PlayerIDWhoKilled != INVALID_PLAYER_ID)
-					{
-						// killed by another player with a weapon, this is all easy.
-						*nPlayer = PlayerIDWhoKilled;
-						return byteDeathReason;
-					}
-					else
-					{
-						if(pVehiclePool->FindIDFromGtaPtr((CVehicleGTA *)m_pPed->m_pLastEntityDamage) != INVALID_VEHICLE_ID)
-						{
-                            CVehicleGTA *pGtaVehicle = (CVehicleGTA *)m_pPed->m_pLastEntityDamage;
-							PlayerIDWhoKilled = pPlayerPool->FindRemotePlayerIDFromGtaPtr((CPedGTA *)pGtaVehicle->pDriver);
-							if(PlayerIDWhoKilled != INVALID_PLAYER_ID)
-							{
-								// killed by another player in car with a weapon, this is all easy.
-								*nPlayer = PlayerIDWhoKilled;
-								return byteDeathReason;
-							}
-						}
-					}
-				}
-				else if(byteDeathReason == WEAPON_RAMMEDBYCAR)
-				{
-					// now, if we can find the vehicle
-					// we can probably derive the responsible player.
-					// Look in the vehicle pool for this vehicle.
-					if(pVehiclePool->FindIDFromGtaPtr((CVehicleGTA *)m_pPed->m_pLastEntityDamage) != INVALID_VEHICLE_ID)
-					{
-                        CVehicleGTA *pGtaVehicle = (CVehicleGTA *)m_pPed->m_pLastEntityDamage;
-						PlayerIDWhoKilled = pPlayerPool->FindRemotePlayerIDFromGtaPtr((CPedGTA *)pGtaVehicle->pDriver);
-						if(PlayerIDWhoKilled != INVALID_PLAYER_ID)
-						{
-							*nPlayer = PlayerIDWhoKilled;
-							return WEAPON_RAMMEDBYCAR;
-						}
-					}
-				}
-				else if(byteDeathReason == WEAPON_FALL)
-				{
-					if(pVehiclePool->FindIDFromGtaPtr((CVehicleGTA *)m_pPed->m_pLastEntityDamage) != INVALID_VEHICLE_ID)
-					{
-                        CVehicleGTA *pGtaVehicle = (CVehicleGTA *)m_pPed->m_pLastEntityDamage;
-						PlayerIDWhoKilled = pPlayerPool->FindRemotePlayerIDFromGtaPtr((CPedGTA *)pGtaVehicle->pDriver);
-						if(PlayerIDWhoKilled != INVALID_PLAYER_ID)
-						{
-							*nPlayer = PlayerIDWhoKilled;
-							return WEAPON_FALL;
-						}
-					}
+            // check for a player pointer.
+            if(m_pPed->m_pLastEntityDamage)
+            {
+                // It's a weapon of some sort.
+                if(byteDeathReason < WEAPON_CAMERA || byteDeathReason == 50 || byteDeathReason == WEAPON_EXPLOSION)
+                {
+                    PlayerIDWhoKilled = pPlayerPool->FindRemotePlayerIDFromGtaPtr(
+                            dynamic_cast<CPedGTA *>(m_pPed->m_pLastEntityDamage));
+                    if(PlayerIDWhoKilled != INVALID_PLAYER_ID)
+                    {
+                        // killed by another player with a weapon, this is all easy.
+                        *nPlayer = PlayerIDWhoKilled;
+                        return byteDeathReason;
+                    }
+                    else
+                    {
+                        if(pVehiclePool->FindIDFromGtaPtr(
+                                dynamic_cast<CVehicleGTA *>(m_pPed->m_pLastEntityDamage)) != INVALID_VEHICLE_ID)
+                        {
+                            CVehicleGTA *pGtaVehicle = dynamic_cast<CVehicleGTA *>(m_pPed->m_pLastEntityDamage);
+                            PlayerIDWhoKilled = pPlayerPool->FindRemotePlayerIDFromGtaPtr(pGtaVehicle->pDriver);
+                            if(PlayerIDWhoKilled != INVALID_PLAYER_ID)
+                            {
+                                // killed by another player in car with a weapon, this is all easy.
+                                *nPlayer = PlayerIDWhoKilled;
+                                return byteDeathReason;
+                            }
+                        }
+                    }
+                }
+                else if(byteDeathReason == 49)
+                {
+                    // now, if we can find the vehicle
+                    // we can probably derive the responsible player.
+                    // Look in the vehicle pool for this vehicle.
+                    if(pVehiclePool->FindIDFromGtaPtr(
+                            dynamic_cast<CVehicleGTA *>(m_pPed->m_pLastEntityDamage)) != INVALID_VEHICLE_ID)
+                    {
+                        CVehicleGTA *pGtaVehicle = dynamic_cast<CVehicleGTA *>(m_pPed->m_pLastEntityDamage);
+                        PlayerIDWhoKilled = pPlayerPool->FindRemotePlayerIDFromGtaPtr(pGtaVehicle->pDriver);
+                        if(PlayerIDWhoKilled != INVALID_PLAYER_ID)
+                        {
+                            *nPlayer = PlayerIDWhoKilled;
+                            return 49;
+                        }
+                    }
+                }
+                else if(byteDeathReason == 54)
+                {
+                    if(pVehiclePool->FindIDFromGtaPtr(
+                            dynamic_cast<CVehicleGTA *>(m_pPed->m_pLastEntityDamage)) != INVALID_VEHICLE_ID)
+                    {
+                        CVehicleGTA *pGtaVehicle = dynamic_cast<CVehicleGTA *>(m_pPed->m_pLastEntityDamage);
+                        PlayerIDWhoKilled = pPlayerPool->FindRemotePlayerIDFromGtaPtr(pGtaVehicle->pDriver);
+                        if(PlayerIDWhoKilled != INVALID_PLAYER_ID)
+                        {
+                            *nPlayer = PlayerIDWhoKilled;
+                            return 54;
+                        }
+                    }
 
-					*nPlayer = INVALID_PLAYER_ID;
-					return WEAPON_FALL;
-				}
-			}
-		}
-	}
+                    *nPlayer = INVALID_PLAYER_ID;
+                    return 54;
+                }
+            }
+        }
+    }
 
-	// Unhandled death type.
-	*nPlayer = INVALID_PLAYER_ID;
-	return 255;
+    // Unhandled death type.
+    *nPlayer = INVALID_PLAYER_ID;
+    return 255;
 }
 
 // 0.3.7
@@ -2344,11 +2359,9 @@ CVehicle* CPlayerPed::GetCurrentVehicle()
 	for (size_t i = 0; i < MAX_VEHICLES; i++) {
 		if (pVehiclePool->GetSlotState(i)) {
 			CVehicle *pVehicle = pVehiclePool->GetAt(i);
-			if (pVehicle && pVehicle->m_pVehicle->IsAdded()) {
-				if (pVehicle->m_pVehicle == reinterpret_cast<CVehicleGTA*>(m_pPed->pVehicle)) {
-					return pVehicle;
-				}
-			}
+			if (pVehicle->m_pVehicle == m_pPed->pVehicle) {
+                return pVehicle;
+            }
 		}
 	}
 	return nullptr;

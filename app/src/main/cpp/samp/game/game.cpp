@@ -214,10 +214,8 @@ const char* CGame::GetDataDirectory()
 // 0.3.7
 void CGame::UpdateCheckpoints()
 {
-    FLog("UpdateCheckpoints");
 	if (m_bCheckpointsEnabled)
 	{
-        FLog("UpdateCheckpoints1");
 		CPlayerPed* pPlayerPed = this->FindPlayerPed();
 		if (pPlayerPed) 
 		{
@@ -234,14 +232,12 @@ void CGame::UpdateCheckpoints()
 	}
 	else if (m_dwCheckpointMarker)
 	{
-        FLog("UpdateCheckpoints2");
 		DisableMarker(m_dwCheckpointMarker);
 		m_dwCheckpointMarker = 0;
 	}
 
 	if (m_bRaceCheckpointsEnabled)
 	{
-        FLog("UpdateCheckpoints3");
 		CPlayerPed* pPlayerPed = this->FindPlayerPed();
 		if (pPlayerPed)
 		{
@@ -254,11 +250,9 @@ void CGame::UpdateCheckpoints()
 	}
 	else if (m_dwRaceCheckpointMarker)
 	{
-        FLog("UpdateCheckpoints4");
 		DisableMarker(m_dwRaceCheckpointMarker);
 		DisableRaceCheckpoint();
 		m_dwRaceCheckpointMarker = 0;
-        FLog("UpdateCheckpoints5");
 	}
 }
 // 0.3.7
@@ -760,6 +754,30 @@ void CGame::Process() {
     if(bIsGameExiting)return;
 
     MainLoop();
+    if (pNetGame)
+    {
+        if(pGame && pGame->FindPlayerPed() && pUI && pUI->buttonpanel() && pUI->buttonpanel()->m_bH)
+        {
+            if(pGame->FindPlayerPed()->IsInVehicle())
+            {
+                pUI->buttonpanel()->m_bH->setCaption("D/B");
+            }
+            else
+                pUI->buttonpanel()->m_bH->setCaption("H");
+        }
+
+        CObjectPool* pObjectPool = pNetGame->GetObjectPool();
+        if (pObjectPool) {
+            pObjectPool->Process();
+            pObjectPool->ProcessMaterialText();
+        }
+
+        CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
+        if (pTextDrawPool) {
+            pTextDrawPool->SnapshotProcess();
+        }
+    }
+
     ProcessMainThreadTasks();
 
     uint32_t CurrentTimeInCycles;
@@ -805,7 +823,7 @@ void CGame::Process() {
 
     if ( !CTimer::m_CodePause && !CTimer::m_UserPause )
     {
-        //CSprite2d::SetRecipNearClip();
+        CSprite2d::SetRecipNearClip();
         ((void (*)()) (g_libGTASA + (VER_x32 ? 0x005C89F8 + 1 : 0x6ECF00)))(); // CSprite2d::InitPerFrame();
         ((void (*)()) (g_libGTASA + (VER_x32 ? 0x005A8A74 + 1 : 0x6CC898)))(); // CFont::InitPerFrame()
         // CCheat::DoCheats();
@@ -818,8 +836,8 @@ void CGame::Process() {
 
         // CPathFind::UpdateStreaming
 
-        // CTrain::UpdateTrains();
-        // CHeli::UpdateHelis();
+        CHook::CallFunction<void>(g_libGTASA+(VER_x32?0x57D098+1:0x6A0A14));// CTrain::UpdateTrains();
+        //CHook::CallFunction<void>(g_libGTASA+(VER_x32?0x572EBC+1:0x695608));// CHeli::UpdatHelis
         // CDarkel::Update()
         ((void(*)())(g_libGTASA + (VER_x32 ? 0x005BE838 + 1 : 0x6E2F08)))(); // CSkidmarks::Update();
         ((void(*)())(g_libGTASA + (VER_x32 ? 0x005AB4C8 + 1 : 0x6D032C)))(); // CGlass::Update()
@@ -849,9 +867,9 @@ void CGame::Process() {
         {
             CPickups::Update();
 //			CCarCtrl::PruneVehiclesOfInterest();
-//			CGarages::Update();
+            CHook::CallFunction<void>(g_libGTASA+(VER_x32?0x30E760+1:0x3D4134)); //CGarages::Update();
 // 			CEntryExitManager::Update();
-//			CStuntJumpManager::Update();
+            CHook::CallFunction<void>(g_libGTASA+(VER_x32?0x3616C4+1:0x4304D0)); //	CStuntJumpManager::Update();
             ((void (*)()) (g_libGTASA + (VER_x32 ? 0x0059CFC0 + 1 : 0x6C13F0)))(); // CBirds::Update()
             ((void (*)()) (g_libGTASA + (VER_x32 ? 0x005C03E4 + 1 : 0x6E4A7C)))(); // CSpecialFX::Update()
             // CRopes::Update();
@@ -866,6 +884,7 @@ void CGame::Process() {
 
         // CCullZones::Update() менты не могут найти?
         // CGameLogic::Update() // FIXME: TEST
+        CHook::CallFunction<void>(g_libGTASA+(VER_x32 ? 0x307D8C+1:0x3CD630));
         // CGangWars::Update();
         // CConversations::Update()
         // CPedToPlayerConversations::Update()
@@ -899,7 +918,7 @@ void CGame::Process() {
         ((void (*)()) (g_libGTASA + (VER_x32 ? 0x00596540 + 1 : 0x6BB3A8)))(); // CWaterLevel::PreRenderWater()
     }
 
-//	CHeli::UpdateHelis();
+    //CHook::CallFunction<void>(g_libGTASA+(VER_x32?0x572EBC+1:0x695608));
 //	CCheat::ProcessAllCheats();
     static bool once = false;
     if (!once)
@@ -907,30 +926,6 @@ void CGame::Process() {
         CCrossHair::Init();
         once = true;
         return;
-    }
-
-    if (pNetGame)
-    {
-        if(pGame && pGame->FindPlayerPed() && pUI && pUI->buttonpanel() && pUI->buttonpanel()->m_bH)
-        {
-            if(pGame->FindPlayerPed()->IsInVehicle())
-            {
-                pUI->buttonpanel()->m_bH->setCaption("D/B");
-            }
-            else
-                pUI->buttonpanel()->m_bH->setCaption("H");
-        }
-
-        CObjectPool* pObjectPool = pNetGame->GetObjectPool();
-        if (pObjectPool) {
-            pObjectPool->Process();
-            //pObjectPool->ProcessMaterialText();
-        }
-
-        CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
-        if (pTextDrawPool) {
-            pTextDrawPool->SnapshotProcess();
-        }
     }
 }
 

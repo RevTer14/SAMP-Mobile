@@ -34,25 +34,20 @@ CObject::CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance
 
 	ScriptCommand(&create_object, iModel, vecPos.x, vecPos.y, vecPos.z, &m_dwGTAId);
 
-	CPhysical* pEntity = GamePool_Object_GetAt(m_dwGTAId);
+	m_pEntity = GamePool_Object_GetAt(m_dwGTAId);
 
-	if (pEntity)
-	{
-		m_pEntity = pEntity;
+    m_byteMoving = 0;
+    m_fMoveSpeed = 0.0f;
+    m_bNeedRotate = false;
 
-		m_byteMoving = 0;
-		m_fMoveSpeed = 0.0f;
-		m_bNeedRotate = false;
+    m_iModel = iModel;
 
-		m_iModel = iModel;
-
-        m_Matrix = m_pEntity->GetMatrix().ToRwMatrix();
-		m_Matrix.pos.x = vecPos.x;
-		m_Matrix.pos.y = vecPos.y;
-		m_Matrix.pos.z = vecPos.z;
-		m_pEntity->SetMatrix((CMatrix&)m_Matrix);
-		InstantRotate(vecRot.x, vecRot.y ,vecRot.z);
-	}
+    m_Matrix = m_pEntity->GetMatrix().ToRwMatrix();
+    m_Matrix.pos.x = vecPos.x;
+    m_Matrix.pos.y = vecPos.y;
+    m_Matrix.pos.z = vecPos.z;
+    m_pEntity->SetMatrix((CMatrix&)m_Matrix);
+    InstantRotate(vecRot.x, vecRot.y ,vecRot.z);
 
 	for (int i = 0; i < 16; i++)
 	{
@@ -279,18 +274,13 @@ void CObject::InstantRotate(float x, float y, float z)
 // 0.3.7
 void CObject::GetRotation(float* pfX, float* pfY, float* pfZ)
 {
-	if (m_pEntity) {
-		RwMatrix* mat = reinterpret_cast<RwMatrix *>(m_pEntity->m_matrix);
+    if (!m_pEntity) return;
 
-		if (mat) {
-			// CMatrix::ConvertToEulerAngles
-			((void (*)(RwMatrix*, float*, float*, float*, int))(g_libGTASA + 0x44E6AC + 1))(mat, pfX, pfY, pfZ, 21);
-		}
+    m_pEntity->m_matrix->ConvertToEulerAngles(pfX, pfY, pfZ, 21);
 
-		*pfX = *pfX * 57.295776 * -1.0;
-		*pfY = *pfY * 57.295776 * -1.0;
-		*pfZ = *pfZ * 57.295776 * -1.0;
-	}
+    *pfX = *pfX * 57.295776 * -1.0;
+    *pfY = *pfY * 57.295776 * -1.0;
+    *pfZ = *pfZ * 57.295776 * -1.0;
 }
 // 0.3.7
 void CObject::RotateMatrix(CVector vecRot)
@@ -361,7 +351,7 @@ void CObject::SetMaterial(int iModel, int iMaterialIndex, char* txdname, char* t
 			m_MaterialTexture[iMaterialIndex] = 0;
 		}
 
-		m_MaterialTexture[iMaterialIndex] = (uintptr_t)LoadTextureFromTxd(txdname, texturename);
+		m_MaterialTexture[iMaterialIndex] = (uintptr_t)LoadTexture(texturename);
 		m_dwMaterialColor[iMaterialIndex] = dwColor;
 		m_iMaterialType[iMaterialIndex] = MATERIAL_TYPE_MATERIAL;
 		m_bHasMaterial = true;
@@ -406,8 +396,10 @@ void CObject::ProcessMaterialText()
 		if (m_iMaterialType[i] == MATERIAL_TYPE_TEXT && m_MaterialTextTexture[i] == 0)
 		{
 			m_iMaterialFontSize[i]*=0.75f;
-			m_MaterialTextTexture[i] = pMaterialTextGenerator->Generate(m_szMaterialText[i], m_iMaterialSize[i], m_iMaterialFontSize[i],
-				false, m_dwMaterialFontColor[i], m_dwMaterialBackColor[i], m_iMaterialTextAlign[i]);
+			m_MaterialTextTexture[i] = reinterpret_cast<uintptr_t>(pMaterialTextGenerator->Generate(
+                    m_szMaterialText[i], m_iMaterialSize[i], m_iMaterialFontSize[i],
+                    false, m_dwMaterialFontColor[i], m_dwMaterialBackColor[i],
+                    m_iMaterialTextAlign[i]));
 			m_bHasMaterialText = true;
 		}
 	}
@@ -540,32 +532,36 @@ void CObject::SetAttachedVehicle(uint16_t VehicleID, CVector* vecPos, CVector* v
 // 0.3.7
 void CObject::AttachToVehicle(CVehicle* pVehicle)
 {
-	if (!ScriptCommand(&is_object_attached, m_dwGTAId)) {
-		ScriptCommand(&attach_object_to_car,
-			m_dwGTAId,
-			pVehicle->m_dwGTAId,
-			m_vecAttachedPos.x,
-			m_vecAttachedPos.y,
-			m_vecAttachedPos.z,
-			m_vecAttachedRot.x,
-			m_vecAttachedRot.y,
-			m_vecAttachedRot.z);
-	}
+    if (GamePool_Object_GetAt(m_dwGTAId)) {
+        if (!ScriptCommand(&is_object_attached, m_dwGTAId)) {
+            ScriptCommand(&attach_object_to_car,
+                          m_dwGTAId,
+                          pVehicle->m_dwGTAId,
+                          m_vecAttachedPos.x,
+                          m_vecAttachedPos.y,
+                          m_vecAttachedPos.z,
+                          m_vecAttachedRot.x,
+                          m_vecAttachedRot.y,
+                          m_vecAttachedRot.z);
+        }
+    }
 }
 // 0.3.7
 void CObject::AttachToObject(CObject* pObject)
 {
-	if (!ScriptCommand(&is_object_attached, m_dwGTAId)) {
-		ScriptCommand(&attach_object_to_object,
-			m_dwGTAId,
-			pObject->m_dwGTAId,
-			m_vecAttachedPos.x,
-			m_vecAttachedPos.y,
-			m_vecAttachedPos.z,
-			m_vecAttachedRot.x,
-			m_vecAttachedRot.y,
-			m_vecAttachedRot.z);
-	}
+    if (GamePool_Object_GetAt(m_dwGTAId)) {
+        if (!ScriptCommand(&is_object_attached, m_dwGTAId)) {
+            ScriptCommand(&attach_object_to_object,
+                          m_dwGTAId,
+                          pObject->m_dwGTAId,
+                          m_vecAttachedPos.x,
+                          m_vecAttachedPos.y,
+                          m_vecAttachedPos.z,
+                          m_vecAttachedRot.x,
+                          m_vecAttachedRot.y,
+                          m_vecAttachedRot.z);
+        }
+    }
 } 
 
 bool CObject::AttachedToMovingEntity()

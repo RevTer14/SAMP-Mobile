@@ -210,8 +210,8 @@ void DoInitStuff()
 	if (bGameInited == false)
 	{
 		pPlayerTags = new CPlayerTags();
-		//pSnapShotHelper = new CSnapShotHelper();
-		//pMaterialTextGenerator = new MaterialTextGenerator();
+		pSnapShotHelper = new CSnapShotHelper();
+		pMaterialTextGenerator = new MaterialTextGenerator();
 		pAudioStream = new CAudioStream();
 		pAudioStream->Initialize();
 
@@ -311,9 +311,6 @@ void MainLoop()
 
 	if (pNetGame) {
 		pNetGame->Process();
-
-		CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
-        if(pTextDrawPool) pTextDrawPool->Draw();
 	}
 
 	if (pAudioStream) {
@@ -419,16 +416,14 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 
 uint32_t GetTickCount()
 {
-	struct timeval tv;
-	gettimeofday(&tv, nullptr);
-	return (tv.tv_sec * 1000 + tv.tv_usec / 1000);
+    return CTimer::m_snTimeInMillisecondsNonClipped;
 }	
 
 void FLog(const char* fmt, ...)
 {
 	char buffer[0xFF];
 	static FILE* flLog = nullptr;
-	const char* pszStorage = CGame::GetDataDirectory();
+	const char* pszStorage = g_pszStorage;
 
 
 	if (flLog == nullptr && pszStorage != nullptr)
@@ -459,7 +454,7 @@ void ChatLog(const char* fmt, ...)
 {
 	char buffer[0xFF];
 	static FILE* flLog = nullptr;
-	const char* pszStorage = CGame::GetDataDirectory();
+	const char* pszStorage = g_pszStorage;
 
 
 	if (flLog == nullptr && pszStorage != nullptr)
@@ -486,7 +481,7 @@ void MyLog(const char* fmt, ...)
 {
 	char buffer[0xFF];
 	static FILE* flLog = nullptr;
-	const char* pszStorage = CGame::GetDataDirectory();
+	const char* pszStorage = g_pszStorage;
 
 
 	if (flLog == nullptr && pszStorage != nullptr)
@@ -514,7 +509,7 @@ void MyLog2(const char* fmt, ...)
 {
 	char buffer[0xFF];
 	static FILE* flLog = nullptr;
-	const char* pszStorage = CGame::GetDataDirectory();
+	const char* pszStorage = g_pszStorage;
 
 
 	if (flLog == nullptr && pszStorage != nullptr)
@@ -543,7 +538,7 @@ void LogVoice(const char* fmt, ...)
 {
 	char buffer[0xFF];
 	static FILE* flLog = nullptr;
-	const char* pszStorage = CGame::GetDataDirectory();
+	const char* pszStorage = g_pszStorage;
 
 	if (flLog == nullptr && pszStorage != nullptr)
 	{

@@ -72,21 +72,15 @@ void DeleteRwTexture(uintptr_t texture);
 
 bool IsPointInRect(float x, float y, CRect* rect);
 
-uintptr_t ModelInfoCreateInstance(int iModel);
+RwObject* ModelInfoCreateInstance(int iModel);
 
 void RenderClumpOrAtomic(uintptr_t rwObject);
-
-void RwFrameTranslate(uintptr_t frame, RwV3d* vec, int flag);
-void RwFrameRotate(uintptr_t frame, int axis, float angle);
 
 float GetModelColSphereRadius(int iModel);
 
 void GetModelColSphereVecCenter(int iModel, RwV3d* vec);
 
 void DestroyAtomicOrClump(uintptr_t rwObject);
-
-void RpWorldAddLight(uintptr_t light);
-void RpWorldRemoveLight(uintptr_t light);
 
 void GamePrepareTrain(CVehicleGTA* pGtaVehicle);
 
@@ -136,3 +130,6 @@ bool GetAnimationIndexFromName(const char* szName);
 void SetScissorRect(void* pRect);
 
 bool IsValidGamePed(CPedGTA* pPed);
+void DefinedState2d();
+void DefinedState();
+void RenderEntity(CEntityGTA* entity);
