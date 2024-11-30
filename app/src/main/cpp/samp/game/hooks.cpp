@@ -269,7 +269,7 @@ void CObject_Render_hook(CObjectGta* thiz)
 		}
 	}
 
-    //((void (*)(void))(g_libGTASA + (VER_x32 ? 0x005D1F98 + 1 : 0x6F6664)))();
+    ((void (*)(void))(g_libGTASA + (VER_x32 ? 0x005D1F98 + 1 : 0x6F6664)))();
 	CObject_Render(thiz);
     //((void (*)(void))(g_libGTASA + 0x5D1F5C + 1))();
 }
@@ -387,6 +387,8 @@ void AND_TouchEvent_hook(int type, int num, int posX, int posY)
 	// imgui
 	//bool bRet = pUI->OnTouchEvent(type, num, posX, posY);
 
+    FLog("%f %f", posX, posY);
+
 	if (pGame->IsGamePaused())
 		return AND_TouchEvent(type, num, posX, posY);
 
@@ -407,19 +409,13 @@ void AND_TouchEvent_hook(int type, int num, int posX, int posY)
 				break;
 		}
 
-		if (pUI->keyboard()->visible() || pUI->dialog()->visible()) {
-			AND_TouchEvent(1, 0, 0, 0);
-			return;
-		}
-		else
-		{
-			if (pNetGame && pNetGame->GetTextDrawPool())
-			{
-				if (!pNetGame->GetTextDrawPool()->onTouchEvent(type, num, posX, posY)) {
-					return AND_TouchEvent(1, 0, 0, 0);
-				}
-			}
-		}
+		if (pNetGame && pNetGame->GetTextDrawPool())
+        {
+            if (pNetGame->GetTextDrawPool()->onTouchEvent(type, num, posX, posY)) {
+                FLog("GetTextDrawPool()->onTouchEvent %f %f", posX, posY);
+                return AND_TouchEvent(1, 0, 0, 0);
+            }
+        }
 	}
 
 	if (pGame->IsGameInputEnabled())
@@ -1455,7 +1451,6 @@ stFile* NvFOpen(const char* r0, const char* r1, int r2, int r3)
 #endif
     st->isFileExist = false;
 
-    FLog("%s", path);
     FILE *f  = fopen(path, "rb");
 
     if(f)
@@ -1557,6 +1552,17 @@ int CTaskSimpleGetUp__ProcessPed_hook(uintptr_t* thiz, CPedGTA* ped)
     }
 
     return res;
+}
+
+int64 getmip()
+{
+    return 1;
+}
+
+uint64_t* RQCommand_rqSetAlphaTest(uint64_t *result)
+{
+    *result += 8;
+    return result;
 }
 
 void InjectHooks()
@@ -1683,5 +1689,8 @@ void InstallHooks()
     CHook::InlineHook("_ZN7CObject6RenderEv", &CObject_Render_hook, & CObject_Render);
 
     CHook::Redirect("_Z19PlayerIsEnteringCarv", &PlayerIsEnteringCar);
+    CHook::Redirect("_ZNK14TextureListing11GetMipCountEv", &getmip);
+
+    CHook::Redirect("_Z25RQ_Command_rqSetAlphaTestRPc", &RQCommand_rqSetAlphaTest);
     HookCPad();
 }

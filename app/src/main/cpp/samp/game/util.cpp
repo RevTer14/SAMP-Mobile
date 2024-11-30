@@ -2001,12 +2001,12 @@ uintptr_t LoadTexture(const char* texname)
     {
         uintptr_t texture = (uintptr_t)CUtil::LoadTextureFromDB(texdb[i], texname);
         if (texture != 0) {
-            //Log("Texture: %s loaded from %s", texname, texdb[i]);
+            FLog("Texture: %s loaded from %s", texname, texdb[i]);
             return texture;
         }
     }
 
-    //Log("Texture: %s not found!", texname);
+    FLog("Texture: %s not found!", texname);
     return 0;
 }
 
@@ -2262,7 +2262,7 @@ void DestroyTextDrawTexture(int index)
 		pTexture = TextDrawTexture[index];
 		bTextDrawTextureSlotState[index] = false;
 		if (pTexture)
-			DeleteRwTexture(pTexture);
+			RwTextureDestroy(reinterpret_cast<RwTexture *>(pTexture));
 
 		TextDrawTexture[index] = 0;
 	}
@@ -2273,7 +2273,7 @@ void DestroyTextDrawTexture(int index)
 void DeleteRwTexture(uintptr_t texture)
 {
 	// RwTextureDestroy
-	((void(*)(uintptr_t))(g_libGTASA + 0x1DB764 + 1))(texture);
+	//((void(*)(uintptr_t))(g_libGTASA + 0x1DB764 + 1))(texture);
 }
 
 void DrawRaster(RwRaster* raster, CRect const& rect)
@@ -2472,11 +2472,11 @@ int GameGetWeaponModelIDFromWeaponID(int iWeaponID)
 
 bool IsPointInRect(float x, float y, CRect* rect)
 {
-	if (x >= rect->left && x <= rect->right &&
-		y >= rect->top && y <= rect->bottom)
-		return true;
+    if (x >= rect->left && x <= rect->right &&
+        y >= rect->bottom && y <= rect->top)
+        return true;
 
-	return false;
+    return false;
 }
 
 RwObject* ModelInfoCreateInstance(int iModel)
@@ -2627,7 +2627,7 @@ void RwMatrixScale(RwMatrix* matrix, RwV3d* scale)
 
 const char* getGameDataFolderDirectory()
 {
-	return (const char*)(g_libGTASA + /*0x63C4B8*/0x6D687C);
+	return "";
 }
 // 0.3.7
 // 0.3.7
@@ -2655,10 +2655,8 @@ int GetTaskTypeFromTask(uint32_t *task)
 
 int Game_PedStatPrim(int model_id)
 {
-	int *pStat;
-	uint32_t *d = (uint32_t *)(g_libGTASA+0x91DCB8+(model_id*4));
-	pStat = (int *)((*d)+40);
-	return *pStat;	
+
+	return CModelInfo::ms_modelInfoPtrs[model_id]->AsPedModelInfoPtr()->m_nStatType;
 }
 
 uintptr_t g_pWidgets[TYPE_SIZE];
