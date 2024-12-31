@@ -123,7 +123,7 @@ RwTexture* LoadTextureFromTxd(const char* txdname, const char* texturename);
 uintptr_t LoadTexture(const char* texname);
 
 RpMaterial* ObjectMaterialCallBack(RpMaterial* material, void* data);
-RpAtomic* ObjectMaterialTextCallBack(RpAtomic* rpAtomic, CObject* pObject);
+RpMaterial* ObjectMaterialTextCallBack(RpMaterial* material, void* data);
 
 bool GetAnimationIndexFromName(const char* szName);
 

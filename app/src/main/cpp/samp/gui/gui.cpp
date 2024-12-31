@@ -220,9 +220,13 @@ bool UI::OnTouchEvent(int type, bool multi, int x, int y)
 	return true;
 }
 
+#include "../settings.h"
 extern CGame *pGame;
+extern CSettings* pSettings;
 void UI::renderDebug()
 {
+    if(!pSettings->Get().iFPSCounter) return;
+
     char szStr[30];
     char szStrMem[64];
     char szStrPos[64];

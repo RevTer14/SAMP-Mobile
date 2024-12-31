@@ -2118,7 +2118,7 @@ float subAngle(float a1, float a2)
 
 void HideEntity(CEntityGTA *pEntity)
 {
-    pEntity->GetPosition().z -= 2000.0;
+    pEntity->SetPosn(pEntity->GetPosition().x, pEntity->GetPosition().y, pEntity->GetPosition().z -= 2000.0);
 }
 
 /* =========== RemoveBuildings ============= */
@@ -2911,21 +2911,25 @@ RpMaterial* ObjectMaterialCallBack(RpMaterial* material, void* data)
     return material;
 }
 
-RpAtomic* ObjectMaterialTextCallBack(RpAtomic* rpAtomic, CObject* pObject)
+RpMaterial* ObjectMaterialTextCallBack(RpMaterial* material, void* data)
 {
-    if(!pObject->m_MaterialTextTexture || rpAtomic->object.object.type != 1) return rpAtomic;
+    CObject* pObject = (CObject*)data;
+    RpAtomic* rpAtomic = (RpAtomic*)pObject->m_pEntity->m_pRwAtomic;
 
-    int iTotalEntries = rpAtomic->geometry->matList.numMaterials;
-    if (iTotalEntries > 16) iTotalEntries = 16; // fix fucking bug :|
-    for (int i = 0; i < iTotalEntries; i++)
+    if(!pObject->m_MaterialTextTexture || rpAtomic->object.object.type != 1) return material;
+
+    for (int i = 0; i < rpAtomic->geometry->matList.numMaterials; i++)
     {
-        if(pObject->m_MaterialTextTexture[i])
-        {
-            rpAtomic->geometry->matList.materials[i]->texture = reinterpret_cast<RwTexture *>(pObject->m_MaterialTextTexture[i]);
+        if(i >= 16) break;
+        if(rpAtomic->geometry->matList.materials[i] == material) {
+            if (pObject->m_MaterialTextTexture[i]) {
+                rpAtomic->geometry->matList.materials[i]->texture = reinterpret_cast<RwTexture *>(pObject->m_MaterialTextTexture[i]);
+            }
+            break;
         }
     }
 
-    return rpAtomic;
+    return material;
 }
 
 void SetScissorRect(void* pRect)

@@ -64,7 +64,7 @@ void CWorld::ProcessPedsAfterPreRender() {
         CRemotePlayer* pRemotePlayer = pNetGame->GetPlayerPool()->GetAt(i);
         if(pRemotePlayer)
         {
-            if(pRemotePlayer->GetPlayerPed() && pRemotePlayer->GetPlayerPed()->m_pPed->m_bRemoveFromWorld)
+            if(pRemotePlayer->GetPlayerPed() && !pRemotePlayer->GetPlayerPed()->m_pPed->m_bRemoveFromWorld)
             {
                 pRemotePlayer->GetPlayerPed()->ProcessAttachedObjects();
                 pRemotePlayer->GetPlayerPed()->m_pPed->GetIntelligence()->ProcessAfterPreRender();

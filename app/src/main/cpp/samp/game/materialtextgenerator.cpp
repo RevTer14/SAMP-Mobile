@@ -59,6 +59,7 @@ void MaterialTextGenerator::Render(const char* text, const ImVec2& size, int fon
 
 		pUI->renderer()->drawText(text_pos, font_color, info, false, font_size);
 
+        ImGui::EndFrame();
 		ImGui::Render();
 		pUI->renderDrawData(ImGui::GetDrawData());
 	}
@@ -98,7 +99,7 @@ RwTexture* MaterialTextGenerator::Generate(const char* text, int size, int font_
         RwCameraClear(m_camera, reinterpret_cast<RwRGBA *>(&background_color), 3);
         FLog("MaterialTextGenerator::Generate6");
 		RwCameraBeginUpdate((RwCamera*)m_camera);
-		DefinedState2d();
+		DefinedState();
         FLog("MaterialTextGenerator::Generate7");
 		Render(text, ImVec2(width, height), font_size, bold, fix_color(font_color), fix_color(background_color), alignment);
         FLog("MaterialTextGenerator::Generate8");

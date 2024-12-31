@@ -262,14 +262,18 @@ void CObject_Render_hook(CObjectGta* thiz)
 				}
 				// SetObjectMaterialText
 				if(pObject->m_bHasMaterialText)
-					RwFrameForAllObjects((RwFrame*)rwObject->parent, (RwObject *(*)(RwObject *, void *))ObjectMaterialTextCallBack, pObject);
+                {
+                    //RwFrameForAllObjects((RwFrame*)rwObject->parent, (RwObject *(*)(RwObject *, void *))ObjectMaterialTextCallBack, pObject);
+                    RpAtomic* atomic = (RpAtomic*)object->m_pRwAtomic;
+                    RpGeometryForAllMaterials(atomic->geometry, ObjectMaterialTextCallBack, (void*)pObject);
+                }
 			}
 
 
 		}
 	}
 
-    ((void (*)(void))(g_libGTASA + (VER_x32 ? 0x005D1F98 + 1 : 0x6F6664)))();
+    //((void (*)(void))(g_libGTASA + (VER_x32 ? 0x005D1F98 + 1 : 0x6F6664)))();
 	CObject_Render(thiz);
     //((void (*)(void))(g_libGTASA + 0x5D1F5C + 1))();
 }
@@ -387,6 +391,8 @@ void AND_TouchEvent_hook(int type, int num, int posX, int posY)
 	// imgui
 	//bool bRet = pUI->OnTouchEvent(type, num, posX, posY);
 
+    FLog("%f %f", posX, posY);
+
 	if (pGame->IsGamePaused())
 		return AND_TouchEvent(type, num, posX, posY);
 
@@ -407,19 +413,19 @@ void AND_TouchEvent_hook(int type, int num, int posX, int posY)
 				break;
 		}
 
-		if (pUI->keyboard()->visible() || pUI->dialog()->visible()) {
-			AND_TouchEvent(1, 0, 0, 0);
-			return;
-		}
-		else
-		{
-			if (pNetGame && pNetGame->GetTextDrawPool())
-			{
-				if (!pNetGame->GetTextDrawPool()->onTouchEvent(type, num, posX, posY)) {
-					return AND_TouchEvent(1, 0, 0, 0);
-				}
-			}
-		}
+        if (pUI->keyboard()->visible() || pUI->dialog()->visible()) {
+            AND_TouchEvent(1, 0, 0, 0);
+            return;
+        }
+        else
+        {
+            if (pNetGame && pNetGame->GetTextDrawPool())
+            {
+                if (!pNetGame->GetTextDrawPool()->onTouchEvent(type, num, posX, posY)) {
+                    return AND_TouchEvent(1, 0, 0, 0);
+                }
+            }
+        }
 	}
 
 	if (pGame->IsGameInputEnabled())
@@ -798,6 +804,8 @@ void CRenderer_RenderEverythingBarRoads_hook() {
 #include "RQ_Commands.h"
 #include "Pickups.h"
 #include "TimeCycle.h"
+#include "game/Pipelines/CustomCar/CustomCarEnvMapPipeline.h"
+#include "game/Pipelines/CustomBuilding/CustomBuildingDNPipeline.h"
 
 CFPSFix g_fps;
 
@@ -1598,6 +1606,73 @@ int64 GetInputType(void)
     return 0LL;
 }
 
+int(*CAnimBlendNode__FindKeyFrame)(int, float, int, int);
+int CAnimBlendNode__FindKeyFrame_hook(int a1, float a2, int a3, int a4)
+{
+    if (*(uintptr_t*)(a1 + 16))
+    {
+        return CAnimBlendNode__FindKeyFrame(a1, a2, a3, a4);
+    }
+    else return 0;
+}
+
+RwFrame* CClumpModelInfo_GetFrameFromId_Post(RwFrame* pFrameResult, RpClump* pClump, int id)
+{
+    if (pFrameResult)
+        return pFrameResult;
+
+    uintptr_t calledFrom = 0;
+    __asm__ volatile ("mov %0, lr" : "=r" (calledFrom));
+    calledFrom -= g_libGTASA;
+
+    if (calledFrom == 0x00515708                // CVehicle::SetWindowOpenFlag
+        || calledFrom == 0x00515730             // CVehicle::ClearWindowOpenFlag
+        || calledFrom == 0x00338698             // CVehicleModelInfo::GetOriginalCompPosition
+        || calledFrom == 0x00338B2C)            // CVehicleModelInfo::CreateInstance
+        return nullptr;
+
+    for (uint i = 2; i < 40; i++)
+    {
+        RwFrame* pNewFrameResult = nullptr;
+        uint     uiNewId = id + (i / 2) * ((i & 1) ? -1 : 1);
+
+        pNewFrameResult = ((RwFrame * (*)(RpClump * pClump, int id))(g_libGTASA + (VER_2_1 ? 0x003856D0 : 0x00335CC0) + 1))(pClump, i);
+
+        if (pNewFrameResult)
+        {
+            return pNewFrameResult;
+        }
+    }
+
+    return nullptr;
+}
+RwFrame* (*CClumpModelInfo_GetFrameFromId)(RpClump*, int);
+RwFrame* CClumpModelInfo_GetFrameFromId_hook(RpClump* a1, int a2)
+{
+    return CClumpModelInfo_GetFrameFromId_Post(CClumpModelInfo_GetFrameFromId(a1, a2), a1, a2);
+}
+
+void (*FxEmitterBP_c__Render)(uintptr_t* a1, int a2, int a3, float a4, char a5);
+void FxEmitterBP_c__Render_hook(uintptr_t* a1, int a2, int a3, float a4, char a5)
+{
+    if(!a1 || !a2) return;
+    uintptr_t* temp = *((uintptr_t**)a1 + 3);
+    if (!temp)
+    {
+        return;
+    }
+    FxEmitterBP_c__Render(a1, a2, a3, a4, a5);
+}
+
+bool (*RwResourcesFreeResEntry)(void* entry);
+bool RwResourcesFreeResEntry_hook(void* entry)
+{
+    bool result;
+    if (entry) result = RwResourcesFreeResEntry(entry);
+    else result = false;
+    return result;
+}
+
 void InjectHooks()
 {
     FLog("InjectHooks");
@@ -1607,6 +1682,7 @@ void InjectHooks()
     CHook::RET("_ZN11CPlayerInfo14LoadPlayerSkinEv");
     CHook::RET("_ZN11CPopulation10InitialiseEv");
 #endif
+    CCustomCarEnvMapPipeline::InjectHooks();
     CCamera::InjectHooks(); //
     CReferences::InjectHooks(); //
     CModelInfo::injectHooks(); //
@@ -1660,7 +1736,7 @@ void InjectHooks()
     TextureDatabase::InjectHooks();
     TextureDatabaseEntry::InjectHooks();
     TextureDatabaseRuntime::InjectHooks();
-    //CCustomBuildingDNPipeline::InjectHooks();
+    CCustomBuildingDNPipeline::InjectHooks();
     //CWidgetRadar::InjectHooks();
 
     //CRealTimeShadowManager::InjectHooks();
@@ -1674,14 +1750,19 @@ void InstallSpecialHooks()
 
     CHook::InlineHook("_Z10NvUtilInitv", &NvUtilInit_hook, &NvUtilInit);
 
-    //CHook::RET("_ZN12CCutsceneMgr16LoadCutsceneDataEPKc"); // LoadCutsceneData
-    //CHook::RET("_ZN12CCutsceneMgr10InitialiseEv");			// CCutsceneMgr::Initialise
+    CHook::RET("_ZN12CCutsceneMgr16LoadCutsceneDataEPKc"); // LoadCutsceneData
+    CHook::RET("_ZN12CCutsceneMgr10InitialiseEv");			// CCutsceneMgr::Initialise
 
     CHook::Redirect("_Z7NvFOpenPKcS0_bb", &NvFOpen);
 
     CHook::InlineHook("_ZN14MainMenuScreen6UpdateEf", &MainMenuScreen__Update_hook, &MainMenuScreen__Update);
 
     CHook::RET("_ZN4CPed31RemoveWeaponWhenEnteringVehicleEi"); // CPed::RemoveWeaponWhenEnteringVehicle
+
+#if VER_x32
+	CHook::InlineHook("_Z32_rxOpenGLDefaultAllInOneRenderCBP10RwResEntryPvhj", &rxOpenGLDefaultAllInOneRenderCB_hook, &rxOpenGLDefaultAllInOneRenderCB);
+	CHook::InlineHook("_ZN25CCustomBuildingDNPipeline18CustomPipeRenderCBEP10RwResEntryPvhj", &CCustomBuildingDNPipeline__CustomPipeRenderCB_hook, &CCustomBuildingDNPipeline__CustomPipeRenderCB);
+#endif
 }
 
 #include <EGL/egl.h>
@@ -1740,5 +1821,17 @@ void InstallHooks()
     }
 
     CHook::Redirect("_ZN4CHID12GetInputTypeEv", &GetInputType);
+    CHook::Redirect("_ZNK14TextureListing11GetMipCountEv", &getmip);
+
+    CHook::Redirect("_Z25RQ_Command_rqSetAlphaTestRPc", &RQCommand_rqSetAlphaTest);
+
+#if VER_x32
+    CHook::InlineHook("_ZN14CAnimBlendNode12FindKeyFrameEf", &CAnimBlendNode__FindKeyFrame_hook, &CAnimBlendNode__FindKeyFrame);
+    CHook::InlineHook("_ZN15CClumpModelInfo14GetFrameFromIdEP7RpClumpi", &CClumpModelInfo_GetFrameFromId_hook, &CClumpModelInfo_GetFrameFromId);
+#endif
+
+    CHook::InlineHook("_ZN13FxEmitterBP_c6RenderEP8RwCamerajfh", &FxEmitterBP_c__Render_hook, &FxEmitterBP_c__Render);
+    CHook::InlineHook("_Z23RwResourcesFreeResEntryP10RwResEntry", &RwResourcesFreeResEntry_hook, &RwResourcesFreeResEntry);
+
     HookCPad();
 }

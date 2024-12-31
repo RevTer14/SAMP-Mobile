@@ -38,7 +38,6 @@ typedef struct _TEXT_DRAW_DATA
     bool bHasKeyCode;
 } TEXT_DRAW_DATA;
 #pragma pack(pop)
-
 #pragma pack(push, 1)
 typedef struct _TEXT_DRAW_TRANSMIT
 {
@@ -74,7 +73,7 @@ typedef struct _TEXT_DRAW_TRANSMIT
     uint16_t wColor2;
 } TEXT_DRAW_TRANSMIT;
 #pragma pack(pop)
-
+#pragma pack(push, 1)
 class CTextDraw
 {
 public:
@@ -111,3 +110,4 @@ public:
     bool m_bHovered;
     uint32_t m_dwHoverColor;
 };
+#pragma pack(pop)

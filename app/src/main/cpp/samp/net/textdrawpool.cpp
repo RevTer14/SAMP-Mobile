@@ -111,6 +111,7 @@ void CTextDrawPool::SendClick()
 bool CTextDrawPool::onTouchEvent(int type, bool multi, int x, int y)
 {
     if (m_bSelectState == false) return true;
+    static bool bWannaClick = false;
 
     m_wClickedTextDrawID = 0xFFFF;
 
@@ -125,37 +126,42 @@ bool CTextDrawPool::onTouchEvent(int type, bool multi, int x, int y)
 
             if (pTextDraw->m_TextDrawData.byteSelectable)
             {
-                CRect* rect = &pTextDraw->m_rectArea;
-                if (rect)
+                FLog("onTouchEvent textdraw 2");
+                switch (type)
                 {
-                    if (IsPointInRect(x, y, rect))
-                    {
-                        switch (type)
+                    case 2:
+                        if (IsPointInRect(x, y, &(pTextDraw->m_rectArea)))
                         {
-                            case 2:
-                            case 3:
-                                m_wClickedTextDrawID = 0xFFFF;
-                                pTextDraw->m_bHovered = true;
-                                pTextDraw->m_dwHoverColor = m_dwHoverColor;
-                                break;
-
-                            case 1:
-                                m_wClickedTextDrawID = i;
-                                pTextDraw->m_bHovered = false;
-                                pTextDraw->m_dwHoverColor = 0;
-                                break;
+                            bWannaClick = true;
+                            return false;
                         }
-                    }
+                        break;
+                    case 3:
+                        /*m_wClickedTextDrawID = 0xFFFF;
+                        pTextDraw->m_bHovered = true;
+                        pTextDraw->m_dwHoverColor = m_dwHoverColor;
+                        FLog("x: %f, y:%f, %d",IsPointInRect(x, y, &pTextDraw->m_rectArea));*/
+                        break;
+
+                    case 1:
+                        FLog("m_rectArea %f %f %f %f, clicked: %f %f", pTextDraw->m_rectArea.bottom, pTextDraw->m_rectArea.top,pTextDraw->m_rectArea.left,pTextDraw->m_rectArea.right,
+                             x,y);
+                        if (IsPointInRect(x, y, &pTextDraw->m_rectArea)) {
+                            FLog("Point is in rect");
+                            m_wClickedTextDrawID = i;
+                            SendClick();
+                            pTextDraw->m_bHovered = false;
+                            pTextDraw->m_dwHoverColor = 0;
+                            return false;
+                        }
+                        bWannaClick = false;
+                        break;
                 }
             }
         }
     }
 
-    if (m_wClickedTextDrawID != 0xFFFF) {
-        SendClick();
-    }
-
-    return false;
+    return true;
 }
 
 void CTextDrawPool::SnapshotProcess()

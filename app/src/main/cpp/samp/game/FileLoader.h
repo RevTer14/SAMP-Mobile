@@ -7,8 +7,8 @@
 
 #include "common.h"
 #include "CFileMgr.h"
-#include "Core/Quaternion.h"
-struct CEntityGTA;
+#include "Quaternion.h"
+#include "game/Entity/CEntityGTA.h"
 
 class CFileObjectInstance {
 public:

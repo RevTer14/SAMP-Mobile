@@ -59,8 +59,8 @@ CTextDraw::CTextDraw(TEXT_DRAW_TRANSMIT* pTextDrawTransmit, const char* szText)
     m_TextDrawData.bHasRectArea = false;
     m_rectArea.left = 0.0f;
     m_rectArea.right = 0.0f;
-    m_rectArea.bottom = 0.0f;
     m_rectArea.top = 0.0f;
+    m_rectArea.bottom = 0.0f;
     m_bHovered = false;
     m_dwHoverColor = 0;
 
@@ -70,6 +70,59 @@ CTextDraw::~CTextDraw()
 {
     if (m_TextDrawData.iTextureSlot != -1 && m_TextDrawData.iTextureSlot != 0x0) RwTextureDestroy((RwTexture*)TextDrawTexture[m_TextDrawData.iTextureSlot]);
     DestroyTextDrawTexture(m_TextDrawData.iTextureSlot);
+}
+
+uintptr_t LoadFromTxdSlot(const char* szSlot, const char* szTexture)
+{
+    RwTexture* tex;
+    if (strncmp(szSlot, "none", 5u))
+    {
+        /*uintptr_t v10 = ((int (*)(const char*))(g_libGTASA + 0x55BB85))(szSlot);
+        CallFunction<void>(g_libGTASA + 0x55BD6C + 1);
+        CallFunction<void>(g_libGTASA + 0x55BD6C + 1, v10, 0);
+        tex = CallFunction<RwTexture*>(g_libGTASA + 0x1B2558 + 1, szTexture, 0);
+        CallFunction<void>(g_libGTASA + 0x55BDA8 + 1);*/
+    }
+
+    static char *texdb[7] = { "samp", "mobile", "txd", "menu", "gta3", "gta_int", "player" };
+    bool FindedLibrary = false;
+    for (int i = 0; i < 7; i++)
+    {
+        if (!strcmp(texdb[i], szSlot))
+        {
+            FindedLibrary = true;
+            break;
+        }
+    }
+
+    if (FindedLibrary == false)
+    {
+        if(!tex) tex = (RwTexture*)LoadTexture(szTexture);
+    }
+
+    if(!tex) tex = (RwTexture*)LoadTexture(std::string(std::string(szTexture) + "_" + szSlot).c_str());
+    if(!tex) tex = (RwTexture*)LoadTexture(std::string(std::string(szSlot) + "_" + szTexture).c_str());
+    if(!tex) tex = (RwTexture*)LoadTexture(szTexture);
+    if(!tex)
+    {
+        std::string str = szTexture;
+        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        tex = (RwTexture*)LoadTexture(str.c_str());
+    }
+    if(!tex)
+    {
+        std::string str = szTexture;
+        std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+        tex = (RwTexture*)LoadTexture(std::string(str + "_" + szSlot).c_str());
+    }
+
+    if(!tex)
+    {
+        tex = (RwTexture*)CUtil::LoadTextureFromDB(szSlot, szTexture);
+    }
+
+   FLog("%s loaded from %s", szTexture, szSlot);
+    return (uintptr_t)tex;
 }
 
 void CTextDraw::Draw()
@@ -168,6 +221,7 @@ void CTextDraw::DrawDefault()
         m_rectArea.bottom = fUseY;
         m_rectArea.top = fUseY + fLineHeight;
     }
+    m_TextDrawData.bHasRectArea = true;
 }
 
 void CTextDraw::DrawTextured()
@@ -179,6 +233,7 @@ void CTextDraw::DrawTextured()
     m_rectArea.bottom = m_TextDrawData.fY * scaleY;
     m_rectArea.right = (m_TextDrawData.fX + m_TextDrawData.fLineWidth) * scaleX;
     m_rectArea.top = (m_TextDrawData.fY + m_TextDrawData.fLineHeight) * scaleY;
+    m_TextDrawData.bHasRectArea = true;
 
     static float uv_reflected[8] = {
             0.0f, 1.0f,
@@ -231,10 +286,11 @@ void CTextDraw::LoadTexture()
         strcpy(texturename, ++szTexture);
 
         if (m_TextDrawData.iTextureSlot != -1)
-            TextDrawTexture[m_TextDrawData.iTextureSlot] = ::LoadTexture(texturename);
+            TextDrawTexture[m_TextDrawData.iTextureSlot] = ::LoadFromTxdSlot(txdname, texturename);
     }
 }
 
+#include "Models/ModelInfo.h"
 void CTextDraw::SnapshotProcess()
 {
     if (m_TextDrawData.dwStyle != 5 || m_TextDrawData.iTextureSlot != -1) {
@@ -270,14 +326,14 @@ void CTextDraw::SnapshotProcess()
         // OBJECT MODEL
     else
     {
-        if (!GetModelInfoByID(m_TextDrawData.wModelID))
+        if (!CModelInfo::GetModelInfo(m_TextDrawData.wModelID))
             m_TextDrawData.wModelID = 18631;
-        snapshot = (uintptr_t)pSnapShotHelper->CreateObjectSnapShot(
+        /*snapshot = (uintptr_t)pSnapShotHelper->CreateObjectSnapShot(
                 m_TextDrawData.wModelID,
                 m_TextDrawData.dwBackgroundColor,
                 &m_TextDrawData.vecRot,
                 m_TextDrawData.fZoom
-        );
+        );*/
     }
 
     if (snapshot)

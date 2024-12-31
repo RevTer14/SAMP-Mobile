@@ -206,6 +206,15 @@ public:
                 (void **)orig);
     }
 
+    template <typename Ptr, typename Func, typename Orig>
+    static void InlineHook(Ptr ptr, Func func, Orig orig)
+    {
+        shadowhook_hook_func_addr(
+                (void*)ptr,
+                (void *)func,
+                (void **)orig);
+    }
+
     template <typename Func, typename Orig>
     static void InlineHook(const char* sym, Func func, Orig orig)
     {
