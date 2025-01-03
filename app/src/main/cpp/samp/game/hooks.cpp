@@ -1767,8 +1767,10 @@ void InstallSpecialHooks()
 
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>   // If using OpenGL ES 2.0 or 3.0
+void SetUpGLHooks();
 void InstallHooks()
 {
+    //SetUpGLHooks();
     CHook::Redirect("_Z13Render2dStuffv", &Render2dStuff);
     CHook::Redirect("_Z13RenderEffectsv", &RenderEffects);
     CHook::InlineHook("_Z14AND_TouchEventiiii", &AND_TouchEvent_hook, &AND_TouchEvent);

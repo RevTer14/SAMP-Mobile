@@ -267,6 +267,9 @@ public:
 
 	bool ProcessUnoccupiedSync(VEHICLEID vehicleId, CVehicle *pVehicle);
 
+    void MaybeSendExitVehicle();
+    void MaybeSendEnterVehicle();
+
     bool				m_bPassengerDriveByMode;
 public:
 	bool				m_bWaitingForSpawnRequestReply;

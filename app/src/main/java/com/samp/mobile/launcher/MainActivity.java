@@ -153,13 +153,13 @@ public class MainActivity extends AppCompatActivity {
     public boolean getServersInfo()
     {
         final boolean[] z = {false};
-        Volley.newRequestQueue(getApplicationContext()).add(new StringRequest("https://samp-mobile.online/launcher/serverinfo.php", new Response.Listener<String>() {
+        Volley.newRequestQueue(getApplicationContext()).add(new StringRequest("https://samp-mobile.shop/hosted.json", new Response.Listener<String>() {
 
             @Override
             public void onResponse(String response) {
                 try {
                     JSONObject jsonObject  = new JSONObject(new String(response.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8));
-                    JSONArray jsonArray = jsonObject.getJSONArray("servers");
+                    JSONArray jsonArray = jsonObject.getJSONArray("query");
                     for(int i = 0; i<jsonArray.length(); i++) {
                         JSONObject jSONObject = jsonArray.getJSONObject(i);
                         SAMPServerInfo sAMPServerInfo = new SAMPServerInfo();
@@ -168,7 +168,7 @@ public class MainActivity extends AppCompatActivity {
                         sAMPServerInfo.setAddress(jSONObject.getString("ip"));
                         sAMPServerInfo.setPort(jSONObject.getInt("port"));
                         sAMPServerInfo.setCurrentPlayerCount(jSONObject.getInt("online"));
-                        sAMPServerInfo.setMaxPlayerCount(jSONObject.getInt("maxonline"));
+                        sAMPServerInfo.setMaxPlayerCount(jSONObject.getInt("maxplayers"));
                         sAMPServerInfo.setHasPassword(jSONObject.getBoolean("password"));
                         sAMPServerInfo.setServerStatus(SAMPServerInfo.Status.ONLINE);
                         sAMPServerInfo.setPing(12);
@@ -190,6 +190,7 @@ public class MainActivity extends AppCompatActivity {
                         if(fragment.isAdded()) {
                             for (Fragment fragment2 : fragment.getChildFragmentManager().getFragments()) {
                                 if ((fragment2 instanceof ServerPagesItemFragment) && ((ServerPagesItemFragment) fragment2).getPage() == 1) {
+                                    Log.d("AXL", "getserverslist");
                                     ((RecyclerView.Adapter) Objects.requireNonNull(((RecyclerView) ((View) fragment2.requireView()).findViewById(R.id.server_recycler)).getAdapter())).notifyDataSetChanged();
                                 }
                             }

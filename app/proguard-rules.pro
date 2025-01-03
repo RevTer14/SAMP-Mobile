@@ -1,12 +1,13 @@
 #-dontshrink
 #-keepclasseswithmembernames class com.nvidia.devtech.*, com.wardrumstudios.utils.*
 
--keep public class com.nvidia.devtech.* { *; }
+-keep class com.nvidia.devtech.* { *; }
 
--keep public class com.wardrumstudios.utils.* { *; }
+-keep class com.wardrumstudios.utils.* { *; }
 
--keep public class com.samp.mobile.game.* { *; }
+-keep class com.samp.mobile.game.* { *; }
 
-# Applovin
--keep class com.applovin.** { *; }
--dontwarn com.applovin.**
+-dontwarn javax.servlet.**
+-dontwarn org.conscrypt.**
+-dontwarn org.bouncycastle.**
+-dontwarn org.openjsse.**

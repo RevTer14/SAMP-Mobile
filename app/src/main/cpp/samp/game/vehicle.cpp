@@ -649,7 +649,7 @@ void CVehicle::UpdateDamageStatus(uint32_t dwPanelDamage, uint32_t dwDoorDamage,
 				if(GetPanelDamageStatus() || GetDoorDamageStatus() || GetLightDamageStatus())
 				{
 					// CAutoMobile::Fix
-					(( void (*)(CVehicleGTA*))(g_libGTASA+0x55D550+1))(m_pVehicle);
+					(( void (*)(CVehicleGTA*))(g_libGTASA+(VER_x32 ? 0x55D5C0+1:0x67DF0C)))(m_pVehicle);
 					return;
 				}
 			}
@@ -659,7 +659,7 @@ void CVehicle::UpdateDamageStatus(uint32_t dwPanelDamage, uint32_t dwDoorDamage,
 			SetLightDamageStatus(byteLightDamage);
 
 			// CAutomobile::SetupDamageAfterLoad
-			(( void (*)(CVehicleGTA*))(g_libGTASA+0x55D816+1))(m_pVehicle);
+			(( void (*)(CVehicleGTA*))(g_libGTASA+(VER_x32 ? 0x55D886+1:0x67E368)))(m_pVehicle);
 		}
 	}
 }

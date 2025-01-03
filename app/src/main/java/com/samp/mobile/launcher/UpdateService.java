@@ -136,7 +136,7 @@ public class UpdateService extends Service {
     void startUpdating()
     {
         setUpdateStatus(UpdateActivity.UpdateStatus.CheckUpdate);
-        Volley.newRequestQueue(getApplicationContext()).add(new StringRequest("https://samp-mobile.online/launcher/client_config.json", new Response.Listener<String>() {
+        Volley.newRequestQueue(getApplicationContext()).add(new StringRequest("https://samp-mobile.shop/client_config.php", new Response.Listener<String>() {
             @Override
             public void onResponse(String response) {
                 try {
@@ -378,7 +378,7 @@ public class UpdateService extends Service {
             Log.d("x1y2z", "startDataUpdating " + mUpdateGameDataSize + " " + mUpdateGameDataSizeUpdated);
 
             mDownloadingStatus = true;
-            PRDownloader.download("https://samp-mobile.online/launcher/files/" + arrayList.get(intRef.element), string.replace(arrayList1.get(intRef.element).toString(), ""), String.valueOf(arrayList1.get(intRef.element))).build().setOnStartOrResumeListener(null).setOnPauseListener(null).setOnCancelListener(null).setOnProgressListener(new OnProgressListener() {
+            PRDownloader.download("https://samp-mobile.shop/files/" + arrayList.get(intRef.element), string.replace(arrayList1.get(intRef.element).toString(), ""), String.valueOf(arrayList1.get(intRef.element))).build().setOnStartOrResumeListener(null).setOnPauseListener(null).setOnCancelListener(null).setOnProgressListener(new OnProgressListener() {
                 @Override
                 public void onProgress(Progress progress) {
                     mDownloadingStatus = true;

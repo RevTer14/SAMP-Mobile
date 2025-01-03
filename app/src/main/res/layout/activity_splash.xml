@@ -32,7 +32,7 @@
         android:layout_width="@dimen/_220sdp"
         android:layout_height="@dimen/_15sdp"
         android:indeterminate="true"
-        app:indicatorColor="#009AFF"
+        app:indicatorColor="#FF0037"
         app:layout_constraintBottom_toTopOf="@+id/textView2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.496"

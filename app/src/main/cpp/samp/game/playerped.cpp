@@ -1754,7 +1754,7 @@ void CPlayerPed::StartJetpack()
 	m_pPed->SetPosn(m_pPed->m_matrix->m_pos.x, m_pPed->m_matrix->m_pos.y, m_pPed->m_matrix->m_pos.z);
 
 	// CCheat::JetpackCheat
-	(( void (*)())(g_libGTASA+0x2FE1E8+1))();
+	(( void (*)())(g_libGTASA+(VER_x32 ? 0x2FE258+1:0x3C2A40)))();
 
 	CWorld::PlayerInFocus = 0;
 }

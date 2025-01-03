@@ -64,41 +64,39 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
 
         this.position = holder.getAdapterPosition();
 
-        if (mServersInfo.size() > position) {
-            /*new Thread(new Runnable() {
+        /*new Thread(new Runnable() {
                 public void run() {
                     new ProcessInfo().execute(Integer.valueOf(holder.getAdapterPosition()));
                 }
             }).start();*/
 
-            if (!mServersInfo.get(holder.getAdapterPosition()).getHasPassword())
-                holder.mPassword.setImageResource(R.drawable.ic_password_off);
-            else
-                holder.mPassword.setImageResource(R.drawable.ic_password_on);
+        if (!mServersInfo.get(holder.getAdapterPosition()).getHasPassword())
+            holder.mPassword.setImageResource(R.drawable.ic_password_off);
+        else
+            holder.mPassword.setImageResource(R.drawable.ic_password_on);
 
-            holder.mServerNameText.setText(mServersInfo.get(holder.getAdapterPosition()).getServerName());
+        holder.mServerNameText.setText(mServersInfo.get(holder.getAdapterPosition()).getServerName());
 
-            holder.mOnlineText.setText(mServersInfo.get(holder.getAdapterPosition()).getCurrentPlayerCount() + "/" + mServersInfo.get(holder.getAdapterPosition()).getMaxPlayerCount());
-            holder.mServerIP.setText("Adress: " + mServersInfo.get(holder.getAdapterPosition()).getAddress());
-            holder.mMode.setText("Mode: " + mServersInfo.get(holder.getAdapterPosition()).getServerMode());
+        holder.mOnlineText.setText(mServersInfo.get(holder.getAdapterPosition()).getCurrentPlayerCount() + "/" + mServersInfo.get(holder.getAdapterPosition()).getMaxPlayerCount());
+        holder.mServerIP.setText("Adress: " + mServersInfo.get(holder.getAdapterPosition()).getAddress());
+        holder.mMode.setText("Mode: " + mServersInfo.get(holder.getAdapterPosition()).getServerMode());
 
-            holder.mLayout.setOnTouchListener(new ButtonAnimator(mContext, holder.mLayout));
-            holder.mLayout.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    ServerInformationFragment newInstance = new ServerInformationFragment((Activity) mContext, ServerAdapter.this, holder.getAdapterPosition(), mServersInfo.get(holder.getAdapterPosition()));
-            /*newInstance.setEnterTransition(new Fade());
-            if (holder.itemView.getContext() != null) {
-                ((MainActivity) holder.itemView.getContext()).getSupportFragmentManager().beginTransaction().replace(R.id.main_layout, newInstance).addToBackStack(null).commit();
-            }*/
-                    //StartAppAd.showAd(mContext);
-                    newInstance.show();
+        holder.mLayout.setOnTouchListener(new ButtonAnimator(mContext, holder.mLayout));
+        holder.mLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ServerInformationFragment newInstance = new ServerInformationFragment((Activity) mContext, ServerAdapter.this, holder.getAdapterPosition(), mServersInfo.get(holder.getAdapterPosition()));
+        /*newInstance.setEnterTransition(new Fade());
+        if (holder.itemView.getContext() != null) {
+            ((MainActivity) holder.itemView.getContext()).getSupportFragmentManager().beginTransaction().replace(R.id.main_layout, newInstance).addToBackStack(null).commit();
+        }*/
+                //StartAppAd.showAd(mContext);
+                newInstance.show();
 
-                }
-            });
+            }
+        });
 
-            holderPosition.put(Integer.valueOf(holder.getAdapterPosition()), new Pair<>(mServersInfo.get(holder.getAdapterPosition()).getAddress(), Integer.valueOf(mServersInfo.get(holder.getAdapterPosition()).getPort())));
-        }
+        holderPosition.put(Integer.valueOf(holder.getAdapterPosition()), new Pair<>(mServersInfo.get(holder.getAdapterPosition()).getAddress(), Integer.valueOf(mServersInfo.get(holder.getAdapterPosition()).getPort())));
     }
 
     public void refreshServers() {
@@ -113,6 +111,7 @@ public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder
 
     @Override
     public int getItemCount() {
+        Log.d("AXL" , "size: " + ((MainActivity)mContext).getServerList().size());
         return ((MainActivity)mContext).getServerList().size();
     }
 

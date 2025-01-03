@@ -7,6 +7,7 @@
 // voice
 #include "../voice_new/MicroIcon.h"
 #include "../voice_new/SpeakerList.h"
+#include "game/Tasks/TaskTypes/TaskComplexEnterCarAsDriver.h"
 
 extern UI* pUI;
 extern CGame *pGame;
@@ -221,6 +222,8 @@ bool CLocalPlayer::Process()
 		// DRIVER CONDITIONS
 		else if (m_pPlayerPed->IsInVehicle() && !m_pPlayerPed->IsAPassenger())
 		{
+            MaybeSendExitVehicle();
+
 			g_bLockEnterVehicleWidget = false;
 
             CVehicleGTA* pGtaVehicle = m_pPlayerPed->GetGtaVehicle();
@@ -283,6 +286,8 @@ bool CLocalPlayer::Process()
 			ProcessSurfing();
 			MoveHeadWithCamera();
 
+            MaybeSendEnterVehicle();
+
 			if (m_bInRCMode)
 			{
 				m_bInRCMode = false;
@@ -338,6 +343,7 @@ bool CLocalPlayer::Process()
 		// PASSENGER CONDITIONS
 		else if (m_pPlayerPed->GetActionTrigger() == ACTION_INCAR && m_pPlayerPed->IsAPassenger())
 		{
+            MaybeSendExitVehicle();
 			g_bLockEnterVehicleWidget = false;
 
             CVehicleGTA* pGtaVehicle = m_pPlayerPed->GetGtaVehicle();
@@ -738,14 +744,14 @@ void CLocalPlayer::SendOnFootFullSyncData()
 	ofSync.dwAnimation = 0;
 	//_this->field_104 = 1;
 
-	if ((GetTickCount() - m_dwLastUpdateOnFootData) > 500 || memcmp(&m_ofSync, &ofSync, sizeof(ONFOOT_SYNC_DATA)))
+	if (/*(GetTickCount() - m_dwLastUpdateOnFootData) > 500 || */memcmp(&m_ofSync, &ofSync, sizeof(ONFOOT_SYNC_DATA)))
 	{
 		m_dwLastUpdateOnFootData = GetTickCount();
 
 		bsPlayerSync.Write((uint8_t)ID_PLAYER_SYNC);
 		bsPlayerSync.Write((char*)&ofSync, sizeof(ONFOOT_SYNC_DATA));
 		pNetGame->GetRakClient()->Send(&bsPlayerSync, HIGH_PRIORITY, UNRELIABLE_SEQUENCED, 1);
-		memcpy(&m_ofSync, &ofSync, sizeof(ONFOOT_SYNC_DATA));
+        m_ofSync = ofSync;
 	}
 }
 
@@ -780,20 +786,18 @@ void CLocalPlayer::SendInCarFullSyncData()
     mat = pVehicle->m_pVehicle->GetMatrix().ToRwMatrix();
     vecMoveSpeed = pVehicle->m_pVehicle->GetMoveSpeed();
 
-	icSync.quat.SetFromMatrix(&mat);
-	icSync.quat.Normalize();
+	icSync.vecPos = mat.pos;
 
-	if (	FloatOffset(icSync.quat.w, m_icSync.quat.w) < 0.00001f
-			&&	FloatOffset(icSync.quat.x, m_icSync.quat.x) < 0.00001f
-			&&	FloatOffset(icSync.quat.y, m_icSync.quat.y) < 0.00001f
-			&&	FloatOffset(icSync.quat.z, m_icSync.quat.z) < 0.00001f)
-	{
-		icSync.quat.Set(m_icSync.quat);
-	}
+    icSync.quat.SetFromMatrix(&mat);
+    icSync.quat.Normalize();
 
-	icSync.vecPos.x = mat.pos.x;
-	icSync.vecPos.y = mat.pos.y;
-	icSync.vecPos.z = mat.pos.z;
+    if (	FloatOffset(icSync.quat.w, m_icSync.quat.w) < 0.00001f
+            &&	FloatOffset(icSync.quat.x, m_icSync.quat.x) < 0.00001f
+            &&	FloatOffset(icSync.quat.y, m_icSync.quat.y) < 0.00001f
+            &&	FloatOffset(icSync.quat.z, m_icSync.quat.z) < 0.00001f)
+    {
+        icSync.quat.Set(m_icSync.quat);
+    }
 
 	icSync.vecMoveSpeed.x = vecMoveSpeed.x;
 	icSync.vecMoveSpeed.y = vecMoveSpeed.y;
@@ -848,8 +852,8 @@ void CLocalPlayer::SendInCarFullSyncData()
     if(icSync.TrailerID != INVALID_VEHICLE_ID)
         SendTrailerData(icSync.TrailerID);
 
-	if (IsNeedSyncDataSend(&m_icSync, &icSync, sizeof(INCAR_SYNC_DATA)))
-	//if( (GetTickCount() - m_dwLastUpdateInCarData) > 500 || memcmp(&m_icSync, &icSync, sizeof(INCAR_SYNC_DATA))) {
+	//if (IsNeedSyncDataSend(&m_icSync, &icSync, sizeof(INCAR_SYNC_DATA)))
+	if( /*(GetTickCount() - m_dwLastUpdateInCarData) > 500 || */memcmp(&m_icSync, &icSync, sizeof(INCAR_SYNC_DATA)))
 	{
 		RakNet::BitStream bsVehicleSync;
 		bsVehicleSync.Write((uint8_t) ID_VEHICLE_SYNC);
@@ -932,10 +936,7 @@ void CLocalPlayer::SendPassengerFullSyncData()
 	//if(m_pPlayerPed->IsCuffed()) byteUnk = psSync.byteSeatFlags | 0x80;
 	psSync.byteSeatFlags = (byteUnk ^ (m_pPlayerPed->IsInPassengerDriveByMode() << 6)) & 0x40 ^ byteUnk;
 
-	RwMatrix mat = m_pPlayerPed->m_pPed->GetMatrix().ToRwMatrix();
-	psSync.vecPos.x = mat.pos.x;
-	psSync.vecPos.y = mat.pos.y;
-	psSync.vecPos.z = mat.pos.z;
+    psSync.vecPos = m_pPlayerPed->m_pPed->GetPosition();
 
 	if (IsNeedSyncDataSend(&m_psSync, &psSync, sizeof(PASSENGER_SYNC_DATA)))
 	{
@@ -2115,4 +2116,39 @@ void CLocalPlayer::SendUnoccupiedData(VEHICLEID vehicleId, CVehicle *pVehicle)
 
 		memcpy(&m_UnoccupiedData, &unSync, sizeof(UNOCCUPIED_SYNC_DATA));
 	}
+}
+
+void CLocalPlayer::MaybeSendExitVehicle() {
+    static bool oldExitVehicleState = false;
+    bool exitVehicleState = m_pPlayerPed->m_pPed->IsExitingVehicle();
+
+    if(exitVehicleState && !oldExitVehicleState) {
+        auto vehicleId = pNetGame->GetVehiclePool()->FindIDFromGtaPtr(m_pPlayerPed->m_pPed->pVehicle);
+
+        if(vehicleId != INVALID_VEHICLE_ID) {
+            RakNet::BitStream bsSend;
+
+            bsSend.Write(vehicleId);
+            pNetGame->GetRakClient()->RPC(&RPC_ExitVehicle, &bsSend, HIGH_PRIORITY, RELIABLE_SEQUENCED, 0, false, UNASSIGNED_NETWORK_ID, NULL);
+        }
+
+    }
+    oldExitVehicleState = exitVehicleState;
+}
+
+void CLocalPlayer::MaybeSendEnterVehicle() {
+    static bool oldEnterVehicleState = false;
+
+    CTaskComplexEnterCarAsDriver* task
+            = static_cast<CTaskComplexEnterCarAsDriver*>(m_pPlayerPed->m_pPed->GetTaskManager().CTaskManager::FindActiveTaskByType(TASK_COMPLEX_ENTER_CAR_AS_DRIVER));
+
+    bool enterVehicleState = task != nullptr;
+
+    if(enterVehicleState && !oldEnterVehicleState) {
+        auto vehicleId = pNetGame->GetVehiclePool()->FindIDFromGtaPtr(task->GetTarget());
+
+        if(vehicleId != INVALID_VEHICLE_ID)
+            SendEnterVehicleNotification(vehicleId, false);
+    }
+    oldEnterVehicleState = enterVehicleState;
 }

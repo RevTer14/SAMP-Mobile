@@ -35,15 +35,15 @@ void ProcessIncommingEvent(PLAYERID playerId, int iEventType,
 	case EVENT_TYPE_PAINTJOB:
         iVehicleID = pNetGame->GetVehiclePool()->FindGtaIDFromID(dwParam1);
         iPaintJob = (int)dwParam2;
-        if (iVehicleID) ScriptCommand(&change_car_skin, iVehicleID, dwParam2);
+        //if (iVehicleID) ScriptCommand(&change_car_skin, iVehicleID, dwParam2);
 		break;
 
 	case EVENT_TYPE_CARCOMPONENT:
         iVehicleID = pNetGame->GetVehiclePool()->FindGtaIDFromID(dwParam1);
         iComponent = (int)dwParam2;
 
-        if(CStreaming::TryLoadModel(iComponent))
-            ScriptCommand(&add_car_component, iVehicleID, iComponent, &v);
+       // if(CStreaming::TryLoadModel(iComponent))
+          //  ScriptCommand(&add_car_component, iVehicleID, iComponent, &v);
 		break;
 
 	case EVENT_TYPE_CARCOLOR:

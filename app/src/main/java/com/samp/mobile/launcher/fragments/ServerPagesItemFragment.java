@@ -53,6 +53,8 @@ public class ServerPagesItemFragment extends Fragment {
             pagePosition = getArguments().getInt("page");
             Log.d("InfoJSON", "ServerPagesItemFragment " + pagePosition);
         }
+
+        builder = new AlertDialog.Builder(getContext());
     }
 
     @Override
@@ -66,12 +68,14 @@ public class ServerPagesItemFragment extends Fragment {
             view = inflater.inflate(R.layout.fragment_internet, container, false);
             ServerAdapter adapter = new ServerAdapter(view.getContext(), this.pagePosition);
 
+            Log.d("AXL", "pagepos == 1");
+
             RecyclerView recyclerView2 = view.findViewById(R.id.server_recycler);
             if (recyclerView2.getItemAnimator() != null) {
                 ((SimpleItemAnimator) Objects.requireNonNull(recyclerView2.getItemAnimator())).setSupportsChangeAnimations(false);
                 recyclerView2.setLayoutManager(new LinearLayoutManager(view.getContext()));
                 if (view.getContext() != null) {
-                    recyclerView2.setAdapter(new ServerAdapter(view.getContext(), pagePosition));
+                    recyclerView2.setAdapter(adapter);
                 }
             }
 
@@ -79,7 +83,7 @@ public class ServerPagesItemFragment extends Fragment {
                 @Override
                 public void onClick(View view) {
                     Log.d("gor", "clicked add server button");
-                    builder.setMessage("Write me to add here your server (30$ per month)!\nTelegram: @gorgrigoryan18\n" +
+                    builder.setMessage("Write me to add here your server (25$ per month)!\nTelegram: @gorgrigoryan18\n" +
                                     "Discord: x1y2z")
                             .setCancelable(false)
                             .setPositiveButton("Ok", new DialogInterface.OnClickListener() {

@@ -127,6 +127,8 @@ public:
 	void SendSpawn();
 	void SendNextClass();
 
+    void Packet_CustomRPC(Packet *p);
+
 private:
 	void InitializePools();
 	void UninitializePools();

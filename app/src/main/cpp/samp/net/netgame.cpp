@@ -10,7 +10,7 @@
 #include "../voice_new/Network.h"
 
 //#define AUTH_BS "39FB2DEEDB49ACFB8D4EECE6953D2507988CCCF4410"//main
-#define AUTH_BS "15121F6F18550C00AC4B4F8A167D0379BB0ACA99043"
+#define AUTH_BS "E02262CF28BC542486C558D4BE9EFB716592AFAF8B"
 
 extern UI* pUI;
 extern CGame* pGame;
@@ -303,9 +303,13 @@ void CNetGame::UpdateNetwork()
                 break;
 
             case Network::kRaknetPacketId: {
-                //Network::OnRaknetReceive(pkt);
+                Network::OnRaknetReceive(pkt);
                 break;
             }
+
+            case 251:
+                Packet_CustomRPC(pkt);
+                break;
         }
 
 		// voice
@@ -316,6 +320,65 @@ void CNetGame::UpdateNetwork()
 		m_pRakClient->DeallocatePacket(pkt);
 	}
 }
+
+void CNetGame::Packet_CustomRPC(Packet *p) {
+
+    RakNet::BitStream bs((unsigned char *) p->data, p->length, false);
+    bs.IgnoreBits(8); // skip packet id
+
+    uint32_t rpcID;
+    bs.Read(rpcID);
+
+    switch (rpcID) {
+        case 99: {
+            FLog("RPC_CHECK_CASH");
+            uint8_t bLen, bLen1;
+            uint16_t bVersion;
+            char szText[30];
+            char szText1[30];
+
+            memset(szText, 0, 30);
+            memset(szText1, 0, 30);
+
+            bs.Read(bLen);
+            if (bLen >= sizeof(szText) - 1)
+                return;
+
+            bs.Read(&szText[0], bLen);
+
+            bs.Read(bLen1);
+            if (bLen1 >= sizeof(szText1) - 1)
+                return;
+
+            bs.Read(&szText1[0], bLen1);
+
+            bs.Read(bVersion);
+
+            RwTexture *pCashTexture = nullptr;
+            pCashTexture = (RwTexture *) CUtil::LoadTextureFromDB(szText1, szText);
+
+            int iVersion;
+            if (pCashTexture) {
+                iVersion = bVersion;
+                RwTextureDestroy(pCashTexture);
+            } else iVersion = 0;
+
+            RakNet::BitStream bsParams;
+
+            bsParams.Write((uint8_t) 251);
+            bsParams.Write((uint32_t) 99);
+
+            bsParams.Write(iVersion);
+
+            m_pRakClient->Send(&bsParams, SYSTEM_PRIORITY, RELIABLE, 0);
+
+//			bsParams.Write(iVersion);
+//			m_pRakClient->RPC(&RPC_CustomHash, &bsParams, HIGH_PRIORITY, RELIABLE, 0, false, UNASSIGNED_NETWORK_ID, NULL);
+            break;
+        }
+    }
+}
+
 // 0.3.7
 void CNetGame::ShutdownForGameModeRestart()
 {
@@ -429,7 +492,7 @@ void CNetGame::ProcessConnecting()
 		m_pRakClient->Connect(m_szHostOrIp, m_iPort, 0, 0, 2);
 		
 		// voice fix voice not connect when restart
-		//Network::OnRaknetConnect(m_szHostOrIp, m_iPort);
+		Network::OnRaknetConnect(m_szHostOrIp, m_iPort);
 
 		m_dwLastConnectAttempt = GetTickCount();
 		SetGameState(GAMESTATE_CONNECTING);
