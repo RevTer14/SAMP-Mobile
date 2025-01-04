@@ -12,10 +12,11 @@ import android.widget.TextView;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.joom.paranoid.Obfuscate;
 import com.samp.mobile.R;
 import com.samp.mobile.launcher.MainActivity;
 import com.samp.mobile.launcher.util.ButtonAnimator;
-
+@Obfuscate
 public class FavouriteServerAdapter extends RecyclerView.Adapter<FavouriteServerAdapter.ViewHolder>{
 
     public Context mActivity;

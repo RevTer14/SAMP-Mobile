@@ -11,10 +11,11 @@ import android.widget.ImageView;
 
 import androidx.fragment.app.Fragment;
 
+import com.joom.paranoid.Obfuscate;
 import com.samp.mobile.R;
 import com.samp.mobile.launcher.MainActivity;
 import com.samp.mobile.launcher.util.ButtonAnimator;
-
+@Obfuscate
 public class HomeFragment extends Fragment {
 
     @Override
@@ -38,7 +39,7 @@ public class HomeFragment extends Fragment {
         discord_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent link = new Intent(Intent.ACTION_VIEW, Uri.parse("https://bit.ly/x1y2z_Discord"));
+                Intent link = new Intent(Intent.ACTION_VIEW, Uri.parse("https://discord.gg/jvKM7HR3Dc"));
                 startActivity(link);
             }
         });
@@ -48,7 +49,7 @@ public class HomeFragment extends Fragment {
         internet_logo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent link = new Intent(Intent.ACTION_VIEW, Uri.parse("https://samp-mobile.online"));
+                Intent link = new Intent(Intent.ACTION_VIEW, Uri.parse("https://samp-mobile.shop"));
                 startActivity(link);
             }
         });

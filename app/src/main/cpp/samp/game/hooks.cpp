@@ -1384,6 +1384,7 @@ void InstallWidgetHooks()
 }
 
 void ReadSettingFile();
+void ApplyFPSPatch(uint8_t fps);
 void (*NvUtilInit)();
 void NvUtilInit_hook()
 {
@@ -1394,6 +1395,11 @@ void NvUtilInit_hook()
     g_pszStorage = (char*)(g_libGTASA + (VER_x32 ? 0x6D687C : 0x8B46A8)); // StorageRootBuffer
 
     ReadSettingFile();
+
+    if(pSettings)
+    {
+        ApplyFPSPatch(pSettings->Get().iFPSCount);
+    }
 }
 
 struct stFile
@@ -1673,6 +1679,72 @@ bool RwResourcesFreeResEntry_hook(void* entry)
     return result;
 }
 
+static uint32_t dwRLEDecompressSourceSize = 0;
+
+size_t (*OS_FileRead)(OSFile a1, void *buffer, size_t numBytes);
+size_t OS_FileRead_hook(OSFile a1, void *buffer, size_t numBytes)
+{
+    dwRLEDecompressSourceSize = numBytes;
+
+    uintptr_t calledFrom = 0;
+    GET_LR(calledFrom);
+
+    if (!numBytes)
+    {
+        return 0;
+    }
+
+    return OS_FileRead(a1, buffer, numBytes);
+}
+
+void (*RLEDecompress)(uint8_t* pDest, size_t uiDestSize, uint8_t const* pSrc, size_t uiSegSize, uint32_t uiEscape);
+void RLEDecompress_hook(uint8_t* pDest, size_t uiDestSize, const uint8_t* pSrc, size_t uiSegSize, uint32_t uiEscape) {
+
+    if (!pDest || !pSrc || uiDestSize == 0 || uiSegSize == 0) {
+        // Обработка некорректных входных данных или размеров
+        // Здесь можно сгенерировать исключение или вернуть код ошибки
+        return;
+    }
+
+    const uint8_t* pTempSrc = pSrc;
+    const uint8_t* const pEndOfDest = pDest + uiDestSize;
+    const uint8_t* const pEndOfSrc = pSrc + dwRLEDecompressSourceSize; // Предполагается, что dwRLEDecompressSourceSize определено правильно
+
+    try {
+        while (pDest < pEndOfDest && pTempSrc < pEndOfSrc) {
+            if (*pTempSrc == uiEscape) {
+                if (pTempSrc + 1 >= pEndOfSrc || pTempSrc[1] == 0 || pTempSrc + 2 + uiSegSize > pEndOfSrc) {
+                    // Обработка ошибки, неверное значение ucCurSeg или недостаточно данных в исходном буфере
+                    throw std::runtime_error("rled error 1");
+                }
+
+                uint8_t ucCurSeg = pTempSrc[1];
+                while (ucCurSeg--) {
+                    if (pDest + uiSegSize > pEndOfDest) {
+                        // Обработка ошибки, недостаточно места в целевом буфере
+                        throw std::runtime_error("rled error 2");
+                    }
+                    memcpy(pDest, pTempSrc + 2, uiSegSize);
+                    pDest += uiSegSize;
+                }
+                pTempSrc += 2 + uiSegSize;
+            } else {
+                if (pDest + uiSegSize > pEndOfDest || pTempSrc + uiSegSize > pEndOfSrc) {
+                    // Обработка ошибки, недостаточно данных в исходном буфере или недостаточно места в целевом буфере
+                    throw std::runtime_error("rled error 3");
+                }
+                memcpy(pDest, pTempSrc, uiSegSize);
+                pDest += uiSegSize;
+                pTempSrc += uiSegSize;
+            }
+        }
+
+        dwRLEDecompressSourceSize = 0;
+    } catch (const std::exception& e) {
+        FLog("%s", e.what());
+    }
+}
+
 void InjectHooks()
 {
     FLog("InjectHooks");
@@ -1758,6 +1830,10 @@ void InstallSpecialHooks()
     CHook::InlineHook("_ZN14MainMenuScreen6UpdateEf", &MainMenuScreen__Update_hook, &MainMenuScreen__Update);
 
     CHook::RET("_ZN4CPed31RemoveWeaponWhenEnteringVehicleEi"); // CPed::RemoveWeaponWhenEnteringVehicle
+
+    CHook::InstallPLT(g_libGTASA + (VER_x32 ? 0x6701D4 : 0x840708), &RLEDecompress_hook, &RLEDecompress);
+
+    CHook::InlineHook("_Z11OS_FileReadPvS_i", &OS_FileRead_hook, &OS_FileRead);
 
 #if VER_x32
 	CHook::InlineHook("_Z32_rxOpenGLDefaultAllInOneRenderCBP10RwResEntryPvhj", &rxOpenGLDefaultAllInOneRenderCB_hook, &rxOpenGLDefaultAllInOneRenderCB);

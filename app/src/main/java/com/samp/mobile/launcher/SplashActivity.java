@@ -17,6 +17,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -29,16 +30,18 @@ import androidx.core.content.ContextCompat;
 
 import com.downloader.Progress;
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
+import com.joom.paranoid.Obfuscate;
 import com.samp.mobile.R;
 import com.samp.mobile.launcher.config.Config;
 import com.samp.mobile.launcher.util.SharedPreferenceCore;
+import com.samp.mobile.launcher.util.SignatureChecker;
 import com.samp.mobile.launcher.util.Util;
 
 import java.io.File;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-
+@Obfuscate
 public class SplashActivity extends AppCompatActivity {
 
     private final String[] permissions = {"android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE", "android.permission.RECORD_AUDIO"};
@@ -72,79 +75,83 @@ public class SplashActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
 
-        Config.currentContext = this;
-
-        prefs = getSharedPreferences("com.samp.mobile", MODE_PRIVATE);
-
-        builder = new AlertDialog.Builder(this);
-
-        if(!Util.isNetworkConnected(Config.currentContext))
+        if(!SignatureChecker.isSignatureValid(this, getPackageName()))
         {
-            builder.setMessage("There is no internet connection.\n" +
-                            "Please exit, connect to the internet and reenter the launcher")
-                    .setCancelable(false)
-                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int id) {
-                            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(false);
-
-                            finishAndRemoveTask();
-                            System.exit(0);
-                        }
-                    })
-                    .setNegativeButton("",null);
-            AlertDialog alert = builder.create();
-            alert.setTitle("Info");
-            alert.show();
-            return;
+            ((TextView)findViewById(R.id.launcher_orig_text)).setText("Using not original launcher");
         }
+        else {
+            Config.currentContext = this;
 
-        mInHandler = new IncomingHandler();
-        mMessenger = new Messenger(mInHandler);
+            prefs = getSharedPreferences("com.samp.mobile", MODE_PRIVATE);
 
-        GLSurfaceView.Renderer mGlRenderer = new GLSurfaceView.Renderer() {
-            @Override
-            public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
-                UpdateActivity.eGPUType egputype;
-                String glGetString = gl10.glGetString(GL10.GL_EXTENSIONS);
-                String glGetString2 = gl10.glGetString(GL10.GL_EXTENSIONS);
-                if (glGetString2.contains("GL_IMG_texture_compression_pvrtc")) {
-                    egputype = UpdateActivity.eGPUType.PVR;
-                    mGpuType = 3;
-                } else if (glGetString2.contains("GL_EXT_texture_compression_dxt1") || glGetString2.contains("GL_EXT_texture_compression_s3tc") || glGetString2.contains("GL_AMD_compressed_ATC_texture")) {
-                    egputype = UpdateActivity.eGPUType.DXT;
-                    mGpuType = 1;
-                } else {
-                    egputype = UpdateActivity.eGPUType.ETC;
-                    mGpuType = 2;
-                }
-                Log.e("x1y2z", "GPU name: " + glGetString);
-                Log.e("x1y2z", "GPU type: " + egputype.name());
+            builder = new AlertDialog.Builder(this);
 
-                if(isPermissionsGranted()) {
-                    mIsBind = bindService(new Intent(SplashActivity.this, UpdateService.class), mConnection, Context.BIND_AUTO_CREATE);
-                }
-                else {
-                    ActivityCompat.requestPermissions(SplashActivity.this,
-                            permissions,
-                            1);
-                }
+            if (!Util.isNetworkConnected(Config.currentContext)) {
+                builder.setMessage("There is no internet connection.\n" +
+                                "Please exit, connect to the internet and reenter the launcher")
+                        .setCancelable(false)
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(false);
+
+                                finishAndRemoveTask();
+                                System.exit(0);
+                            }
+                        })
+                        .setNegativeButton("", null);
+                AlertDialog alert = builder.create();
+                alert.setTitle("Info");
+                alert.show();
+                return;
             }
 
-            @Override
-            public void onSurfaceChanged(GL10 gl10, int i, int i1) {
+            mInHandler = new IncomingHandler();
+            mMessenger = new Messenger(mInHandler);
 
-            }
+            GLSurfaceView.Renderer mGlRenderer = new GLSurfaceView.Renderer() {
+                @Override
+                public void onSurfaceCreated(GL10 gl10, EGLConfig eglConfig) {
+                    UpdateActivity.eGPUType egputype;
+                    String glGetString = gl10.glGetString(GL10.GL_EXTENSIONS);
+                    String glGetString2 = gl10.glGetString(GL10.GL_EXTENSIONS);
+                    if (glGetString2.contains("GL_IMG_texture_compression_pvrtc")) {
+                        egputype = UpdateActivity.eGPUType.PVR;
+                        mGpuType = 3;
+                    } else if (glGetString2.contains("GL_EXT_texture_compression_dxt1") || glGetString2.contains("GL_EXT_texture_compression_s3tc") || glGetString2.contains("GL_AMD_compressed_ATC_texture")) {
+                        egputype = UpdateActivity.eGPUType.DXT;
+                        mGpuType = 1;
+                    } else {
+                        egputype = UpdateActivity.eGPUType.ETC;
+                        mGpuType = 2;
+                    }
+                    Log.e("x1y2z", "GPU name: " + glGetString);
+                    Log.e("x1y2z", "GPU type: " + egputype.name());
 
-            @Override
-            public void onDrawFrame(GL10 gl10) {
+                    if (isPermissionsGranted()) {
+                        mIsBind = bindService(new Intent(SplashActivity.this, UpdateService.class), mConnection, Context.BIND_AUTO_CREATE);
+                    } else {
+                        ActivityCompat.requestPermissions(SplashActivity.this,
+                                permissions,
+                                1);
+                    }
+                }
 
-            }
-        };
+                @Override
+                public void onSurfaceChanged(GL10 gl10, int i, int i1) {
 
-        ConstraintLayout gpuLayout = findViewById(R.id.gpu);
-        GLSurfaceView mGlSurfaceView = new GLSurfaceView(this);
-        mGlSurfaceView.setRenderer(mGlRenderer);
-        gpuLayout.addView(mGlSurfaceView);
+                }
+
+                @Override
+                public void onDrawFrame(GL10 gl10) {
+
+                }
+            };
+
+            ConstraintLayout gpuLayout = findViewById(R.id.gpu);
+            GLSurfaceView mGlSurfaceView = new GLSurfaceView(this);
+            mGlSurfaceView.setRenderer(mGlRenderer);
+            gpuLayout.addView(mGlSurfaceView);
+        }
     }
 
     public class IncomingHandler extends Handler {

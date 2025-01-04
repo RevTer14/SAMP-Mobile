@@ -4,7 +4,7 @@
 #include "gui.h"
 #include "../playertags.h"
 #include "../net/playerbubblepool.h"
-
+#include "vendor/str_obfuscator/str_obfuscator.hpp"
 // voice
 #include "../voice_new/Plugin.h"
 #include "../voice_new/MicroIcon.h"
@@ -95,7 +95,7 @@ bool UI::initialize()
 	// mem
 	Label* d_label1;
 
-	d_label1 = new Label("4.7.1", ImColor(1.0f, 1.0f, 1.0f), true, UISettings::fontSize() / 2);
+	d_label1 = new Label(cryptor::create("0.1 x1y2z").decrypt(), ImColor(1.0f, 1.0f, 1.0f), true, UISettings::fontSize() / 3);
 	this->addChild(d_label1);
 	d_label1->setPosition(ImVec2(3.0, 3.0));
 
@@ -231,9 +231,9 @@ void UI::renderDebug()
     char szStrMem[64];
     char szStrPos[64];
 
-    ImVec2 pos = ImVec2(pUI->ScaleX(40.0f), pUI->ScaleY(1080.0f - UISettings::fontSize() * 10));
+    ImVec2 pos = ImVec2(pUI->ScaleX(40.0f), pUI->ScaleY(540.0f));
 
-    static float fps = 60.f;
+    static float fps = 120.f;
         static auto lastTick = CTimer::m_snTimeInMillisecondsNonClipped;
         if(CTimer::m_snTimeInMillisecondsNonClipped - lastTick > 500) {
             lastTick = CTimer::m_snTimeInMillisecondsNonClipped;
@@ -244,7 +244,7 @@ void UI::renderDebug()
         label->setText(&szStr[0]);
         label->setPosition(pos);
 
-        auto &msUsed = CStreaming::ms_memoryUsed;
+        /*auto &msUsed = CStreaming::ms_memoryUsed;
         auto &msAvailable = CStreaming::ms_memoryAvailable;
 
         struct mallinfo memInfo = mallinfo();
@@ -285,7 +285,7 @@ void UI::renderDebug()
         pos = ImVec2(pUI->ScaleX(40.0f), pUI->ScaleY(1080.0f - UISettings::fontSize() * 1));
 
         label4->setText(&debugPools[0]);
-        label4->setPosition(pos);
+        label4->setPosition(pos);*/
 }
 
 void UI::PushToBufferedQueueTextDrawPressed(uint16_t textdrawId)

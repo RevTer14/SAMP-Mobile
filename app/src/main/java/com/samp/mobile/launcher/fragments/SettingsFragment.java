@@ -21,6 +21,7 @@ import android.widget.ToggleButton;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 
+import com.joom.paranoid.Obfuscate;
 import com.samp.mobile.R;
 import com.samp.mobile.launcher.MainActivity;
 import com.samp.mobile.launcher.SplashActivity;
@@ -33,7 +34,7 @@ import org.ini4j.Wini;
 
 import java.io.File;
 import java.io.IOException;
-
+@Obfuscate
 public class SettingsFragment extends Fragment {
 
     Wini mWini = null;

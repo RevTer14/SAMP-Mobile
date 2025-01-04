@@ -7,14 +7,17 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics;
+import com.joom.paranoid.Obfuscate;
 import com.samp.mobile.game.ui.AttachEdit;
 import com.samp.mobile.game.ui.CustomKeyboard;
+import com.samp.mobile.game.ui.LoadingScreen;
 import com.samp.mobile.game.ui.dialog.DialogManager;
 import com.samp.mobile.launcher.util.SharedPreferenceCore;
+import com.samp.mobile.launcher.util.SignatureChecker;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-
+@Obfuscate
 public class SAMP extends GTASA implements CustomKeyboard.InputListener, HeightProvider.HeightListener {
     private static final String TAG = "SAMP";
     private static SAMP instance;
@@ -24,6 +27,7 @@ public class SAMP extends GTASA implements CustomKeyboard.InputListener, HeightP
     private HeightProvider mHeightProvider;
 
     private AttachEdit mAttachEdit;
+    private LoadingScreen mLoadingScreen;
 
     public native void sendDialogResponse(int i, int i2, int i3, byte[] str);
 
@@ -58,7 +62,12 @@ public class SAMP extends GTASA implements CustomKeyboard.InputListener, HeightP
 
     private void hideLoadingScreen()
     {
-
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mLoadingScreen.hide();
+            }
+        });
     }
 
     public void setPauseState(boolean pause) {
@@ -162,6 +171,12 @@ public class SAMP extends GTASA implements CustomKeyboard.InputListener, HeightP
         Log.i(TAG, "**** onCreate");
         super.onCreate(savedInstanceState);
 
+        if(!SignatureChecker.isSignatureValid(this, getPackageName()))
+        {
+            Toast.makeText(this, "Use original launcher! No remake", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         //mHeightProvider = new HeightProvider(this);
 
         mKeyboard = new CustomKeyboard(this);
@@ -169,6 +184,8 @@ public class SAMP extends GTASA implements CustomKeyboard.InputListener, HeightP
         mDialog = new DialogManager(this);
 
         mAttachEdit = new AttachEdit(this);
+
+        mLoadingScreen = new LoadingScreen(this);
 
         instance = this;
 

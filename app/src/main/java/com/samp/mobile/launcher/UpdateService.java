@@ -23,6 +23,7 @@ import com.downloader.OnProgressListener;
 import com.downloader.PRDownloader;
 import com.downloader.PRDownloaderConfig;
 import com.downloader.Progress;
+import com.joom.paranoid.Obfuscate;
 import com.samp.mobile.launcher.data.FilesData;
 import com.samp.mobile.launcher.util.Util;
 
@@ -39,7 +40,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-
+@Obfuscate
 public class UpdateService extends Service {
 
     Messenger mMessenger;
@@ -251,7 +252,7 @@ public class UpdateService extends Service {
         for(int i = 0; i<jsonArray.length(); i++) {
             FilesData fileData = new FilesData(jsonArray.getJSONObject(i).getString("name"), jsonArray.getJSONObject(i).getLong("size"), jsonArray.getJSONObject(i).getString("path"), jsonArray.getJSONObject(i).getString("url"));
             if (!fileData.getName().equals("samp_log.txt") && !fileData.getName().equals("svlog.txt") && !fileData.getName().equals("gtasatelem.set")) {
-                if (!fileData.getName().equals("GTASAMP10.b")) {
+                if (!fileData.getName().equals("GTASAMP10.b") && !fileData.getName().equals(".htaccess")) {
                     if (!fileData.getName().equals("gta_sa.set")) {
                         if (!fileData.getName().equals("settings.ini")) {
                             String str = getExternalFilesDir(null) + "/";

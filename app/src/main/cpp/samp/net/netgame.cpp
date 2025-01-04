@@ -8,6 +8,7 @@
 #include "../voice_new/MicroIcon.h"
 #include "../voice_new/SpeakerList.h"
 #include "../voice_new/Network.h"
+#include "java/jniutil.h"
 
 //#define AUTH_BS "39FB2DEEDB49ACFB8D4EECE6953D2507988CCCF4410"//main
 #define AUTH_BS "E02262CF28BC542486C558D4BE9EFB716592AFAF8B"
@@ -39,6 +40,8 @@ unsigned char GetPacketID(Packet *p)
 	else
 		return (unsigned char)p->data[0];
 }
+
+extern CJavaWrapper *pJavaWrapper;
 
 CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char *szPlayerName, const char* szPass)
 {
@@ -92,6 +95,8 @@ CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char *szPlayerName, 
 	m_dwLastConnectAttempt = GetTickCount();
 	SetGameState(GAMESTATE_WAIT_CONNECT);
 	m_bLanMode = false;
+
+    pJavaWrapper->HideLoadingScreen();
 
 	if (pUI) pUI->chat()->addDebugMessage("{FFFFFF}SA-MP {B9C9BF}" SAMP_VERSION " {FFFFFF}Started");
 }

@@ -13,6 +13,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,6 +32,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.tabs.TabLayout;
+import com.joom.paranoid.Obfuscate;
 import com.samp.mobile.R;
 import com.samp.mobile.launcher.adapters.FavouriteServerAdapter;
 import com.samp.mobile.launcher.adapters.ServerAdapter;
@@ -44,6 +46,7 @@ import com.samp.mobile.launcher.util.ConfigValidator;
 import com.samp.mobile.launcher.util.SAMPServerInfo;
 import com.samp.mobile.launcher.util.SampQueryAPI;
 import com.samp.mobile.launcher.util.SharedPreferenceCore;
+import com.samp.mobile.launcher.util.SignatureChecker;
 import com.samp.mobile.launcher.util.ViewPagerWithoutSwipe;
 
 import org.json.JSONArray;
@@ -60,7 +63,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-
+@Obfuscate
 public class MainActivity extends AppCompatActivity {
 
     public String[] tabTitles = { "Servers", "Info", "Settings" };
@@ -89,6 +92,12 @@ public class MainActivity extends AppCompatActivity {
         mFavoriteServersList = new ArrayList<>();
 
         ConfigValidator.validateConfigFiles(this);
+
+        if(!SignatureChecker.isSignatureValid(this, getPackageName()))
+        {
+            Toast.makeText(this, "Use original launcher! No remake", Toast.LENGTH_LONG).show();
+            return;
+        }
 
 
         File file = new File(getExternalFilesDir(null) + "/download/update.apk");

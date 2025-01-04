@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.joom.paranoid.Obfuscate;
 import com.samp.mobile.R;
 import com.samp.mobile.game.GTASA;
 import com.samp.mobile.game.SAMP;
@@ -34,7 +35,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+@Obfuscate
 public class ServerInformationFragment extends Dialog {
 
     ServerAdapter mServerAdapter;

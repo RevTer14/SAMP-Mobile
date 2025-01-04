@@ -26,14 +26,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.FileProvider;
 
+import com.joom.paranoid.Obfuscate;
 import com.samp.mobile.R;
 import com.samp.mobile.launcher.config.Config;
+import com.samp.mobile.launcher.util.SignatureChecker;
 
 import java.io.File;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
-
+@Obfuscate
 public class UpdateActivity extends AppCompatActivity{
     public Messenger mMessenger = new Messenger(new IncomingHandler());
     public Messenger mService;
@@ -203,6 +205,13 @@ public class UpdateActivity extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_update);
+
+        if(!SignatureChecker.isSignatureValid(this, getPackageName()))
+        {
+            Toast.makeText(this, "Use original launcher! No remake", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         Config.currentContext = this;

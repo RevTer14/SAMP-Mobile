@@ -658,10 +658,10 @@ bool CGame::InitialiseRenderWare() {
     TextureDatabaseRuntime::Load("menu", false, TextureDatabaseFormat::DF_PVR);
 #else
     TextureDatabaseRuntime::Load("samp", false, TextureDatabaseFormat::DF_Default);
-    TextureDatabaseRuntime::Load("mobile", false, TextureDatabaseFormat::DF_ETC);
-    TextureDatabaseRuntime::Load("txd", false, TextureDatabaseFormat::DF_ETC);
-    TextureDatabaseRuntime::Load("gta3", false, TextureDatabaseFormat::DF_ETC);
-    TextureDatabaseRuntime::Load("gta_int", false, TextureDatabaseFormat::DF_ETC);
+    TextureDatabaseRuntime::Load("mobile", false, TextureDatabaseFormat::DF_Default);
+    TextureDatabaseRuntime::Load("txd", false, TextureDatabaseFormat::DF_Default);
+    TextureDatabaseRuntime::Load("gta3", false, TextureDatabaseFormat::DF_Default);
+    TextureDatabaseRuntime::Load("gta_int", false, TextureDatabaseFormat::DF_Default);
     TextureDatabaseRuntime::Load("player", false, TextureDatabaseFormat::DF_PVR);
     TextureDatabaseRuntime::Load("menu", false, TextureDatabaseFormat::DF_PVR);
     //TextureDatabaseRuntime::Load("cutscene", false, TextureDatabaseFormat::DF_Default);

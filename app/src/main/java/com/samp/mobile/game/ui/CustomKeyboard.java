@@ -6,6 +6,7 @@ import android.widget.EditText;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 
+import com.joom.paranoid.Obfuscate;
 import com.samp.mobile.R;
 
 import android.app.Activity;
@@ -24,7 +25,7 @@ import android.widget.TextView;
 import com.samp.mobile.R;
 
 import java.util.ArrayList;
-
+@Obfuscate
 public class CustomKeyboard {
 
     public interface InputListener

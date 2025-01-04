@@ -144,8 +144,6 @@ void ApplyPatches_level0()
 {
     FLog("ApplyPatches_level0");
 
-    ApplyFPSPatch(60);
-
     CHook::Write(g_libGTASA + (VER_x32 ? 0x006783C0 : 0x84E7A8), &CWorld::Players);
     CHook::Write(g_libGTASA + (VER_x32 ? 0x00679B5C : 0x8516D8), &CWorld::PlayerInFocus);
 
