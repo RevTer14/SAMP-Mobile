@@ -863,7 +863,7 @@ void ScrSetObjectPos(RPCParameters* rpcParams)
 
 	CObject* pObject = pObjectPool->GetAt(ObjectID);
 	if (pObject) {
-		pObject->m_pEntity->SetPosn(fX, fY, fZ);
+		pObject->SetPos(fX, fY, fZ);
 	}
 }
 // 0.3.7

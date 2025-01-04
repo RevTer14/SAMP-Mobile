@@ -922,7 +922,7 @@ void CGame::Process() {
     static bool once = false;
     if (!once)
     {
-        CCrossHair::Init();
+        //CCrossHair::Init();
         once = true;
         return;
     }

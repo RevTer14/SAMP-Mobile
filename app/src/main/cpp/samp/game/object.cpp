@@ -33,6 +33,7 @@ CObject::CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance
 	m_bSyncRotation = true;
 
 	ScriptCommand(&create_object, iModel, vecPos.x, vecPos.y, vecPos.z, &m_dwGTAId);
+    ScriptCommand(&put_object_at, m_dwGTAId, vecPos.x, vecPos.y, vecPos.z);
 
 	m_pEntity = GamePool_Object_GetAt(m_dwGTAId);
 
@@ -42,11 +43,11 @@ CObject::CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance
 
     m_iModel = iModel;
 
-    m_Matrix = m_pEntity->GetMatrix().ToRwMatrix();
+    /*m_Matrix = m_pEntity->GetMatrix().ToRwMatrix();
     m_Matrix.pos.x = vecPos.x;
     m_Matrix.pos.y = vecPos.y;
     m_Matrix.pos.z = vecPos.z;
-    m_pEntity->SetMatrix((CMatrix&)m_Matrix);
+    m_pEntity->SetMatrix((CMatrix&)m_Matrix);*/
     InstantRotate(vecRot.x, vecRot.y ,vecRot.z);
 
 	for (int i = 0; i < 16; i++)
@@ -590,4 +591,12 @@ bool CObject::AttachedToMovingEntity()
 	}
 
 	return false;
+}
+
+void CObject::SetPos(float x, float y, float z)
+{
+    if (GamePool_Object_GetAt(m_dwGTAId))
+    {
+        ScriptCommand(&put_object_at, m_dwGTAId, x, y, z);
+    }
 }

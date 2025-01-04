@@ -37,6 +37,8 @@ public:
 
 	bool AttachedToMovingEntity();
 
+    void SetPos(float x, float y, float z);
+
 	/* attach */
 	uint16_t	m_AttachedVehicleID;
 	uint16_t	m_AttachedObjectID;
