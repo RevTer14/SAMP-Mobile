@@ -8,6 +8,7 @@
 #include "CEntityGTA.h"
 #include "PtrNodeDoubleLink.h"
 #include "EntryInfoList.h"
+#include "game/RealTimeShadow.h"
 
 struct CPhysical : public CEntityGTA {
     float       m_fPrevDistFromCam;
@@ -89,7 +90,7 @@ struct CPhysical : public CEntityGTA {
     CEntityGTA         *m_pEntityIgnoredCollision;
     float           m_fContactSurfaceBrightness;
     float           m_fDynamicLighting;
-    uintptr_t       m_pShadowData;
+    CRealTimeShadow*       m_pShadowData;
 
 public:
     CPhysical();

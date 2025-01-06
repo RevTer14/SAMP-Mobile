@@ -45,8 +45,8 @@ void CVisibilityPlugins::RenderAlphaAtomic(RpAtomic* atomic, int32 alpha) {
 }
 
 void CVisibilityPlugins::InjectHooks() {
-    CHook::Write(g_libGTASA + (VER_x32 ? 0x00676200 : 0x84A480), &CVisibilityPlugins::ms_pedLodDist);
-    CHook::Write(g_libGTASA + (VER_x32 ? 0x00676530 : 0x84AAD0), &CVisibilityPlugins::ms_pCameraPosn);
+    //CHook::Write(g_libGTASA + (VER_x32 ? 0x00676200 : 0x84A480), &CVisibilityPlugins::ms_pedLodDist);
+    //CHook::Write(g_libGTASA + (VER_x32 ? 0x00676530 : 0x84AAD0), &CVisibilityPlugins::ms_pCameraPosn);
 }
 
 void CVisibilityPlugins::SetupVehicleVariables(RpClump *clump) {

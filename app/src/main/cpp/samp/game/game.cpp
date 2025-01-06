@@ -71,6 +71,7 @@ void CGame::StartGame()
 	//*(char*)(g_libGTASA + 0x6E00D9) = 0;
 
     InstallHooks();
+    ApplyGlobalPatches();
 
 	GameAimSyncInit();
 	InitScripting();
@@ -83,9 +84,7 @@ void CGame::Initialize()
 {
 	FLog("CGame initializing..");
 
-#if VER_x32
     ApplySAMPPatchesInGame();
-#endif
 	GameResetRadarColors();
 
     szGameTextMessage = new uint16_t[1076];

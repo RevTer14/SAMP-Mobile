@@ -122,8 +122,8 @@ void RemoveOccludersInRadius(RwV3d vecPos, float fRadius);
 RwTexture* LoadTextureFromTxd(const char* txdname, const char* texturename);
 uintptr_t LoadTexture(const char* texname);
 
-RpMaterial* ObjectMaterialCallBack(RpMaterial* material, void* data);
-RpMaterial* ObjectMaterialTextCallBack(RpMaterial* material, void* data);
+RpAtomic* ObjectMaterialCallBack(RpAtomic* rpAtomic, CObject* pObject);
+RpAtomic* ObjectMaterialTextCallBack(RpAtomic* rpAtomic, CObject* pObject);
 
 bool GetAnimationIndexFromName(const char* szName);
 

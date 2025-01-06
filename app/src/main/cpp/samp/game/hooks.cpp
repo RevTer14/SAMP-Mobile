@@ -119,7 +119,19 @@ void RenderEffects() {
 }
 
 void MainLoop();
-void Render2dStuff()
+void(*Render2dStuff)();
+void Render2dStuff_hook()
+{
+    Render2dStuff();
+    if(pNetGame)
+    {
+        CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
+        if(pTextDrawPool) pTextDrawPool->Draw();
+    }
+    if (pUI) pUI->render();
+    return;
+}
+/*void Render2dStuff()
 {
     if( CHook::CallFunction<bool>(g_libGTASA + (VER_x32 ? 0x001BB7F4 + 1 : 0x24EA90)) ) // emu_IsAltRenderTarget()
         CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x001BC20C + 1 : 0x24F5B8)); // emu_FlushAltRenderTarget()
@@ -132,8 +144,6 @@ void Render2dStuff()
     RwRenderStateSet(rwRENDERSTATEFOGENABLE, RWRSTATE(rwRENDERSTATENARENDERSTATE));
     RwRenderStateSet(rwRENDERSTATECULLMODE, RWRSTATE(rwCULLMODECULLNONE));
 
-    if (pUI) pUI->render();
-
     if(pNetGame)
     {
         CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
@@ -143,10 +153,12 @@ void Render2dStuff()
     //CCrossHair::Render();
 
     //((void (*)()) (g_libGTASA + (VER_x32 ? 0x00437B0C + 1 : 0x51CFF0)))(); // CHud::DrawRadar
-    CHook::CallFunction<void>("_ZN4CHud4DrawEv");
+    CHook::CallFunction<void>("_ZN4CHud14DrawEv");
     //	GPS::Draw();
     //
     ((void(*)(bool) )(g_libGTASA + (VER_x32 ? 0x002B0BD8 + 1 : 0x36FB00)) )(false); // CTouchInterface::DrawAll
+
+    if (pUI) pUI->render();
 
     //CSpecialFX::Render2DFXs(void)	00000000006E5A78
     //CSpecialFX::Render2DFXs(void)	005C156C
@@ -156,7 +168,7 @@ void Render2dStuff()
     ((void (*)(bool)) (g_libGTASA + (VER_x32 ? 0x0054BDD4 + 1 : 0x66B678)))(1u); // CMessages::Display - gametext
     ((void (*)(bool)) (g_libGTASA + (VER_x32 ? 0x005A9120 + 1 : 0x6CCEA0)))(1u); // CFont::RenderFontBuffer
     CHook::CallFunction<void>(g_libGTASA+(VER_x32?0x1C0750+1:0x252CE4), 0);
-}
+}*/
 
 /* =============================================================================== */
 
@@ -228,6 +240,7 @@ int CFileLoader__LoadObjectInstance_hook(stLoadObjectInstance *thiz) {
 				if (fDistance <= BuildingToRemove[i].fRange) {
 					if (BuildingToRemove[i].dwModel == -1 || thiz->wModelIndex == (uint16_t) BuildingToRemove[i].dwModel) {
 						thiz->wModelIndex = 19300;
+                        //thiz->vecPosObject = 0.0f;
 						break;
 					}
 				}
@@ -236,6 +249,35 @@ int CFileLoader__LoadObjectInstance_hook(stLoadObjectInstance *thiz) {
 	}
 
 	return CFileLoader__LoadObjectInstance(thiz);
+}
+
+extern int iBuildingToRemoveCount;
+extern std::list<REMOVE_BUILDING_DATA> RemoveBuildingData;
+void (*CEntity_Render)(CEntityGTA* pEntity);
+int g_iLastRenderedObject;
+void CEntity_Render_hook(CEntityGTA* pEntity)
+{
+    if(iBuildingToRemoveCount > 1)
+    {
+        if(pEntity && *(uintptr_t*)pEntity != g_libGTASA+(VER_x32 ? 0x667D18:0x8300A0) && !pNetGame->GetObjectPool()->GetObjectFromGtaPtr(pEntity))
+        {
+            for (auto &entry : RemoveBuildingData)
+            {
+                float fDistance = GetDistance(entry.vecPos, pEntity->GetMatrix().m_pos);
+                if(fDistance <= entry.fRange)
+                {
+                    if(pEntity->GetModelId() == entry.usModelIndex)
+                    {
+                        pEntity->m_bUsesCollision = 0;
+                        pEntity->m_bCollisionProcessed = 0;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    g_iLastRenderedObject = pEntity->GetModelId();
+    CEntity_Render(pEntity);
 }
 
 /* =============================================================================== */
@@ -249,33 +291,34 @@ void CObject_Render_hook(CObjectGta* thiz)
 	if(pNetGame && object != 0)
 	{
 		CObject *pObject = pNetGame->GetObjectPool()->FindObjectFromGtaPtr(object);
-		if(pObject)
+		if(pObject && pObject->m_pEntity)
 		{
 			RwObject* rwObject = (RwObject*)pObject->m_pEntity->m_pRwObject;
 			if(rwObject)
 			{
 				// SetObjectMaterial
-				if(pObject->m_bHasMaterial)
+				if(pObject->m_bHasMaterial || pObject->m_bHasMaterialText)
 				{
-					//RwFrameForAllObjects((RwFrame*)rwObject->parent, (RwObject *(*)(RwObject *, void *))ObjectMaterialCallBack, pObject);
-					RpAtomic* atomic = (RpAtomic*)object->m_pRwAtomic;
-					RpGeometryForAllMaterials(atomic->geometry, ObjectMaterialCallBack, (void*)pObject);
+					RwFrameForAllObjects((RwFrame*)rwObject->parent, (RwObject *(*)(RwObject *, void *))ObjectMaterialCallBack, pObject);
+					//RpAtomic* atomic = (RpAtomic*)object->m_pRwAtomic;
+					//RpGeometryForAllMaterials(atomic->geometry, ObjectMaterialCallBack, (void*)pObject);
 				}
 				// SetObjectMaterialText
 				if(pObject->m_bHasMaterialText)
                 {
-                    //RwFrameForAllObjects((RwFrame*)rwObject->parent, (RwObject *(*)(RwObject *, void *))ObjectMaterialTextCallBack, pObject);
-                    RpAtomic* atomic = (RpAtomic*)object->m_pRwAtomic;
-                    RpGeometryForAllMaterials(atomic->geometry, ObjectMaterialTextCallBack, (void*)pObject);
+                    RwFrameForAllObjects((RwFrame*)rwObject->parent, (RwObject *(*)(RwObject *, void *))ObjectMaterialTextCallBack, pObject);
+                    //RpAtomic* atomic = (RpAtomic*)object->m_pRwAtomic;
+                    //RpGeometryForAllMaterials(atomic->geometry, ObjectMaterialTextCallBack, (void*)pObject);
                 }
 			}
 
 
 		}
+
+        CObject_Render(object);
 	}
 
     //((void (*)(void))(g_libGTASA + (VER_x32 ? 0x005D1F98 + 1 : 0x6F6664)))();
-	CObject_Render(thiz);
     //((void (*)(void))(g_libGTASA + 0x5D1F5C + 1))();
 }
 
@@ -289,8 +332,6 @@ void CObject_Render_hook(CObjectGta* thiz)
 
 bool NotifyEnterVehicle(CVehicleGTA *_pVehicle)
 {
-	FLog("NotifyEnterVehicle");
-
 	if(!pNetGame) {
 		return false;
 	}
@@ -324,6 +365,25 @@ bool NotifyEnterVehicle(CVehicleGTA *_pVehicle)
 	}
 
 	return true;
+}
+
+int (*TaskEnterVehicle)(uintptr_t a1, uintptr_t a2);
+int TaskEnterVehicleHook(uintptr_t a1, uintptr_t a2)
+{
+    if(!NotifyEnterVehicle((CVehicleGTA*)a1)) {
+        return false;
+    }
+
+    // CTask::operator new
+    uintptr_t pTask = ((uintptr_t (*)(void))(g_libGTASA + (VER_x32 ? 0x4D6A70:0x5D7414)))();
+
+    // CTaskComplexEnterCarAsDriver::CTaskComplexEnterCarAsDriver
+    ((void (__fastcall *)(uintptr_t, uintptr_t))(g_libGTASA + (VER_x32 ? 0x4F6FE0:0x6007E0)))(pTask, a1);
+
+    // CTaskManager::SetTask
+    ((int (__fastcall *)(uintptr_t, uintptr_t, int, int))(g_libGTASA + (VER_x32 ? 0x53397A:0x64E084)))(a2, pTask, 3, 0);
+
+    return true;
 }
 
 void (*CTaskComplexLeaveCar)(uintptr_t** thiz, CVehicleGTA* pVehicle, int iTargetDoor, int iDelayTime, bool bSensibleLeaveCar, bool bForceGetOut);
@@ -474,7 +534,7 @@ extern BULLET_DATA* g_pCurrentBulletData;
 
 extern int g_iLagCompensationMode;
 
-void SendBulletSync(CVector* vecOrigin, CVector* a2, CVector* vecPos, CEntityGTA** ppEntity)
+void SendBulletSync(CVector* vecOrigin, CVector* a2, CColPoint *colPoint, CEntityGTA** ppEntity)
 {
     CMatrix mat1, mat2;
 
@@ -485,20 +545,20 @@ void SendBulletSync(CVector* vecOrigin, CVector* a2, CVector* vecPos, CEntityGTA
     bulletData.vecOrigin.y = vecOrigin->y;
     bulletData.vecOrigin.z = vecOrigin->z;
 
-    bulletData.vecPos.x = vecPos->x;
-    bulletData.vecPos.y = vecPos->y;
-    bulletData.vecPos.z = vecPos->z;
+    bulletData.vecPos.x = colPoint->m_vecPoint.x;
+    bulletData.vecPos.y = colPoint->m_vecPoint.y;
+    bulletData.vecPos.z = colPoint->m_vecPoint.z;
 
     if (ppEntity)
     {
         CEntityGTA* pEntity = *ppEntity;
-        if (pEntity && pEntity->m_matrix)
+        if (pEntity)
         {
             if (g_iLagCompensationMode != 0)
             {
-                bulletData.vecOffset.x = vecPos->x - pEntity->m_matrix->m_pos.x;
-                bulletData.vecOffset.y = vecPos->y - pEntity->m_matrix->m_pos.y;
-                bulletData.vecOffset.z = vecPos->z - pEntity->m_matrix->m_pos.z;
+                bulletData.vecOffset.x = colPoint->m_vecPoint.x - pEntity->m_matrix->m_pos.x;
+                bulletData.vecOffset.y = colPoint->m_vecPoint.y - pEntity->m_matrix->m_pos.y;
+                bulletData.vecOffset.z = colPoint->m_vecPoint.z - pEntity->m_matrix->m_pos.z;
             }
             else
             {
@@ -510,11 +570,12 @@ void SendBulletSync(CVector* vecOrigin, CVector* a2, CVector* vecPos, CEntityGTA
                 // RwMatrixInvert
                 Invert(mat1, mat2);
 
-                ProjectMatrix(&bulletData.vecOffset, &mat1, vecPos);
+                ProjectMatrix(&bulletData.vecOffset, &mat1, &colPoint->m_vecPoint);
             }
 
             bulletData.pEntity = pEntity;
         }
+        else bulletData.vecOffset = 0;
     }
 
     pGame->FindPlayerPed()->ProcessBulletData(&bulletData);
@@ -563,63 +624,70 @@ uint32_t CWeapon__ProcessLineOfSight_hook(CVector *vecOrigin, CVector *vecEnd, C
     uintptr_t dwRetAddr = 0;
     GET_LR(dwRetAddr);
 
+    FLog("dwRetAddr CWeapon__ProcessLineOfSight_hook 0x%llx", dwRetAddr);
+#if VER_x32
     if(dwRetAddr >= 0x005DC178 && dwRetAddr <= 0x005DD684)
+		g_bForceWorldProcessLineOfSight = true;
+#else
+    if(dwRetAddr >= 0x701494 && dwRetAddr <= 0x702B18)
         g_bForceWorldProcessLineOfSight = true;
+#endif
 
     return CWeapon__ProcessLineOfSight(vecOrigin, vecEnd, vecPos, ppEntity, pWeaponSlot, ppEntity2, b1, b2, b3, b4, b5, b6, b7);
 }
 
-uint32_t(*CWorld__ProcessLineOfSight)(CVector*, CVector*, CVector*, CEntityGTA**, bool, bool, bool, bool, bool, bool, bool, bool);
-uint32_t CWorld__ProcessLineOfSight_hook(CVector* vecOrigin, CVector* vecEnd, CVector* vecPos, CEntityGTA** ppEntity,
+uint32_t(*CWorld__ProcessLineOfSight)(CVector*, CVector*, CColPoint *colPoint, CEntityGTA**, bool, bool, bool, bool, bool, bool, bool, bool);
+uint32_t CWorld__ProcessLineOfSight_hook(CVector* vecOrigin, CVector* vecEnd, CColPoint *colPoint, CEntityGTA** ppEntity,
 										bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7, bool b8)
 {
     uintptr_t dwRetAddr = 0;
     GET_LR(dwRetAddr);
 
-    if(dwRetAddr == 0x5dd0b0 + 1 || g_bForceWorldProcessLineOfSight)
+    if(dwRetAddr == (VER_x32 ? 0x005dd0b0 + 1 : 0x70253C) || g_bForceWorldProcessLineOfSight)
     {
         g_bForceWorldProcessLineOfSight = false;
-		LOGI("CWorld_ProcessLineOfSight iLagCompensationMode: %d", g_iLagCompensationMode);
-        CEntityGTA* pEntity = nullptr;
-		static CVector vecPosPlusOffset = { 0.0f, 0.0f, 0.0f };
+		//LOGI("CWorld_ProcessLineOfSight iLagCompensationMode: %d", g_iLagCompensationMode);
+        static CVector vecPosPlusOffset;
 
 		if (g_iLagCompensationMode != 2)
 		{
 			if (g_pCurrentFiredPed != pGame->FindPlayerPed())
 			{
-				if (g_pCurrentBulletData)
+				if (g_pCurrentBulletData && g_pCurrentBulletData->pEntity)
 				{
-					pEntity = g_pCurrentBulletData->pEntity;
-					if (pEntity) // CPlaceable
+					if (*(uintptr_t*)(g_pCurrentBulletData->pEntity) != g_libGTASA+(VER_x32 ? 0x667D18:0x8300A0)) // CPlaceable
 					{
-						if (pEntity->m_matrix)
-						{
-							if (g_iLagCompensationMode)
-							{
-								vecPosPlusOffset.x = pEntity->GetPosition().x + g_pCurrentBulletData->vecOffset.x;
-								vecPosPlusOffset.y = pEntity->GetPosition().y + g_pCurrentBulletData->vecOffset.y;
-								vecPosPlusOffset.z = pEntity->GetPosition().z + g_pCurrentBulletData->vecOffset.z;
-							}
-							else
-							{
-								ProjectMatrix(&vecPosPlusOffset, &pEntity->GetMatrix(), &g_pCurrentBulletData->vecOffset);
-							}
+                        if (g_iLagCompensationMode)
+                        {
+                            vecPosPlusOffset.x = g_pCurrentBulletData->pEntity->GetPosition().x + g_pCurrentBulletData->vecOffset.x;
+                            vecPosPlusOffset.y = g_pCurrentBulletData->pEntity->GetPosition().y + g_pCurrentBulletData->vecOffset.y;
+                            vecPosPlusOffset.z = g_pCurrentBulletData->pEntity->GetPosition().z + g_pCurrentBulletData->vecOffset.z;
+                        }
+                        else
+                        {
+                            //FLog("vecPosPlusOffset %f %f %f", vecPosPlusOffset.x, vecPosPlusOffset.y, vecPosPlusOffset.z);
+                            //FLog("pEntity->GetMatrix().m_up %f %f %f", g_pCurrentBulletData->pEntity->GetMatrix().m_up.x, g_pCurrentBulletData->pEntity->GetMatrix().m_up.y, g_pCurrentBulletData->pEntity->GetMatrix().m_up.z);
+                            //FLog("g_pCurrentBulletData->vecOffset %f %f %f", g_pCurrentBulletData->vecOffset.x, g_pCurrentBulletData->vecOffset.y, g_pCurrentBulletData->vecOffset.z);
+                            ProjectMatrix((CVector*)&vecPosPlusOffset, &g_pCurrentBulletData->pEntity->GetMatrix(), &g_pCurrentBulletData->vecOffset);
+                            //vecPosPlusOffset.x = pEntity->GetMatrix().m_up.x * g_pCurrentBulletData->vecOffset.z + pEntity->GetMatrix().m_forward.x * g_pCurrentBulletData->vecOffset.y + pEntity->GetMatrix().m_right.x * g_pCurrentBulletData->vecOffset.x + pEntity->GetMatrix().m_pos.x;
+                            //vecPosPlusOffset.y = pEntity->GetMatrix().m_up.y * g_pCurrentBulletData->vecOffset.z + pEntity->GetMatrix().m_forward.y * g_pCurrentBulletData->vecOffset.y + pEntity->GetMatrix().m_right.y * g_pCurrentBulletData->vecOffset.x + pEntity->GetMatrix().m_pos.y;
+                            //vecPosPlusOffset.z = pEntity->GetMatrix().m_up.z * g_pCurrentBulletData->vecOffset.z + pEntity->GetMatrix().m_forward.z * g_pCurrentBulletData->vecOffset.y + pEntity->GetMatrix().m_right.z * g_pCurrentBulletData->vecOffset.x + pEntity->GetMatrix().m_pos.z;
+                        }
 
-							vecEnd->x = vecPosPlusOffset.x - vecOrigin->x + vecPosPlusOffset.x;
-							vecEnd->y = vecPosPlusOffset.y - vecOrigin->y + vecPosPlusOffset.y;
-							vecEnd->z = vecPosPlusOffset.z - vecOrigin->z + vecPosPlusOffset.z;
-						}
+                        vecEnd->x = vecPosPlusOffset.x - vecOrigin->x + vecPosPlusOffset.x;
+                        vecEnd->y = vecPosPlusOffset.y - vecOrigin->y + vecPosPlusOffset.y;
+                        vecEnd->z = vecPosPlusOffset.z - vecOrigin->z + vecPosPlusOffset.z;
 					}
 				}
 			}
 		}
 
-		uint32_t result = CWorld__ProcessLineOfSight(vecOrigin, vecEnd, vecPos, ppEntity, b1, b2, b3, b4, b5, b6, b7, b8);
+		uint32_t result = CWorld__ProcessLineOfSight(vecOrigin, vecEnd, colPoint, ppEntity, b1, b2, b3, b4, b5, b6, b7, b8);
 
 		if (g_iLagCompensationMode == 2)
 		{
 			if (g_pCurrentFiredPed == pGame->FindPlayerPed()) {
-				SendBulletSync(vecOrigin, vecEnd, vecPos, ppEntity);
+				SendBulletSync(vecOrigin, vecEnd, colPoint, ppEntity);
 			}
 			return result;
 		}
@@ -638,23 +706,23 @@ uint32_t CWorld__ProcessLineOfSight_hook(CVector* vecOrigin, CVector* vecEnd, CV
 						{
 							result = 0;
 							*ppEntity = nullptr;
-							vecPos->x = 0.0f;
-							vecPos->y = 0.0f;
-							vecPos->z = 0.0f;
+                            colPoint->m_vecPoint.x = 0.0f;
+                            colPoint->m_vecPoint.y = 0.0f;
+                            colPoint->m_vecPoint.z = 0.0f;
 							return result;
 						}
 					}
 				}
 			}
 			else {
-				SendBulletSync(vecOrigin, vecEnd, vecPos, ppEntity);
+				SendBulletSync(vecOrigin, vecEnd, colPoint, ppEntity);
 			}
 		}
 
 		return result;
 	}
 
-	return CWorld__ProcessLineOfSight(vecOrigin, vecEnd, vecPos, ppEntity, b1, b2, b3, b4, b5, b6, b7, b8);
+	return CWorld__ProcessLineOfSight(vecOrigin, vecEnd, colPoint, ppEntity, b1, b2, b3, b4, b5, b6, b7, b8);
 }
 // 0.3.7
 uint32_t(*CWeapon__FireSniper)(CWeapon* thiz, CPedGTA* pFiringEntity, CEntityGTA* victim, CVector* target);
@@ -684,7 +752,7 @@ bool CBulletInfo_AddBullet_hook(CEntityGTA* creator, int weaponType, CVector pos
 	CBulletInfo_AddBullet(creator, weaponType, pos, velocity);
 
 	// CBulletInfo::Update
-	((void (*)())(g_libGTASA + 0x5D7044 + 1))();
+	CHook::CallFunction<void>("_ZN11CBulletInfo6UpdateEv");
 	return true;
 }
 
@@ -808,6 +876,8 @@ void CRenderer_RenderEverythingBarRoads_hook() {
 #include "TimeCycle.h"
 #include "game/Pipelines/CustomCar/CustomCarEnvMapPipeline.h"
 #include "game/Pipelines/CustomBuilding/CustomBuildingDNPipeline.h"
+#include "COcclusion.h"
+#include "RealTimeShadowManager.h"
 
 CFPSFix g_fps;
 
@@ -1138,43 +1208,6 @@ int rxOpenGLDefaultAllInOneRenderCB_hook(RwResEntry* resEntry, uintptr_t object,
 	if(!resEntry || !flags)
 		return 0;
 
-    FLog("rxOpenGLDefaultAllInOneRenderCB");
-
-	if(resEntry->size)
-	{
-        FLog("rxOpenGLDefaultAllInOneRenderCB size ok");
-		RwResEntry *arr = *(resEntry->ownerRef);
-		if(arr)
-		{
-            FLog("rxOpenGLDefaultAllInOneRenderCB ownerref ok");
-			uint32_t validFlag = flags & 0x84;
-			if(validFlag)
-			{
-                FLog("rxOpenGLDefaultAllInOneRenderCB flag ok");
-				for(int i = 0; i < resEntry->size; i++)
-				{
-					if(!arr[i].ownerRef)
-                    {
-                        FLog("rxOpenGLDefaultAllInOneRenderCB no owner ref");
-                        break;
-                    }
-                    FLog("rxOpenGLDefaultAllInOneRenderCB %d 0", i);
-					uintptr_t *v4 = *(uintptr_t**)(arr[i].ownerRef);
-                    FLog("rxOpenGLDefaultAllInOneRenderCB %d 1", i);
-					if(v4)
-					{
-                        FLog("rxOpenGLDefaultAllInOneRenderCB v4 ok", i);
-						if(!*v4 || v4 > (uintptr_t*)(VER_x32 ? 0xFFFFFF00:0xFFFFFFFFFFFFFF00))
-                        {
-                            FLog("rxOpenGLDefaultAllInOneRenderCB no pointer", i);
-                            return 0;
-                        }
-					}
-				}
-			}
-		}
-	}
-
 	return rxOpenGLDefaultAllInOneRenderCB(resEntry, object, type, flags);
 }
 
@@ -1184,29 +1217,6 @@ int CCustomBuildingDNPipeline__CustomPipeRenderCB_hook(RwResEntry* resEntry, uin
 {
     if(!resEntry || !flags)
         return 0;
-
-    if(resEntry->size)
-    {
-        RwResEntry *arr = *(resEntry->ownerRef);
-        if(arr)
-        {
-            uint32_t validFlag = flags & 0x84;
-            if(validFlag)
-            {
-                for(int i = 0; i < resEntry->size; i++)
-                {
-                    if(!arr[i].ownerRef) break;
-
-                    uintptr_t *v4 = *(uintptr_t**)(arr[i].ownerRef);
-                    if(v4)
-                    {
-                        if(!*v4 || v4 > (uintptr_t*)(VER_x32 ? 0xFFFFFF00:0xFFFFFFFFFFFFFF00))
-                            return 0;
-                    }
-                }
-            }
-        }
-    }
 
 	return CCustomBuildingDNPipeline__CustomPipeRenderCB(resEntry, object, type, flags);
 }
@@ -1401,10 +1411,7 @@ void NvUtilInit_hook()
 
     ReadSettingFile();
 
-    if(pSettings)
-    {
-        ApplyFPSPatch(pSettings->Get().iFPSCount);
-    }
+    ApplyFPSPatch(120);
 }
 
 struct stFile
@@ -1691,14 +1698,6 @@ size_t OS_FileRead_hook(OSFile a1, void *buffer, size_t numBytes)
 {
     dwRLEDecompressSourceSize = numBytes;
 
-    uintptr_t calledFrom = 0;
-    GET_LR(calledFrom);
-
-    if (!numBytes)
-    {
-        return 0;
-    }
-
     return OS_FileRead(a1, buffer, numBytes);
 }
 
@@ -1750,6 +1749,47 @@ void RLEDecompress_hook(uint8_t* pDest, size_t uiDestSize, const uint8_t* pSrc, 
     }
 }
 
+void (*CGame_Process)();
+void CGame_Process_hook()
+{
+    if(pGame->bIsGameExiting)return;
+
+    CGame_Process();
+
+    if (pNetGame)
+    {
+        if(pGame && pGame->FindPlayerPed() && pUI && pUI->buttonpanel() && pUI->buttonpanel()->m_bH)
+        {
+            if(pGame->FindPlayerPed()->IsInVehicle())
+            {
+                pUI->buttonpanel()->m_bH->setCaption("D/B");
+            }
+            else
+                pUI->buttonpanel()->m_bH->setCaption("H");
+        }
+
+        CObjectPool* pObjectPool = pNetGame->GetObjectPool();
+        if (pObjectPool) {
+            pObjectPool->Process();
+            pObjectPool->ProcessMaterialText();
+        }
+
+        CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
+        if (pTextDrawPool) {
+            pTextDrawPool->SnapshotProcess();
+        }
+    }
+}
+
+float (*CDraw__SetFOV)(float thiz, float a2);
+float CDraw__SetFOV_hook(float thiz, float a2)
+{
+    float tmp = (float)((float)((float)(*(float *)&*(float *)(g_libGTASA + (VER_x32 ? 0x00A26A90 : 0xCC7F00)) - 1.3333) * 11.0) / 0.44444) + thiz;
+    if(tmp > 100) tmp = 100.0;
+    *(float *)(g_libGTASA + (VER_x32 ? 0x006B1CB8 : 0x88E6BC)) = tmp;
+    return thiz;
+}
+
 void InjectHooks()
 {
     FLog("InjectHooks");
@@ -1778,8 +1818,8 @@ void InjectHooks()
     //CIdleCam::InjectHooks(); //
     //CTouchInterface::InjectHooks(); //
     //CWidgetGta::InjectHooks();
-    //CEntityGTA::InjectHooks(); //
-    //CPhysical::InjectHooks(); //
+    CEntityGTA::InjectHooks(); //
+    CPhysical::InjectHooks(); //
     CAnimManager::InjectHooks(); //
     //CCarEnterExit::InjectHooks();
     CPlayerPedGta::InjectHooks(); //
@@ -1817,6 +1857,8 @@ void InjectHooks()
     //CWidgetRadar::InjectHooks();
 
     //CRealTimeShadowManager::InjectHooks();
+    CHook::Write(g_libGTASA+(VER_x32 ? 0xA41140 : 0xCE3EE8), &COcclusion::aOccluders);
+    CHook::Write(g_libGTASA+(VER_x32 ? 0xA45790:0xCE8538), &COcclusion::NumOccludersOnMap);
 }
 
 void InstallSpecialHooks()
@@ -1840,8 +1882,8 @@ void InstallSpecialHooks()
 
     CHook::InlineHook("_Z11OS_FileReadPvS_i", &OS_FileRead_hook, &OS_FileRead);
 
-	//CHook::InlineHook("_Z32_rxOpenGLDefaultAllInOneRenderCBP10RwResEntryPvhj", &rxOpenGLDefaultAllInOneRenderCB_hook, &rxOpenGLDefaultAllInOneRenderCB);
-	//CHook::InlineHook("_ZN25CCustomBuildingDNPipeline18CustomPipeRenderCBEP10RwResEntryPvhj", &CCustomBuildingDNPipeline__CustomPipeRenderCB_hook, &CCustomBuildingDNPipeline__CustomPipeRenderCB);
+	CHook::InlineHook("_Z32_rxOpenGLDefaultAllInOneRenderCBP10RwResEntryPvhj", &rxOpenGLDefaultAllInOneRenderCB_hook, &rxOpenGLDefaultAllInOneRenderCB);
+	CHook::InlineHook("_ZN25CCustomBuildingDNPipeline18CustomPipeRenderCBEP10RwResEntryPvhj", &CCustomBuildingDNPipeline__CustomPipeRenderCB_hook, &CCustomBuildingDNPipeline__CustomPipeRenderCB);
 }
 
 #include <EGL/egl.h>
@@ -1850,7 +1892,7 @@ void SetUpGLHooks();
 void InstallHooks()
 {
     //SetUpGLHooks();
-    CHook::Redirect("_Z13Render2dStuffv", &Render2dStuff);
+    CHook::InlineHook("_Z13Render2dStuffv", &Render2dStuff_hook, &Render2dStuff);
     CHook::Redirect("_Z13RenderEffectsv", &RenderEffects);
     CHook::InlineHook("_Z14AND_TouchEventiiii", &AND_TouchEvent_hook, &AND_TouchEvent);
 
@@ -1871,6 +1913,7 @@ void InstallHooks()
     CHook::InlineHook("_ZN6CWorld18ProcessLineOfSightERK7CVectorS2_R9CColPointRP7CEntitybbbbbbbb", &CWorld__ProcessLineOfSight_hook, &CWorld__ProcessLineOfSight);
     CHook::InlineHook("_ZN28CPedDamageResponseCalculator21ComputeDamageResponseEP4CPedR18CPedDamageResponseb", &CPedDamageResponseCalculator__ComputeDamageResponse_hook, &CPedDamageResponseCalculator__ComputeDamageResponse);
     CHook::InlineHook("_ZN7CWeapon18ProcessLineOfSightERK7CVectorS2_R9CColPointRP7CEntity11eWeaponTypeS6_bbbbbbb", &CWeapon__ProcessLineOfSight_hook, &CWeapon__ProcessLineOfSight);
+    CHook::InlineHook("_ZN11CBulletInfo9AddBulletEP7CEntity11eWeaponType7CVectorS3_", &CBulletInfo_AddBullet_hook, &CBulletInfo_AddBullet);
 
     CHook::InlineHook("_ZN11CFileLoader18LoadObjectInstanceEPKc", &CFileLoader__LoadObjectInstance_hook, &CFileLoader__LoadObjectInstance);
 
@@ -1894,7 +1937,7 @@ void InstallHooks()
 
         if (eglGetProcAddress("glAlphaFunc")) {
             // If "glAlphaFunc" is found, store the address in the global library
-            *((void**)(g_libGTASA + 0x89A1B0)) = (void*)eglGetProcAddress("glAlphaFunc");
+            *((void**)(g_libGTASA + (VER_x32 ? 0x6BCBF8:0x89A1B0))) = (void*)eglGetProcAddress("glAlphaFunc");
         } else {
             // If neither function is available, hook the fallback symbol
             CHook::Redirect("_Z25RQ_Command_rqSetAlphaTestRPc", &RQCommand_rqSetAlphaTest);
@@ -1902,9 +1945,6 @@ void InstallHooks()
     }
 
     CHook::Redirect("_ZN4CHID12GetInputTypeEv", &GetInputType);
-    CHook::Redirect("_ZNK14TextureListing11GetMipCountEv", &getmip);
-
-    CHook::Redirect("_Z25RQ_Command_rqSetAlphaTestRPc", &RQCommand_rqSetAlphaTest);
 
 #if VER_x32
     CHook::InlineHook("_ZN14CAnimBlendNode12FindKeyFrameEf", &CAnimBlendNode__FindKeyFrame_hook, &CAnimBlendNode__FindKeyFrame);
@@ -1914,10 +1954,24 @@ void InstallHooks()
     CHook::InlineHook("_ZN13FxEmitterBP_c6RenderEP8RwCamerajfh", &FxEmitterBP_c__Render_hook, &FxEmitterBP_c__Render);
     CHook::InlineHook("_Z23RwResourcesFreeResEntryP10RwResEntry", &RwResourcesFreeResEntry_hook, &RwResourcesFreeResEntry);
 
-    CHook::InlineHook("_ZN9CRenderer24RenderEverythingBarRoadsEv", &CRenderer_RenderEverythingBarRoads_hook, &CRenderer_RenderEverythingBarRoads);
+    //CHook::InlineHook("_ZN9CRenderer24RenderEverythingBarRoadsEv", &CRenderer_RenderEverythingBarRoads_hook, &CRenderer_RenderEverythingBarRoads);
 
     ms_fAspectRatio = (float*)(g_libGTASA+(VER_x32 ? 0xA26A90:0xCC7F00));
     CHook::InlineHook("_ZN4CHud14DrawCrossHairsEv", &DrawCrosshair_hook, &DrawCrosshair);
+
+    // retexture
+    CHook::InlineHook("_ZN7CEntity6RenderEv", &CEntity_Render_hook, &CEntity_Render);
+
+    //CHook::InlineHook("_ZN26CAEGlobalWeaponAudioEntity21ServiceAmbientGunFireEv", &TaskEnterVehicleHook, &TaskEnterVehicle);
+#if VER_x32
+    CHook::UnFuck(g_libGTASA + 0x4DD9E8);
+    *(float*)(g_libGTASA + 0x4DD9E8) = 0.015f;
+#else
+    CHook::Write(g_libGTASA + 0x5DF790, 0x90000AA9);
+    CHook::Write(g_libGTASA + 0x5DF794, 0xBD48D521);
+#endif
+
+    CHook::InlineHook("_ZN5CDraw6SetFOVEfb", &CDraw__SetFOV_hook, &CDraw__SetFOV);
 
     HookCPad();
 }

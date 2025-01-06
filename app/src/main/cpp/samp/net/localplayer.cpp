@@ -19,6 +19,8 @@ extern int iNetModeNormalInCarSendRate;
 extern int iNetModeFiringSendRate;
 extern int iNetModeSendMultiplier;
 
+bool m_bWasInCar = false;
+
 extern bool bUsedPlayerSlots[];
 
 uint32_t dwEnterVehTimeElasped = -1;
@@ -1679,21 +1681,6 @@ void CLocalPlayer::SendEnterVehicleNotification(VEHICLEID VehicleID, bool bPasse
 	bsSend.Write(VehicleID);
 	bsSend.Write(bytePassenger);
 	pNetGame->GetRakClient()->RPC(&RPC_EnterVehicle, &bsSend, HIGH_PRIORITY, RELIABLE_SEQUENCED, 0, false, UNASSIGNED_NETWORK_ID, nullptr);
-
-	CVehiclePool* pVehiclePool = pNetGame->GetVehiclePool();
-
-	if (pVehiclePool)
-	{
-		CVehicle* pVehicle = pVehiclePool->GetAt(VehicleID);
-		if (pVehicle)
-		{
-			if (pVehicle->IsATrainPart())
-			{
-				ScriptCommand(&camera_on_vehicle, pVehicle->m_dwGTAId, 3, 2);
-				dwEnterVehTimeElasped = GetTickCount();
-			}
-		}
-	}
 }
 // 0.3.7
 void CLocalPlayer::SpectatePlayer(PLAYERID PlayerID)

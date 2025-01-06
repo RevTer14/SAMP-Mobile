@@ -377,7 +377,6 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 	CHook::InitHookStuff();
 	InstallSpecialHooks();
 	ApplyPatches_level0();
-    ApplyGlobalPatches();
     InitRenderWareFunctions();
     MultiTouch::initialize();
 

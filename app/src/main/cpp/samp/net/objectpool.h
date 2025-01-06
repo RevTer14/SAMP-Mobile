@@ -21,6 +21,21 @@ public:
 		return nullptr;
 	}
 
+    CObject *GetObjectFromGtaPtr(CEntityGTA *pGtaObject)
+    {
+        uint16_t x=1;
+
+        while(x!=MAX_OBJECTS)
+        {
+            if(m_pObjects[x])
+                if(pGtaObject == m_pObjects[x]->m_pEntity) return m_pObjects[x];
+
+            x++;
+        }
+
+        return 0;
+    }
+
 	OBJECTID FindIDFromGtaPtr(CPhysical* pGtaObject);
 
 	CObject* FindObjectFromGtaPtr(CPhysical* pGtaObject);

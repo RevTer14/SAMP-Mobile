@@ -18,12 +18,12 @@ public:
 
     static void injectHooks();
 
-    static constexpr int32_t NUM_PED_MODEL_INFOS = 370;
+    static constexpr int32_t NUM_PED_MODEL_INFOS = 315;
     static inline CStore<CPedModelInfo, NUM_PED_MODEL_INFOS> ms_pedModelInfoStore;
 
     static inline CStore<CAtomicModelInfo, 20000> ms_atomicModelInfoStore;
 
-    static constexpr int32 NUM_VEHICLE_MODEL_INFOS = 370;
+    static constexpr int32 NUM_VEHICLE_MODEL_INFOS = 270;
     static inline CStore<CVehicleModelInfo, NUM_VEHICLE_MODEL_INFOS> ms_vehicleModelInfoStore;
 
     static CPedModelInfo *AddPedModel(int index);

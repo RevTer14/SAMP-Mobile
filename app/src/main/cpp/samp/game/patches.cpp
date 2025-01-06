@@ -130,8 +130,6 @@ void ApplySAMPPatchesInGame()
 
 int32_t CWorld__FindPlayerSlotWithPedPointer(CPedGTA* pPlayersPed)
 {
-    uint32_t result = 0;
-
     for(int i = 0; i < MAX_PLAYERS; ++i)
     {
         if(CWorld::Players[i].m_pPed == pPlayersPed)
@@ -326,6 +324,11 @@ void ApplyGlobalPatches()
 
     CHook::RET("_ZN22CRealTimeShadowManager4InitEv"); // CRealTimeShadowManager::Init
     CHook::RET("_ZN22CRealTimeShadowManager6UpdateEv"); // CRealTimeShadowManager::Update
+
+    CHook::RET("_ZN22CRealTimeShadowManager20ReturnRealTimeShadowEP15CRealTimeShadow"); // CRealTimeShadowManager::ReturnRealTimeShadow from ~CPhysical
+	CHook::RET("_ZN8CShadows19RenderStaticShadowsEb"); // CShadows::RenderStaticShadows
+	CHook::RET("_ZN8CMirrors16BeforeMainRenderEv"); // CMirrors::BeforeMainRender(void)
+    CHook::RET("_ZN8CMirrors17RenderReflectionsEv");
 
     CHook::RET("_ZN8CCarCtrl18GenerateRandomCarsEv");
 }

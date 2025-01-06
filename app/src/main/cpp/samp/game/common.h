@@ -232,6 +232,15 @@ struct VehicleAudioPropertiesStruct
 	float field_16;			// 16: + 32
 };
 
+#pragma pack(push, 1)
+typedef struct _REMOVE_BUILDING_DATA
+{
+    unsigned short usModelIndex;
+    CVector vecPos;
+    float fRange;
+} REMOVE_BUILDING_DATA;
+#pragma pack(pop)
+
 struct BULLET_SYNC
 {
     uint8_t hitType;

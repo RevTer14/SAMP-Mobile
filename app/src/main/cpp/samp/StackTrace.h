@@ -31,12 +31,13 @@
 #endif
 
 void FLog(const char* fmt, ...);
-
+extern int g_iLastRenderedObject;
 class CStackTrace
 {
 public:
     static void printBacktrace()
     {
+        FLog("Last rendered object: %d", g_iLastRenderedObject);
         FLog("------------ START BACKTRACE ------------");
         FLog(" ");
         PrintStackTrace();

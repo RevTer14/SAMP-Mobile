@@ -45,8 +45,6 @@ CPlayerPed::CPlayerPed()
 
 CPlayerPed::CPlayerPed(int iNum, int iSkin, float fX, float fY, float fZ, float fRotation)
 {
-	FLog("Creating PlayerPed(%d)", iNum);
-    FLog("Attempting to create player: iPlayerNum=%d, fX=%f, fY=%f, fZ=%f, m_dwGTAId=%p", iNum, fX, fY, fZ, &m_dwGTAId);
 	uint32_t dwPlayerActorID;
     static int iPlayerNum;
     iPlayerNum = iNum;
@@ -78,7 +76,6 @@ CPlayerPed::CPlayerPed(int iNum, int iSkin, float fX, float fY, float fZ, float 
 	//ScriptCommand(&create_actor_from_player, &iPlayerNum, &m_dwGTAId);
 
     m_dwGTAId = GamePool_Ped_GetIndex(m_pPed);
-    FLog("m_dwGTAId=%p",m_dwGTAId);
 
 	m_pPed = GamePool_Ped_GetAt(m_dwGTAId);
     if (!m_pPed) {
@@ -114,12 +111,10 @@ CPlayerPed::CPlayerPed(int iNum, int iSkin, float fX, float fY, float fZ, float 
 
 	SetModelIndex(iSkin);
 
-    FLog("CPlayerPed1");
 
 	// GameResetPlayerKeys
     memset(&RemotePlayerKeys[m_bytePlayerNumber], 0, sizeof(PAD_KEYS));
 
-    FLog("CPlayerPed2");
     SetTargetRotation(fRotation);
     RwMatrix mat = m_pPed->GetMatrix().ToRwMatrix();
     mat.pos.x = fX;
@@ -133,8 +128,6 @@ CPlayerPed::CPlayerPed(int iNum, int iSkin, float fX, float fY, float fZ, float 
 	m_stuffData.dwLastUpdateTick = 0;
 
 	m_bHaveBulletData = false;
-    FLog("CPlayerPed3");
-    FLog("m_pPed: %p, m_dwGTAId: %d", m_pPed, m_dwGTAId);
 }
 
 CPlayerPed::~CPlayerPed()
@@ -1154,7 +1147,7 @@ void CPlayerPed::FireInstant()
         if(m_pPed)
             CWeapon__FireSniper(GetCurrentWeaponSlot(), m_pPed, nullptr, nullptr);
         else
-            CWeapon__FireSniper(nullptr, m_pPed, nullptr, nullptr);
+            CWeapon__FireSniper(nullptr, nullptr, nullptr, nullptr);
 	}
 	else
 	{
@@ -1165,11 +1158,10 @@ void CPlayerPed::FireInstant()
         if(m_pPed)
             CWeapon__FireInstantHit(pSlot, m_pPed, &vecBonePos, &vecOut, nullptr, nullptr, nullptr, 0, 1);
         else
-            CWeapon__FireInstantHit(nullptr, m_pPed, &vecBonePos, &vecOut, nullptr, nullptr, nullptr, 0, 1);
+            CWeapon__FireInstantHit(nullptr, nullptr, &vecBonePos, &vecOut, nullptr, nullptr, nullptr, 0, 1);
 	}
 
 	g_pCurrentFiredPed = nullptr;
-	g_pCurrentBulletData = nullptr;
 
 	if (m_bytePlayerNumber != 0)
 	{
@@ -1183,25 +1175,28 @@ void CPlayerPed::FireInstant()
 // 0.3.7
 void CPlayerPed::GetWeaponInfoForFire(bool bLeftWrist, CVector* vecBonePos, CVector* vecOut)
 {
-	if(!m_pPed || !GamePool_Ped_GetAt(m_dwGTAId))
-		return;
+    if (!IsValidGamePed(m_pPed) || !GamePool_Ped_GetAt(m_dwGTAId)) {
+        return;
+    }
 
-	CVector *pFireOffset = GetCurrentWeaponFireOffset();
-	if(pFireOffset && vecBonePos && vecOut)
-	{
-		vecOut->x = pFireOffset->x;
-		vecOut->y = pFireOffset->y;
-		vecOut->z = pFireOffset->z;
+    CVector* pFireOffset = GetCurrentWeaponFireOffset();
+    if (pFireOffset && vecBonePos && vecOut) {
+        vecOut->x = pFireOffset->x;
+        vecOut->y = pFireOffset->y;
+        vecOut->z = pFireOffset->z;
 
-		int iBoneId = 24;
-		if(bLeftWrist) iBoneId = 34;
+        int bone_id = 24;
+        if (bLeftWrist) {
+            bone_id = 34;
+        }
 
-		GetBonePosition(iBoneId, vecBonePos);
+        m_pPed->GetBonePosition(vecBonePos, bone_id, false);
 
-		vecBonePos->z += pFireOffset->z + 0.15000001f;
+        vecBonePos->z += pFireOffset->z + 0.15f;
 
-		GetTransformedBonePosition(iBoneId, vecOut);
-	}
+        // CPed::GetTransformedBonePosition
+        ((void (*)(CPedGTA*, CVector*, int, bool))(g_libGTASA + (VER_x32 ? 0x004A24A8 + 1 : 0x598670)))(m_pPed, vecOut, bone_id, false);
+    }
 }
 
 uintptr_t GetWeaponInfo(int iWeapon, int iSkill)
@@ -1307,9 +1302,7 @@ void CPlayerPed::ProcessBulletData(BULLET_DATA *btData)
 											}
 											else
 											{
-												btData->vecOffset.x += btData->pEntity->GetPosition().x;
-												btData->vecOffset.y += btData->pEntity->GetPosition().y;
-												btData->vecOffset.z += btData->pEntity->GetPosition().z;
+												btData->vecOffset += btData->pEntity->GetPosition();
 											}
 										}
 									}
@@ -1468,7 +1461,8 @@ bool CPlayerPed::IsOnGround()
 	return false;
 }
 
-extern uint32_t(*CWorld__ProcessLineOfSight)(CVector*, CVector*, CVector*, CEntityGTA**, bool, bool, bool, bool, bool, bool, bool, bool);
+extern uint32_t(*CWorld__ProcessLineOfSight)(CVector*, CVector*, CColPoint *colPoint, CEntityGTA**, bool, bool, bool, bool, bool, bool, bool, bool);
+
 CEntityGTA* CPlayerPed::GetEntityUnderPlayer()
 {
 	if(!m_pPed || !GamePool_Ped_GetAt(m_dwGTAId))
@@ -1477,7 +1471,7 @@ CEntityGTA* CPlayerPed::GetEntityUnderPlayer()
     CEntityGTA* entity;
 	CVector vecStart;
 	CVector vecEnd;
-	CVector vecPos;
+	CColPoint vecPos;
 	char buf[100];
 
 	vecStart.x = m_pPed->m_matrix->m_pos.x;

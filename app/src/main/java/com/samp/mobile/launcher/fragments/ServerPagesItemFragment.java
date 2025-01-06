@@ -65,6 +65,8 @@ public class ServerPagesItemFragment extends Fragment {
 
         ((MainActivity)getActivity()).hideKeyboard(getActivity());
 
+        view = inflater.inflate(R.layout.fragment_favorite, container, false);
+
         if(pagePosition == 1) {
             view = inflater.inflate(R.layout.fragment_internet, container, false);
             ServerAdapter adapter = new ServerAdapter(view.getContext(), this.pagePosition);

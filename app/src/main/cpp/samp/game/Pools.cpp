@@ -32,10 +32,10 @@ void CPools::Initialise()
     CPools::ms_pPedPool                 = new CPool<CPedGTA, CCopPed>(240, "Peds");
     CPools::ms_pVehiclePool             = new CPool<CVehicleGTA, CHeli>(1000, "Vehicles");
     CPools::ms_pObjectPool              = new CPool<CObjectGta, CCutsceneObject>(3000, "Objects");
-    CPools::ms_pTaskPool                = new CPool<CTask, CTaskSimpleSlideToCoord>(10000, "Task");
-    CPools::ms_pEntryInfoNodePool       = new CPool<CEntryInfoNode>(60000, "EntryInfoNodePool");
-    CPools::ms_pDummyPool               = new CPool<CDummy>(80000, "Dummies");
-    CPools::ms_pBuildingPool            = new CPool<CBuilding>(60000, "Buildings");
+    CPools::ms_pTaskPool                = new CPool<CTask, CTaskSimpleSlideToCoord>(6000, "Task");
+    CPools::ms_pEntryInfoNodePool       = new CPool<CEntryInfoNode>(20000, "EntryInfoNodePool");
+    CPools::ms_pDummyPool               = new CPool<CDummy>(40000, "Dummies");
+    CPools::ms_pBuildingPool            = new CPool<CBuilding>(21000, "Buildings");
 
     CPools::ms_pColModelPool = PoolAllocator::Allocate(50000, (VER_x32 ? 0x30 : 0x38));
     // 13600 / 200 = 68

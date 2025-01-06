@@ -182,64 +182,6 @@
         app:layout_constraintVertical_bias="0.33" />
 
     <TextView
-        android:id="@+id/textView56"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/montserrat_bold"
-        android:text="CLEO"
-        android:textColor="@color/white"
-        android:textSize="@dimen/_12sdp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.12"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/settings_nickname"
-        app:layout_constraintVertical_bias="0.41" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/cleo_switch"
-        android:layout_width="@dimen/_50sdp"
-        android:layout_height="wrap_content"
-        android:checked="false"
-        android:textOn=""
-        android:textOff=""
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.875"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/settings_nickname"
-        app:layout_constraintVertical_bias="0.41" />
-
-    <TextView
-        android:id="@+id/textView66"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/montserrat_bold"
-        android:text="AML"
-        android:textColor="@color/white"
-        android:textSize="@dimen/_12sdp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.118"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/settings_nickname"
-        app:layout_constraintVertical_bias="0.485" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/aml_switch"
-        android:layout_width="@dimen/_50sdp"
-        android:layout_height="wrap_content"
-        android:checked="false"
-        android:textOn=""
-        android:textOff=""
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.875"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/settings_nickname"
-        app:layout_constraintVertical_bias="0.48" />
-
-    <TextView
         android:id="@+id/textView8"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -252,7 +194,7 @@
         app:layout_constraintHorizontal_bias="0.155"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/settings_nickname"
-        app:layout_constraintVertical_bias="0.560" />
+        app:layout_constraintVertical_bias="0.410" />
 
     <androidx.appcompat.widget.AppCompatSeekBar
         android:id="@+id/messages_seekbar"
@@ -269,7 +211,7 @@
         app:layout_constraintHorizontal_bias="0.846"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/settings_nickname"
-        app:layout_constraintVertical_bias="0.56" />
+        app:layout_constraintVertical_bias="0.415" />
 
     <TextView
         android:id="@+id/messages_count"
@@ -297,7 +239,7 @@
         app:layout_constraintHorizontal_bias="0.137"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/settings_nickname"
-        app:layout_constraintVertical_bias="0.635" />
+        app:layout_constraintVertical_bias="0.49" />
 
     <androidx.appcompat.widget.AppCompatSeekBar
         android:id="@+id/fps_seekbar"
@@ -314,7 +256,7 @@
         app:layout_constraintHorizontal_bias="0.846"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/settings_nickname"
-        app:layout_constraintVertical_bias="0.635" />
+        app:layout_constraintVertical_bias="0.495" />
 
     <TextView
         android:id="@+id/fps_count"

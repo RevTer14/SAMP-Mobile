@@ -43,8 +43,6 @@ public class SettingsFragment extends Fragment {
     SwitchCompat mVoiceSwitch;
     SwitchCompat mModifySwitch;
     SwitchCompat mFPSSwitch;
-    SwitchCompat mAMLSwitch;
-    SwitchCompat mCleoSwitch;
     SeekBar mMessagesSeekBar;
     TextView mMessagesText;
     SeekBar mFPSSeekBar;
@@ -61,8 +59,6 @@ public class SettingsFragment extends Fragment {
         mFPSSwitch = view.findViewById(R.id.fps_switch);
         mVoiceSwitch = view.findViewById(R.id.voice_switch);
         mModifySwitch = view.findViewById(R.id.modify_switch);
-        mAMLSwitch = view.findViewById(R.id.aml_switch);
-        mCleoSwitch = view.findViewById(R.id.cleo_switch);
         mMessagesSeekBar = view.findViewById(R.id.messages_seekbar);
         mMessagesText = view.findViewById(R.id.messages_count);
         mFPSSeekBar = view.findViewById(R.id.fps_seekbar);
@@ -147,20 +143,6 @@ public class SettingsFragment extends Fragment {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
-        });
-
-        mAMLSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                new SharedPreferenceCore().setBoolean(requireContext().getApplicationContext(), "AML", b);
-            }
-        });
-
-        mCleoSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                new SharedPreferenceCore().setBoolean(requireContext().getApplicationContext(), "CLEO", b);
             }
         });
 
@@ -264,8 +246,6 @@ public class SettingsFragment extends Fragment {
         mVoiceSwitch.setChecked(new SharedPreferenceCore().getBoolean(requireContext().getApplicationContext(), "VOICE_CHAT"));
         mFPSSwitch.setChecked(new SharedPreferenceCore().getBoolean(requireContext().getApplicationContext(), "FPS_DISPLAY"));
         mModifySwitch.setChecked(new SharedPreferenceCore().getBoolean(requireContext().getApplicationContext(), "MODIFIED_DATA"));
-        mAMLSwitch.setChecked(new SharedPreferenceCore().getBoolean(requireContext().getApplicationContext(), "AML"));
-        mCleoSwitch.setChecked(new SharedPreferenceCore().getBoolean(requireContext().getApplicationContext(), "CLEO"));
 
         int fps = new SharedPreferenceCore().getInt(getContext(), "FPS_LIMIT");
         switch (fps)

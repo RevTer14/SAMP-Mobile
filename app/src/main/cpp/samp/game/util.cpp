@@ -1879,8 +1879,9 @@ int GamePool_Ped_GetIndex(CPedGTA* pActor)
 
 CPhysical *GamePool_Object_GetAt(int iID)
 {
-	// GetPoolObj
-	return ((CPhysical* (*)(int))(g_libGTASA + (VER_x32 ? 0x00483DD2 + 1 : 0x575D30)))(iID);
+    CPhysical* (*GetPoolObj)(int iID);
+    *(void **) (&GetPoolObj) = (void*)(g_libGTASA + (VER_x32 ? 0x00483DD2 + 1 : 0x575D30));
+    return (GetPoolObj)(iID);
 }
 
 uintptr_t GamePool_Vehicle_GetIndex(CVehicleGTA* pGtaVehicle)
@@ -2118,15 +2119,22 @@ float subAngle(float a1, float a2)
 
 void HideEntity(CEntityGTA *pEntity)
 {
-    pEntity->SetPosn(pEntity->GetPosition().x, pEntity->GetPosition().y, pEntity->GetPosition().z -= 2000.0);
+    pEntity->m_placement.m_vPosn.z -= 2000.0;
 }
 
 /* =========== RemoveBuildings ============= */
 int iBuildingToRemoveCount;
 REMOVEBUILDING_DATA BuildingToRemove[1000];
 
+std::list<REMOVE_BUILDING_DATA> RemoveBuildingData;
+
 void RemoveBuilding(uint32_t dwModel, RwV3d vecPos, float fRange)
 {
+    /*if(dwModel == 19300) return; // We cant delete technical models!
+
+    if(iBuildingToRemoveCount >= 1000)
+        return;
+
     RemoveObjectInRange(dwModel, vecPos, fRange);
 
     BuildingToRemove[iBuildingToRemoveCount].dwModel = dwModel;
@@ -2134,7 +2142,16 @@ void RemoveBuilding(uint32_t dwModel, RwV3d vecPos, float fRange)
     BuildingToRemove[iBuildingToRemoveCount].vecPos.y = vecPos.y;
     BuildingToRemove[iBuildingToRemoveCount].vecPos.z = vecPos.z;
     BuildingToRemove[iBuildingToRemoveCount].fRange = fRange;
+    iBuildingToRemoveCount++;*/
+
+    REMOVE_BUILDING_DATA entry;
+    entry.usModelIndex = dwModel;
+    entry.fRange = fRange;
+    entry.vecPos = vecPos;
+
     iBuildingToRemoveCount++;
+
+    RemoveBuildingData.push_back(entry);
 }
 
 #include "Pools.h"
@@ -2150,7 +2167,10 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
             if(iModel == -1 || pEntity->m_nModelIndex == iModel)
             {
                 float fDistance = GetDistance(pEntity->GetPosition(), vecPos);
-                if(fDistance <= fRange) HideEntity(pEntity);
+                if(fDistance <= fRange) {
+                    HideEntity(pEntity);
+                    //pEntity->m_nModelIndex = 19300;
+                }
             }
         }
     }
@@ -2164,7 +2184,10 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
             if(iModel == -1 || pEntity->m_nModelIndex == iModel)
             {
                 float fDistance = GetDistance(pEntity->GetPosition(), vecPos);
-                if(fDistance <= fRange) HideEntity(pEntity);
+                if(fDistance <= fRange) {
+                    HideEntity(pEntity);
+                    //pEntity->m_nModelIndex = 19300;
+                }
             }
         }
     }
@@ -2178,49 +2201,35 @@ void RemoveObjectInRange(int iModel, RwV3d vecPos, float fRange)
             if(iModel == -1 || pEntity->m_nModelIndex == iModel)
             {
                 float fDistance = GetDistance(pEntity->GetPosition(), vecPos);
-                if(fDistance <= fRange) HideEntity(pEntity);
+                if(fDistance <= fRange) {
+                    HideEntity(pEntity);
+                    //pEntity->m_nModelIndex = 19300;
+                }
             }
         }
     }
 }
-
-struct stOccluders {
-    unsigned short fMidX;
-    unsigned short fMidY;
-    unsigned short fMidZ;
-    unsigned short fWidthX;
-    unsigned short fWidthY;
-    unsigned short fHeight;
-    char cRotZ;
-    char cRotY;
-    char cRotX;
-    char cPad;
-    unsigned short nFlags;
-};
-VALIDATE_SIZE(stOccluders, 0x12);
-
+#include "COcclusion.h"
 void RemoveOccludersInRadius(RwV3d vecPos, float fRadius)
 {
-    int iOccludersOnMap = *(uint32_t *)(g_libGTASA+(VER_x32 ? 0xA45790:0xCE8538));
-    if(iOccludersOnMap >= 1)
+    if(COcclusion::NumOccludersOnMap >= 1)
     {
-        stOccluders* dwOccluders = (stOccluders *)(g_libGTASA + (VER_x32 ? 0xA41140 : 0xCE3EE8));
-        for(int i = 0; i <= iOccludersOnMap; i++)
+        for(int i = 0; i <= COcclusion::NumOccludersOnMap; i++)
         {
             CVector vecOccluderPos;
-            vecOccluderPos.x = (float)dwOccluders[i].fMidX * 0.25;
-            vecOccluderPos.y = (float)dwOccluders[i].fMidY * 0.25;
-            vecOccluderPos.z = (float)dwOccluders[i].fMidZ * 0.25;
+            vecOccluderPos.x = (float)COcclusion::aOccluders[i].fMidX * 0.25;
+            vecOccluderPos.y = (float)COcclusion::aOccluders[i].fMidY * 0.25;
+            vecOccluderPos.z = (float)COcclusion::aOccluders[i].fMidZ * 0.25;
 
             float fDistance = GetDistance(vecOccluderPos, vecPos);
             if(fDistance <= fRadius)
             {
-                dwOccluders[i].fMidX = 0;
-                dwOccluders[i].fMidY = 0;
-                dwOccluders[i].fMidZ = 0;
-                dwOccluders[i].fWidthX = 0;
-                dwOccluders[i].fWidthY = 0;
-                dwOccluders[i].fHeight = 0;
+                COcclusion::aOccluders[i].fMidX = 0;
+                COcclusion::aOccluders[i].fMidY = 0;
+                COcclusion::aOccluders[i].fMidZ = 0;
+                COcclusion::aOccluders[i].fWidthX = 0;
+                COcclusion::aOccluders[i].fWidthY = 0;
+                COcclusion::aOccluders[i].fHeight = 0;
             }
         }
     }
@@ -2589,6 +2598,13 @@ void GameResetStats()
 // 0.3.7
 void ProjectMatrix(CVector* vecOut, CMatrix* mat, CVector* vecPos)
 {
+    if(vecOut == nullptr || mat == nullptr || vecPos == nullptr)
+    {
+        return;
+    }
+    if (mat->m_up == nullptr || mat->m_forward == nullptr || mat->m_right == nullptr || mat->m_pos == nullptr) {
+        return;
+    }
     vecOut->x = mat->m_up.x * vecPos->z + mat->m_forward.x * vecPos->y + mat->m_right.x * vecPos->x + mat->m_pos.x;
     vecOut->y = mat->m_up.y * vecPos->z + mat->m_forward.y * vecPos->y + mat->m_right.y * vecPos->x + mat->m_pos.y;
     vecOut->z = mat->m_up.z * vecPos->z + mat->m_forward.z * vecPos->y + mat->m_right.z * vecPos->x + mat->m_pos.z;
@@ -2884,52 +2900,39 @@ bool IsGameEntityArePlaceable(CEntityGTA *pEntity)
     return false;
 }
 
-RpMaterial* ObjectMaterialCallBack(RpMaterial* material, void* data)
+RpAtomic* ObjectMaterialCallBack(RpAtomic* rpAtomic, CObject* pObject)
 {
-    CObject* pObject = (CObject*)data;
-    RpAtomic* rpAtomic = (RpAtomic*)pObject->m_pEntity->m_pRwAtomic;
-    for (int i = 0; i < rpAtomic->geometry->matList.numMaterials; i++)
+    if(!pObject) return rpAtomic;
+    int iTotalEntries = rpAtomic->geometry->matList.numMaterials;
+    if (iTotalEntries > 16) iTotalEntries = 16; // fix fucking bug :|
+    for (int i = 0; i < iTotalEntries; i++)
     {
-        if(i >= 16) break;
-        if(rpAtomic->geometry->matList.materials[i] == material)
-        {
-            if(pObject->m_MaterialTexture[i])
-                rpAtomic->geometry->matList.materials[i]->texture = reinterpret_cast<RwTexture *>(pObject->m_MaterialTexture[i]);
-
-            if(pObject->m_dwMaterialColor[i]) {
-                rpAtomic->geometry->flags = rpAtomic->geometry->flags & 0xFFFFFFF7 | 0x40;
-                RwRGBA *r = (RwRGBA *) &pObject->m_dwMaterialColor[i];
-                rpAtomic->geometry->matList.materials[i]->color = *r;
-                rpAtomic->geometry->matList.materials[i]->surfaceProps.ambient = 1.0f;	// ambient
-                rpAtomic->geometry->matList.materials[i]->surfaceProps.specular = 0.0f;	// specular
-                rpAtomic->geometry->matList.materials[i]->surfaceProps.diffuse = 1.0f;	// diffuse
-            }
-            break;
-        }
+        if(pObject->m_MaterialTexture[i])
+            rpAtomic->geometry->matList.materials[i]->texture = (RwTexture*)pObject->m_MaterialTexture[i];
+            /*material->color.red = pObject->m_dwMaterialColor[i]->red;
+            material->color.green = pObject->m_dwMaterialColor[i]->green;
+            material->color.blue = pObject->m_dwMaterialColor[i]->blue;
+            material->color.alpha = pObject->m_dwMaterialColor[i]->alpha;*/
     }
 
-    return material;
+    return rpAtomic;
 }
 
-RpMaterial* ObjectMaterialTextCallBack(RpMaterial* material, void* data)
+RpAtomic* ObjectMaterialTextCallBack(RpAtomic* rpAtomic, CObject* pObject)
 {
-    CObject* pObject = (CObject*)data;
-    RpAtomic* rpAtomic = (RpAtomic*)pObject->m_pEntity->m_pRwAtomic;
+    if(!pObject->m_MaterialTextTexture || rpAtomic->object.object.type != 1) return rpAtomic;
 
-    if(!pObject->m_MaterialTextTexture || rpAtomic->object.object.type != 1) return material;
-
-    for (int i = 0; i < rpAtomic->geometry->matList.numMaterials; i++)
+    int iTotalEntries = rpAtomic->geometry->matList.numMaterials;
+    if (iTotalEntries > 16) iTotalEntries = 16; // fix fucking bug :|
+    for (int i = 0; i < iTotalEntries; i++)
     {
-        if(i >= 16) break;
-        if(rpAtomic->geometry->matList.materials[i] == material) {
-            if (pObject->m_MaterialTextTexture[i]) {
-                rpAtomic->geometry->matList.materials[i]->texture = reinterpret_cast<RwTexture *>(pObject->m_MaterialTextTexture[i]);
-            }
-            break;
+        if(pObject->m_MaterialTextTexture[i])
+        {
+            rpAtomic->geometry->matList.materials[i]->texture = (RwTexture*)pObject->m_MaterialTextTexture[i];
         }
     }
 
-    return material;
+    return rpAtomic;
 }
 
 void SetScissorRect(void* pRect)

@@ -15,7 +15,7 @@ extern MaterialTextGenerator* pMaterialTextGenerator;
 CObject::CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance, uint8_t bAttached)
 {
     if(!CModelInfo::GetModelInfo(iModel))
-        iModel = 18631; // ��������
+        iModel = 18631; // ????????
 
 	m_AttachedVehicleID = INVALID_VEHICLE_ID;
 	m_AttachedObjectID = INVALID_OBJECT_ID;
@@ -33,9 +33,13 @@ CObject::CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance
 	m_bSyncRotation = true;
 
 	ScriptCommand(&create_object, iModel, vecPos.x, vecPos.y, vecPos.z, &m_dwGTAId);
+    if(!m_dwGTAId) return;
+
     ScriptCommand(&put_object_at, m_dwGTAId, vecPos.x, vecPos.y, vecPos.z);
 
 	m_pEntity = GamePool_Object_GetAt(m_dwGTAId);
+
+    if(!m_pEntity) return;
 
     m_byteMoving = 0;
     m_fMoveSpeed = 0.0f;
@@ -363,7 +367,7 @@ void CObject::SetMaterial(int iModel, int iMaterialIndex, char* txdname, char* t
 void CObject::SetMaterialText(int index, char* text, int materialSize, char* fontname, int fontSize, bool bold,
 	uint32_t dwFontColor, uint32_t dwBackColor, int textAlignment)
 {
-	if (index > 16) return;
+	if (index >= 16) return;
 
 	if (m_MaterialTextTexture[index]) {
         RwTextureDestroy(reinterpret_cast<RwTexture *>(m_MaterialTextTexture[index]));

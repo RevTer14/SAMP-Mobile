@@ -280,13 +280,17 @@ public class MainActivity extends AppCompatActivity {
                     for (Fragment fragment2 : fragment.getChildFragmentManager().getFragments()) {
                         if ((fragment2 instanceof ServerPagesItemFragment) && ((ServerPagesItemFragment) fragment2).getPage() == 0) {
                             RecyclerView view = Objects.requireNonNull( fragment2.requireView().findViewById(R.id.server_recycler));
-                            RecyclerView.Adapter adapter = view.getAdapter();
-                            view.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    adapter.notifyDataSetChanged();
+                            if(view != null) {
+                                RecyclerView.Adapter adapter = view.getAdapter();
+                                if(adapter != null) {
+                                    view.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            adapter.notifyDataSetChanged();
+                                        }
+                                    });
                                 }
-                            });
+                            }
                         }
                     }
                 }
