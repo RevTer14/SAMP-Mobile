@@ -125,7 +125,7 @@ public final class SampQueryAPI {
     }
 
     /* renamed from: d */
-    public final boolean mo7166d() {
+    public boolean mo7166d() {
         DatagramSocket datagramSocket;
         DatagramPacket datagramPacket;
         byte[] data;

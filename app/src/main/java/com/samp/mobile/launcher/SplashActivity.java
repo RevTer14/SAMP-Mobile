@@ -96,6 +96,7 @@ public class SplashActivity extends AppCompatActivity {
 
                                 finishAndRemoveTask();
                                 System.exit(0);
+                                dialog.dismiss();
                             }
                         })
                         .setNegativeButton("", null);
@@ -195,6 +196,7 @@ public class SplashActivity extends AppCompatActivity {
                                             intent.putExtra("mode", UpdateActivity.UpdateMode.GameDataUpdate.name());
                                             startActivity(intent);
                                             finish();
+                                            dialog.dismiss();
                                         }
                                     })
                                     .setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -202,6 +204,7 @@ public class SplashActivity extends AppCompatActivity {
                                         public void onClick(DialogInterface dialogInterface, int i) {
                                             startActivity(new Intent(SplashActivity.this, MainActivity.class));
                                             finish();
+                                            dialogInterface.dismiss();
                                         }
                                     });
                             AlertDialog alert = builder.create();
@@ -289,6 +292,7 @@ public class SplashActivity extends AppCompatActivity {
             new SharedPreferenceCore().setBoolean(getApplicationContext(), "MODIFIED_DATA", false);
             new SharedPreferenceCore().setBoolean(getApplicationContext(), "AML", false);
             new SharedPreferenceCore().setBoolean(getApplicationContext(), "CLEO", false);
+            new SharedPreferenceCore().setBoolean(getApplicationContext(), "MLOADER", false);
             prefs.edit().putBoolean("firstrun", false).commit();
         }
     }

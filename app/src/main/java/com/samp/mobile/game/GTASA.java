@@ -3,11 +3,13 @@ package com.samp.mobile.game;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
 import com.bytedance.shadowhook.ShadowHook;
 import com.joom.paranoid.Obfuscate;
+import com.samp.mobile.launcher.util.SharedPreferenceCore;
 import com.samp.mobile.launcher.util.SignatureChecker;
 import com.wardrumstudios.utils.WarMedia;
 
@@ -97,6 +99,14 @@ public class GTASA extends WarMedia {
         //  wantsAccelerometer = true;
 
         super.onCreate(bundle);
+
+        /*if (new SharedPreferenceCore().getBoolean(this, "CLEO")) {
+            try {
+                System.loadLibrary("CLEO");
+            } catch (ExceptionInInitializerError | UnsatisfiedLinkError e) {
+                Log.e("AXL", e.getMessage());
+            }
+        }*/
     }
 
     public void onDestroy()

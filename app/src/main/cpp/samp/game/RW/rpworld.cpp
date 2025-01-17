@@ -7,7 +7,8 @@
 #include "../vendor/armhook/patch.h"
 
 RpClump* RpClumpForAllAtomics(RpClump* clump, RpAtomicCallBack callback, void* data) {
-    return CHook::CallFunction<RpClump*>(g_libGTASA + (VER_x32 ? 0x00213D66 + 1 : 0x2BA020), clump, callback, data);
+    if(clump)
+        return CHook::CallFunction<RpClump*>(g_libGTASA + (VER_x32 ? 0x00213D66 + 1 : 0x2BA020), clump, callback, data);
 }
 
 RpGeometry* RpGeometryForAllMaterials(RpGeometry* geometry, RpMaterialCallBack fpCallBack, void* data) {

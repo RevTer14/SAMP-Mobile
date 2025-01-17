@@ -56,6 +56,7 @@ CTaskSimpleJetPack* CPedIntelligence::GetTaskJetPack() {
 //    if (m_pPed->IsPlayer()) {
 //        return CTask::DynCast<CTaskSimpleJetPack>(m_TaskMgr.GetSimplestActiveTask());
 //    }
+    //CHook::CallFunction<CTaskSimpleJetPack*>("_ZNK16CPedIntelligence14GetTaskJetPackEv");
     return nullptr;
 }
 

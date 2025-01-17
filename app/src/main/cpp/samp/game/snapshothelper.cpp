@@ -55,28 +55,21 @@ void CSnapShotHelper::SetUpScene()
 // 0.3.7
 RwTexture* CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, CVector* vecRot, float fZoom)
 {
-	FLog("Object snapshot: %d", iModel);
+    if(iModel > 20000) return nullptr;
+    FLog("CreateObjectSnapShot: %d, %f, %f, %f", iModel, vecRot->x, vecRot->y, vecRot->z);
+    CStreaming::TryLoadModel(iModel);
+
+    auto pRwObject = ModelInfoCreateInstance(iModel);
+    if (pRwObject == nullptr) {
+        FLog("pRwObject no rw object");
+        return nullptr;
+    }
 
 	RwRaster* raster = RwRasterCreate(256, 256, 32, rwRASTERFORMAT8888 | rwRASTERTYPECAMERATEXTURE);
 	// RwTextureCreate
 	RwTexture* bufferTexture = RwTextureCreate(raster);
 
-    FLog("Object snapshot 1");
-
 	if (!raster || !bufferTexture) return nullptr;
-
-	if (iModel == 1373 || iModel == 3118 || iModel == 3552 || iModel == 3553)
-		iModel = 18631;
-
-    if (!CStreaming::TryLoadModel(iModel))
-        iModel = 18631;
-
-    if(!CModelInfo::GetModelInfo(iModel))
-        return nullptr;
-
-    FLog("Object snapshot 2");
-	RwObject* atomic = ModelInfoCreateInstance(iModel);
-	if (!atomic) return nullptr;
 
 	CVector vec;
 	vec.x = 0.0f;
@@ -85,8 +78,7 @@ RwTexture* CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, C
 
     float fRadius = CModelInfo::GetModelInfo(iModel)->m_pColModel->GetBoundRadius();
     CVector vecCenter = CModelInfo::GetModelInfo(iModel)->m_pColModel->GetBoundCenter();
-    FLog("Object snapshot 3");
-	RwFrame* parent = static_cast<RwFrame *>(atomic->parent);
+	RwFrame* parent = static_cast<RwFrame *>(pRwObject->parent);
     if(!parent) return nullptr;
     fZoom = (-0.1f - fRadius * 2.25f) * fZoom;
 	if (parent)
@@ -113,32 +105,23 @@ RwTexture* CSnapShotHelper::CreateObjectSnapShot(int iModel, uint32_t dwColor, C
 			}
 		}
 	}
-    FLog("Object snapshot 4");
     m_camera->frameBuffer = raster;
-    FLog("Object snapshot 5");
     CVisibilityPlugins::SetRenderWareCamera(m_camera);
     RwCameraClear(m_camera, reinterpret_cast<RwRGBA *>(&dwColor), 3);
 	RwCameraBeginUpdate((RwCamera*)m_camera);
 	RpWorldAddLight(Scene.m_pRpWorld, m_light);
-    FLog("Object snapshot 6");
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)true);
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)true);
 	RwRenderStateSet(rwRENDERSTATESHADEMODE, (void*)rwSHADEMODEGOURAUD);
 	RwRenderStateSet(rwRENDERSTATEALPHATESTFUNCTIONREF, (void*)0);
 	RwRenderStateSet(rwRENDERSTATECULLMODE, (void*)rwCULLMODENACULLMODE);
 	RwRenderStateSet(rwRENDERSTATEFOGENABLE, (void*)false);
-    FLog("Object snapshot 7");
 	// DefinedState
 	DefinedState();
-    FLog("Object snapshot 8");
-	RenderClumpOrAtomic((uintptr_t)atomic);
-    FLog("Object snapshot 9");
+	RenderClumpOrAtomic((uintptr_t)pRwObject);
 	RwCameraEndUpdate(m_camera);
-    FLog("Object snapshot 10");
 	RpWorldRemoveLight(Scene.m_pRpWorld, m_light);
-    FLog("Object snapshot 11");
-	DestroyAtomicOrClump(reinterpret_cast<uintptr_t>(atomic));
-    FLog("Object snapshot 12");
+	DestroyAtomicOrClump(reinterpret_cast<uintptr_t>(pRwObject));
 	return bufferTexture;
 }
 // 0.3.7
@@ -217,8 +200,6 @@ RwTexture* CSnapShotHelper::CreatePedSnapShot(int iModel, uint32_t dwColor, CVec
 
 RwTexture* CSnapShotHelper::CreateVehicleSnapShot(int iModel, uint32_t dwColor, CVector* vecRot, float fZoom, uint32_t dwColor1, uint32_t dwColor2)
 {
-	FLog("Vehicle snapshot: %d", iModel);
-
 	RwRaster* raster = RwRasterCreate(256, 256, 32, rwRASTERFORMAT8888 | rwRASTERTYPECAMERATEXTURE);
 	// RwTextureCreate
 	RwTexture* bufferTexture = RwTextureCreate(raster);
@@ -230,7 +211,6 @@ RwTexture* CSnapShotHelper::CreateVehicleSnapShot(int iModel, uint32_t dwColor, 
 		iModel = 537;
 	}
 
-    FLog("Vehicle snapshot1");
 	CVehicle* pVehicle = new CVehicle(iModel, 0.0f, 0.0f, 50.0f, 0.0f, false, false);
 
 	if (!raster || !bufferTexture || !pVehicle || !pVehicle->m_pVehicle) {
@@ -240,66 +220,51 @@ RwTexture* CSnapShotHelper::CreateVehicleSnapShot(int iModel, uint32_t dwColor, 
 
 	//pVehicle->m_pVehicle->SetGravityProcessing(false);
 	pVehicle->m_pVehicle->SetCollisionChecking(false);
-    FLog("Vehicle snapshot2");
 	float radius = CModelInfo::GetModelInfo(iModel)->m_pColModel->GetBoundRadius();
 	float posY = (-1.0f - (radius + radius)) * fZoom;
 	if (pVehicle->GetVehicleSubtype() == VEHICLE_SUBTYPE_BOAT) {
 		posY = -5.5f - radius * 2.5f;
 	}
-    FLog("Vehicle snapshot3");
 	pVehicle->m_pVehicle->SetPosn(0.0f, posY, 50.0f);
 	if (dwColor1 != 0xFFFFFFFF && dwColor2 != 0xFFFFFFFF) {
 		pVehicle->SetColor(dwColor1, dwColor2);
 	}
-    FLog("Vehicle snapshot4");
 	RwMatrix mat = pVehicle->m_pVehicle->GetMatrix().ToRwMatrix();
 
-    FLog("Vehicle snapshot5");
     CVector axis { 1.0f, 0.0f, 0.0f };
     if (vecRot->x != 0.0f)
     {
-        FLog("Vehicle snapshot6");
         RwMatrixRotate(&mat, &axis, vecRot->x);
     }
     axis.Set( 0.0f, 1.0f, 0.0f );
     if (vecRot->y != 0.0f)
     {
-        FLog("Vehicle snapshot7");
         RwMatrixRotate(&mat, &axis, vecRot->y);
     }
     axis.Set( 0.0f, 0.0f, 1.0f );
     if (vecRot->z != 0.0f)
     {
-        FLog("Vehicle snapshot8");
         RwMatrixRotate(&mat, &axis, vecRot->z);
     }
 
-    FLog("Vehicle snapshot9");
 	pVehicle->m_pVehicle->SetMatrix((CMatrix&)mat);
     pVehicle->m_pVehicle->UpdateRW();
-    FLog("Vehicle snapshot10");
     m_camera->frameBuffer = raster;
-    FLog("Vehicle snapshot10.5");
     CVisibilityPlugins::SetRenderWareCamera(m_camera);
-    FLog("Vehicle snapshot10.9");
     RwCameraClear(m_camera, reinterpret_cast<RwRGBA *>(&dwColor), 3);
-    FLog("Vehicle snapshot11");
 	RwCameraBeginUpdate((RwCamera*)m_camera);
 	RpWorldAddLight(Scene.m_pRpWorld, m_light);
-    FLog("Vehicle snapshot12");
 	RwRenderStateSet(rwRENDERSTATEZTESTENABLE, (void*)true);
 	RwRenderStateSet(rwRENDERSTATEZWRITEENABLE, (void*)true);
 	RwRenderStateSet(rwRENDERSTATESHADEMODE, (void*)rwSHADEMODEGOURAUD);
 	RwRenderStateSet(rwRENDERSTATEFOGENABLE, (void*)false);
 
 	DefinedState();
-    FLog("Vehicle snapshot13");
 	pVehicle->m_pVehicle->Add();
 
     RenderEntity(pVehicle->m_pVehicle);
 	RwCameraEndUpdate((RwCamera*)m_camera);
 	RpWorldRemoveLight(Scene.m_pRpWorld, m_light);
-    FLog("Vehicle snapshot14");
 	pVehicle->m_pVehicle->Remove();
 	delete pVehicle;
 

@@ -2,6 +2,7 @@ package com.samp.mobile.launcher.adapters;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -15,6 +16,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.joom.paranoid.Obfuscate;
@@ -24,6 +26,7 @@ import com.samp.mobile.game.SAMP;
 import com.samp.mobile.launcher.MainActivity;
 import com.samp.mobile.launcher.util.ButtonAnimator;
 import com.samp.mobile.launcher.util.SAMPServerInfo;
+import com.samp.mobile.launcher.util.SharedPreferenceCore;
 
 import org.ini4j.Wini;
 
@@ -84,9 +87,6 @@ public class ServerInformationFragment extends Dialog {
 
         mLanguage.setText(sampServerInfo.getLanguage());
 
-        File file = new File(activity.getExternalFilesDir(null), "favoriteservers.txt");
-        File file2 = new File(activity.getExternalFilesDir(null), "favoriteservers_temp.txt");
-
         Button mConnect = findViewById(R.id.server_connect);
         mConnect.setOnTouchListener(new ButtonAnimator(getContext(), mConnect));
         mConnect.setOnClickListener(new View.OnClickListener() {
@@ -103,8 +103,29 @@ public class ServerInformationFragment extends Dialog {
                         e.printStackTrace();
                     }
                 }
-                activity.startActivity(new Intent(activity, SAMP.class));
-                activity.finish();
+
+                File file1 = new File(activity.getExternalFilesDir(null) + "/Text/american.dxt");
+                if(!file1.exists())
+                {
+                    File file2 = new File(activity.getExternalFilesDir(null) + "/Textures/fonts/RussianFont.png");
+                    if(!file2.exists())
+                    {
+                        Toast.makeText(activity, "Some important files in your modified data are missing, such as \"Text\" and \"Textures\"" +
+                                "Please, fix it and after try again. ( You can get that files in my discord channel )", Toast.LENGTH_LONG).show();
+
+                        dismiss();
+                    }
+                    else {
+                        activity.startActivity(new Intent(activity, SAMP.class));
+                        activity.finish();
+                        dismiss();
+                    }
+                }
+                else {
+                    activity.startActivity(new Intent(activity, SAMP.class));
+                    activity.finish();
+                    dismiss();
+                }
             }
         });
 

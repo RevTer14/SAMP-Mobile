@@ -9,23 +9,6 @@ struct CEntityGTA;
 struct CPedGTA;
 #include "../game/Core/Rect.h"
 
-enum eWidgetType {
-    TYPE_NONE = 0,
-	TYPE_PUNCH,
-	TYPE_SPRINT,
-	TYPE_ENTERCAR,
-	TYPE_ACCELERATE,
-    TYPE_BRAKE,
-    TYPE_SIZE
-};
-
-enum eWidgetState {
-    STATE_NONE,
-    STATE_FIXED
-};
-
-extern uintptr_t g_pWidgets[TYPE_SIZE];
-
 CPedGTA* GamePool_FindPlayerPed();
 CPedGTA* GamePool_Ped_GetAt(int iID);
 int GamePool_Ped_GetIndex(CPedGTA* pActor);
@@ -99,12 +82,6 @@ void RwMatrixInvert(RwMatrix *matOut, RwMatrix *matIn);
 
 int GetTaskTypeFromTask(uint32_t *task);
 int Game_PedStatPrim(int model_id);
-
-eWidgetType GetWidgetTypeFromWidget(uintptr_t pWidget);
-void SetWidgetFromName(const char* name, uintptr_t pWidget);
-void SetWidgetFromId(int idWidget, uintptr_t pWidget);
-eWidgetState ProcessFixedWidget(uintptr_t pWidget); 
-eWidgetState ProcessFixedWidgetFromId(int iWidgetId);
 
 uint32_t GetUpperCaseKey(const char* szUpper);
 

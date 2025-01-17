@@ -328,12 +328,12 @@ void CTextDraw::SnapshotProcess()
     {
         if (!CModelInfo::GetModelInfo(m_TextDrawData.wModelID))
             m_TextDrawData.wModelID = 18631;
-        /*snapshot = (uintptr_t)pSnapShotHelper->CreateObjectSnapShot(
+        snapshot = (uintptr_t)pSnapShotHelper->CreateObjectSnapShot(
                 m_TextDrawData.wModelID,
                 m_TextDrawData.dwBackgroundColor,
                 &m_TextDrawData.vecRot,
                 m_TextDrawData.fZoom
-        );*/
+        );
     }
 
     if (snapshot)

@@ -118,7 +118,7 @@ void RenderEffects() {
     //DebugModules::Render3D();
 }
 
-void MainLoop();
+/*void MainLoop();
 void(*Render2dStuff)();
 void Render2dStuff_hook()
 {
@@ -130,8 +130,8 @@ void Render2dStuff_hook()
     }
     if (pUI) pUI->render();
     return;
-}
-/*void Render2dStuff()
+}*/
+void Render2dStuff()
 {
     if( CHook::CallFunction<bool>(g_libGTASA + (VER_x32 ? 0x001BB7F4 + 1 : 0x24EA90)) ) // emu_IsAltRenderTarget()
         CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x001BC20C + 1 : 0x24F5B8)); // emu_FlushAltRenderTarget()
@@ -144,31 +144,27 @@ void Render2dStuff_hook()
     RwRenderStateSet(rwRENDERSTATEFOGENABLE, RWRSTATE(rwRENDERSTATENARENDERSTATE));
     RwRenderStateSet(rwRENDERSTATECULLMODE, RWRSTATE(rwCULLMODECULLNONE));
 
+    //((void (*)()) (g_libGTASA + (VER_x32 ? 0x00437B0C + 1 : 0x51CFF0)))(); // CHud::DrawRadar
+    //CHook::CallFunction<void>("_ZN4CHud14DrawScriptTextEh", true);
+    CHook::CallFunction<void>("_ZN4CHud4DrawEv");
+    //	GPS::Draw();
+    //
+    ((void(*)(bool) )(g_libGTASA + (VER_x32 ? 0x002B0BD8 + 1 : 0x36FB00)) )(false); // CTouchInterface::DrawAll
+
+    CHook::CallFunction<void>("_Z12emu_GammaSeth", 1);
+
+    ((void (*)(bool)) (g_libGTASA + (VER_x32 ? 0x0054BDD4 + 1 : 0x66B678)))(1u); // CMessages::Display - gametext
+    ((void (*)(bool)) (g_libGTASA + (VER_x32 ? 0x005A9120 + 1 : 0x6CCEA0)))(1u); // CFont::RenderFontBuffer
+    CHook::CallFunction<void>("_Z12emu_GammaSeth", 0);
+
     if(pNetGame)
     {
         CTextDrawPool* pTextDrawPool = pNetGame->GetTextDrawPool();
         if(pTextDrawPool) pTextDrawPool->Draw();
     }
 
-    //CCrossHair::Render();
-
-    //((void (*)()) (g_libGTASA + (VER_x32 ? 0x00437B0C + 1 : 0x51CFF0)))(); // CHud::DrawRadar
-    CHook::CallFunction<void>("_ZN4CHud14DrawEv");
-    //	GPS::Draw();
-    //
-    ((void(*)(bool) )(g_libGTASA + (VER_x32 ? 0x002B0BD8 + 1 : 0x36FB00)) )(false); // CTouchInterface::DrawAll
-
     if (pUI) pUI->render();
-
-    //CSpecialFX::Render2DFXs(void)	00000000006E5A78
-    //CSpecialFX::Render2DFXs(void)	005C156C
-    CHook::CallFunction<void>(g_libGTASA+(VER_x32?0x1C0750+1:0x252CE4), 1);
-    CHook::CallFunction<void>(g_libGTASA+(VER_x32?0x5C156C+1:0x6E5A78));
-
-    ((void (*)(bool)) (g_libGTASA + (VER_x32 ? 0x0054BDD4 + 1 : 0x66B678)))(1u); // CMessages::Display - gametext
-    ((void (*)(bool)) (g_libGTASA + (VER_x32 ? 0x005A9120 + 1 : 0x6CCEA0)))(1u); // CFont::RenderFontBuffer
-    CHook::CallFunction<void>(g_libGTASA+(VER_x32?0x1C0750+1:0x252CE4), 0);
-}*/
+}
 
 /* =============================================================================== */
 
@@ -878,6 +874,7 @@ void CRenderer_RenderEverythingBarRoads_hook() {
 #include "game/Pipelines/CustomBuilding/CustomBuildingDNPipeline.h"
 #include "COcclusion.h"
 #include "RealTimeShadowManager.h"
+#include "game/Widgets/WidgetGta.h"
 
 CFPSFix g_fps;
 
@@ -938,76 +935,7 @@ int RwFrameAddChild_hook(int a1, int a2)
 	return RwFrameAddChild(a1, a2);
 }
 
-// widget fix
-uintptr_t (*CWidget)(uintptr_t thiz, const char* name, int a3, int a4, int a5, int a6);
-uintptr_t CWidget_hook(uintptr_t thiz, const char* name, int a3, int a4, int a5, int a6)
-{
-	// Log(OBFUSCATE("[debug:hooks:CWidget]: New Widget: \"%s\" 0x%X"), name, thiz-g_libGTASA);
-
-	SetWidgetFromName(name, thiz);
-	return CWidget(thiz, name, a3, a4, a5, a6);
-}
-
-void (*CWidget__Update)(uintptr_t pWidget);
-void CWidget__Update_hook(uintptr_t pWidget)
-{
-	if(pNetGame)
-	{
-		switch(ProcessFixedWidget(pWidget))
-		{
-			case STATE_NONE: break;
-			case STATE_FIXED: return;
-		}
-	}
-
-	CWidget__Update(pWidget);
-}
-
-void (*CWidget__SetEnabled)(uintptr_t pWidget, bool bEnabled);
-void CWidget__SetEnabled_hook(uintptr_t pWidget, bool bEnabled)
-{
-	if(pNetGame)
-	{
-		switch(ProcessFixedWidget(pWidget))
-		{
-			case STATE_NONE: break;
-			case STATE_FIXED:
-				bEnabled = false;
-				break;
-		}
-	}
-
-	CWidget__SetEnabled(pWidget, bEnabled);
-}
-
 int iLastTouchedWidgetId = -1;
-
-int (*CTouchInterface__IsTouched)(int iWidgetId, int iUnk, int iEnableWidget);
-int CTouchInterface__IsTouched_hook(int iWidgetId, int iUnk, int iEnableWidget)
-{
-	uintptr_t dwRetAddr = 0;
-	__asm__ volatile ("mov %0, lr" : "=r" (dwRetAddr));
-	dwRetAddr -= g_libGTASA;
-
-	if(pNetGame)
-	{
-		switch(ProcessFixedWidgetFromId(iWidgetId))
-		{
-			case STATE_NONE: break;
-			case STATE_FIXED:
-				iEnableWidget = 0;
-				break;
-		}
-	}
-
-	int iTouched = CTouchInterface__IsTouched(iWidgetId, iUnk, iEnableWidget);
-	if(iTouched && iEnableWidget)
-	{
-		iLastTouchedWidgetId = iWidgetId;
-	}
-
-	return iTouched;
-}
 
 int iLastReleasedWidgetId = -1;
 
@@ -1142,15 +1070,6 @@ void MainMenuScreen__OnExit_hook()
 	pNetGame->GetRakClient()->Disconnect(0);
 
 	pJavaWrapper->exitGame();
-}
-
-int (*mpg123_param)(void* mh, int key, long val, int ZERO, double fval);
-int mpg123_param_hook(void* mh, int key, long val, int ZERO, double fval) {
-	// 0x2000 = MPG123_SKIP_ID3V2
-	// 0x200  = MPG123_FUZZY
-	// 0x100  = MPG123_SEEKBUFFER
-	// 0x40   = MPG123_GAPLESS
-	return mpg123_param(mh, key, val | (0x2000 | 0x200 | 0x100 | 0x40), ZERO, fval);
 }
 
 void (*rqVertexBufferSelect)(unsigned int **result);
@@ -1387,15 +1306,6 @@ void InstallSAMPHooks()
 	InstallCrashFixHooks();
 	InstallWeaponFireHooks();
 	HookCPad();
-}
-
-void InstallWidgetHooks()
-{
-	CHook::InstallPLT(g_libGTASA+0x66F660, (uintptr_t)CWidget_hook, (uintptr_t*)&CWidget);
-	CHook::InstallPLT(g_libGTASA+0x66FBCC, (uintptr_t)CWidget__Update_hook, (uintptr_t*)&CWidget__Update);
-	CHook::InstallPLT(g_libGTASA+0x672A0C, (uintptr_t)CWidget__SetEnabled_hook, (uintptr_t*)&CWidget__SetEnabled);
-	CHook::InstallPLT(g_libGTASA+0x674388, (uintptr_t)CTouchInterface__IsTouched_hook, (uintptr_t*)&CTouchInterface__IsTouched);
-	CHook::InstallPLT(g_libGTASA+0x66F6E0, (uintptr_t)CTouchInterface__IsReleased_hook, (uintptr_t*)&CTouchInterface__IsReleased);
 }
 
 void ReadSettingFile();
@@ -1797,6 +1707,17 @@ void CStreaming__Init2_hook()
     *(uint32_t*)(g_libGTASA+(VER_x32 ? 0x00685FA0:0x85EBD8)) = 536870912;
 }
 
+int(*mpg123_param)(void* mh, int key, long val, int ZERO, double fval);
+int mpg123_param_hook(void* mh, int key, long val, int ZERO, double fval)
+{
+    // 0x2000 = MPG123_SKIP_ID3V2
+    // 0x200  = MPG123_FUZZY
+    // 0x100  = MPG123_SEEKBUFFER
+    // 0x40   = MPG123_GAPLESS
+    return mpg123_param(mh, key, val | (0x2000 | 0x200 | 0x100 | 0x40), ZERO, fval);
+}
+
+#include "Widgets/TouchInterface.h"
 void InjectHooks()
 {
     FLog("InjectHooks");
@@ -1823,8 +1744,8 @@ void InjectHooks()
     CMatrix::InjectHooks(); //
     CCollision::InjectHooks(); //
     //CIdleCam::InjectHooks(); //
-    //CTouchInterface::InjectHooks(); //
-    //CWidgetGta::InjectHooks();
+    CTouchInterface::InjectHooks(); //
+    CWidgetGta::InjectHooks();
     CEntityGTA::InjectHooks(); //
     CPhysical::InjectHooks(); //
     CAnimManager::InjectHooks(); //
@@ -1899,7 +1820,7 @@ void SetUpGLHooks();
 void InstallHooks()
 {
     //SetUpGLHooks();
-    CHook::InlineHook("_Z13Render2dStuffv", &Render2dStuff_hook, &Render2dStuff);
+    CHook::Redirect("_Z13Render2dStuffv", &Render2dStuff);
     CHook::Redirect("_Z13RenderEffectsv", &RenderEffects);
     CHook::InlineHook("_Z14AND_TouchEventiiii", &AND_TouchEvent_hook, &AND_TouchEvent);
 
@@ -1922,7 +1843,7 @@ void InstallHooks()
     CHook::InlineHook("_ZN7CWeapon18ProcessLineOfSightERK7CVectorS2_R9CColPointRP7CEntity11eWeaponTypeS6_bbbbbbb", &CWeapon__ProcessLineOfSight_hook, &CWeapon__ProcessLineOfSight);
     CHook::InlineHook("_ZN11CBulletInfo9AddBulletEP7CEntity11eWeaponType7CVectorS3_", &CBulletInfo_AddBullet_hook, &CBulletInfo_AddBullet);
 
-    CHook::InlineHook("_ZN11CFileLoader18LoadObjectInstanceEPKc", &CFileLoader__LoadObjectInstance_hook, &CFileLoader__LoadObjectInstance);
+    //CHook::InlineHook("_ZN11CFileLoader18LoadObjectInstanceEPKc", &CFileLoader__LoadObjectInstance_hook, &CFileLoader__LoadObjectInstance);
 
     CHook::InlineHook("_ZN6CRadar9ClearBlipEi", &CRadar_ClearBlip_hook, &CRadar_ClearBlip);
 
@@ -1981,6 +1902,13 @@ void InstallHooks()
     CHook::InlineHook("_ZN5CDraw6SetFOVEfb", &CDraw__SetFOV_hook, &CDraw__SetFOV);
 
     CHook::InlineHook("_ZN10CStreaming5Init2Ev", &CStreaming__Init2_hook, &CStreaming__Init2);
+
+/*#if VER_x32
+    CHook::InstallPLT( g_libGTASA + 0x66F3D4, &mpg123_param_hook, &mpg123_param);
+#else
+    CHook::Write(g_libGTASA + 0x339134, 0x52846C02);
+    CHook::Write(g_libGTASA + 0x339404, 0x52846C02);
+#endif*/
 
     HookCPad();
 }

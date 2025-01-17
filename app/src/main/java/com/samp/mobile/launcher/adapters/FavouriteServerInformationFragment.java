@@ -11,6 +11,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -134,8 +135,28 @@ public class FavouriteServerInformationFragment extends Dialog {
                         e.printStackTrace();
                     }
                 }
-                act.startActivity(new Intent(act, SAMP.class));
-                act.finish();
+                File file1 = new File(act.getExternalFilesDir(null) + "/Text/american.dxt");
+                if(!file1.exists())
+                {
+                    File file2 = new File(act.getExternalFilesDir(null) + "/Textures/fonts/RussianFont.png");
+                    if(!file2.exists())
+                    {
+                        Toast.makeText(act, "Some important files in your modified data are missing, such as \"Text\" and \"Textures\"" +
+                                "Please, fix it and after try again. ( You can get that files in my discord channel )", Toast.LENGTH_LONG).show();
+
+                        dismiss();
+                    }
+                    else {
+                        act.startActivity(new Intent(act, SAMP.class));
+                        act.finish();
+                        dismiss();
+                    }
+                }
+                else {
+                    act.startActivity(new Intent(act, SAMP.class));
+                    act.finish();
+                    dismiss();
+                }
             }
         });
 

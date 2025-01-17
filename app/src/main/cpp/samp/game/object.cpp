@@ -79,15 +79,8 @@ CObject::CObject(int iModel, CVector vecPos, CVector vecRot, float fDrawDistance
 
 CObject::~CObject()
 {
-    CPhysical* pEntity = GamePool_Object_GetAt(m_dwGTAId);
-	m_pEntity = pEntity;
-
-	/*if(pGame->GetCamera())
-	{
-		if(pGame->GetCamera()->GetAttachedEntity() == this)
-			pGame->GetCamera()->AttachToEntity(0);
-	}*/
-
+    if(m_pEntity)
+        ScriptCommand(&destroy_object, m_dwGTAId);
     CStreaming::RemoveModelIfNoRefs(m_pEntity->m_nModelIndex);
 
 	for (int i = 0; i < 16; i++)
@@ -164,6 +157,10 @@ void CObject::Process(float fElapsedTime)
 				m_quatTarget.GetMatrix(reinterpret_cast<RwMatrix *>(&matEnt));
 			}
 			m_pEntity->SetMatrix((CMatrix&)matEnt);
+            m_pEntity->UpdateRW();
+            m_pEntity->UpdateRwFrame();
+
+            m_pEntity->Add();
 			StopMoving();
 			return;
 		}
@@ -236,7 +233,14 @@ void CObject::Process(float fElapsedTime)
             matEnt = m_pEntity->GetMatrix().ToRwMatrix();
 		}
 
+        // CPhysical::Remove
+        ((void (*)(CEntityGTA*))(*(uintptr_t*)( *(uintptr*)(m_pEntity) + (VER_x32 ? 0x10 : 0x10*2) )))(m_pEntity);
+
 		m_pEntity->SetMatrix((CMatrix&)matEnt);
+        m_pEntity->UpdateRW();
+        m_pEntity->UpdateRwFrame();
+
+        m_pEntity->Add();
 	}
 }
 
@@ -426,7 +430,14 @@ void CObject::MoveTo(float fX, float fY, float fZ, float fSpeed, float fRotX, fl
 			m_quatTarget.GetMatrix(reinterpret_cast<RwMatrix *>(&mat));
 		}
 
+        // CPhysical::Remove
+        ((void (*)(CEntityGTA*))(*(uintptr_t*)( *(uintptr*)(m_pEntity) + (VER_x32 ? 0x10 : 0x10*2) )))(m_pEntity);
+
 		m_pEntity->SetMatrix((CMatrix&)mat);
+        m_pEntity->UpdateRW();
+        m_pEntity->UpdateRwFrame();
+
+        m_pEntity->Add();
 	}
 
 	m_dwMoveTick = GetTickCount();

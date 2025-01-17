@@ -1547,7 +1547,10 @@ bool CPlayerPed::IsInJetpackMode()
 		return GetTaskTypeFromTask(m_pPed->Tasks->pdwJumpJetPack) == 1303;
 	}*/
 
-	return false;
+    if(m_pPed && m_pPed->IsAdded() && !IsInVehicle()) {
+        return m_pPed->GetIntelligence()->GetTaskJetPack();
+    }
+    return false;
 }
 
 void CPlayerPed::StartJetpack()
@@ -2302,6 +2305,7 @@ void CPlayerPed::FlushAttach()
 
 void CPlayerPed::ProcessAttach()
 {
+    if(!m_pPed) return;
     bool needRender = true;
 
     if(m_pPed->IsInVehicle() && m_pPed->pVehicle->IsRCVehicleModelID())
@@ -2391,6 +2395,7 @@ void CPlayerPed::ProcessAttach()
 
 void CPlayerPed::ProcessHeadMatrix()
 {
+    if(!m_pPed) return;
     auto hierarchy = GetAnimHierarchyFromSkinClump(m_pPed->m_pRwClump);
 
     if(!hierarchy)

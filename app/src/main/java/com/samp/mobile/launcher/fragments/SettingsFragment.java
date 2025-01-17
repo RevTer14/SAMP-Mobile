@@ -48,6 +48,7 @@ public class SettingsFragment extends Fragment {
     SeekBar mFPSSeekBar;
     TextView mFPSText;
 
+
     @Override
     public View onCreateView(LayoutInflater layoutInflater, ViewGroup viewGroup, Bundle bundle) {
         View view = layoutInflater.inflate(R.layout.fragment_settings, viewGroup, false);
@@ -86,8 +87,10 @@ public class SettingsFragment extends Fragment {
                 File file = new File(getActivity().getExternalFilesDir(null) + "/SAMP/settings.ini");
                 if(file.exists()) {
                     try {
-                        mWini.put("client", "name", text);
-                        mWini.store();
+                        if(mWini != null) {
+                            mWini.put("client", "name", text);
+                            mWini.store();
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -112,8 +115,10 @@ public class SettingsFragment extends Fragment {
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 new SharedPreferenceCore().setBoolean(requireContext().getApplicationContext(), "ANDROID_KEYBOARD", b);
                 try {
-                    mWini.put("gui", "androidkeyboard", b);
-                    mWini.store();
+                    if(mWini != null) {
+                        mWini.put("gui", "androidkeyboard", b);
+                        mWini.store();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -125,8 +130,10 @@ public class SettingsFragment extends Fragment {
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 new SharedPreferenceCore().setBoolean(requireContext().getApplicationContext(), "VOICE_CHAT", b);
                 try {
-                    mWini.put("gui", "VoiceChatEnable", b);
-                    mWini.store();
+                    if(mWini != null) {
+                        mWini.put("gui", "VoiceChatEnable", b);
+                        mWini.store();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -138,8 +145,10 @@ public class SettingsFragment extends Fragment {
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 new SharedPreferenceCore().setBoolean(requireContext().getApplicationContext(), "FPS_DISPLAY", b);
                 try {
-                    mWini.put("gui", "fps", b ? 1 : 0);
-                    mWini.store();
+                    if(mWini != null) {
+                        mWini.put("gui", "fps", b ? 1 : 0);
+                        mWini.store();
+                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -173,8 +182,10 @@ public class SettingsFragment extends Fragment {
                 File file = new File(getActivity().getExternalFilesDir(null) + "/SAMP/settings.ini");
                 if(file.exists()) {
                     try {
-                        mWini.put("gui", "ChatMaxMessages", realProgress);
-                        mWini.store();
+                        if(mWini != null) {
+                            mWini.put("gui", "ChatMaxMessages", realProgress);
+                            mWini.store();
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -217,8 +228,10 @@ public class SettingsFragment extends Fragment {
                 File file = new File(getActivity().getExternalFilesDir(null) + "/SAMP/settings.ini");
                 if(file.exists()) {
                     try {
-                        mWini.put("gui", "FPSLimit", realProgress);
-                        mWini.store();
+                        if(mWini != null) {
+                            mWini.put("gui", "FPSLimit", realProgress);
+                            mWini.store();
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

@@ -27,9 +27,11 @@ RpAtomic* GetFirstAtomicCallback(RpAtomic* atomic, void* data) {
 }
 
 RpHAnimHierarchy* GetAnimHierarchyFromSkinClump(RpClump* clump) {
-    RpHAnimHierarchy* anim{};
-    RpClumpForAllAtomics(clump, SkinAtomicGetHAnimHierarchCB, &anim);
-    return anim;
+    if(clump) {
+        RpHAnimHierarchy *anim{};
+        RpClumpForAllAtomics(clump, SkinAtomicGetHAnimHierarchCB, &anim);
+        return anim;
+    }
 }
 
 // name not from Android
