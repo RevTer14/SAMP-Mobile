@@ -12,7 +12,7 @@ CSettings::CSettings()
 	FLog("Loading settings..");	
 
 	char buff[0x7F];
-	sprintf(buff, "%sSAMP/settings.ini", g_pszStorage);
+	snprintf(buff, sizeof(buff), "%sSAMP/settings.ini", g_pszStorage);
 
 	INIReader reader(buff);
 
@@ -25,7 +25,7 @@ CSettings::CSettings()
 
 	// client
 	size_t length = 0;
-	sprintf(buff, "__android_%d%d", rand() % 1000, rand() % 1000);
+	snprintf(buff, sizeof(buff), "__android_%d%d", rand() % 1000, rand() % 1000);
 	length = reader.Get("client", "name", buff).copy(m_Settings.szNickName, 24);
 	m_Settings.szNickName[length] = '\0';
 	length = reader.Get("client", "password", "").copy(m_Settings.szPassword, MAX_SETTINGS_STRING);
