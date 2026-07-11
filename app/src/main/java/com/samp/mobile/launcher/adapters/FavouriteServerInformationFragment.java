@@ -4,6 +4,9 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,6 +28,7 @@ import com.samp.mobile.launcher.MainActivity;
 import com.samp.mobile.launcher.data.FavoritesInfo;
 import com.samp.mobile.launcher.util.ButtonAnimator;
 import com.samp.mobile.launcher.util.SAMPServerInfo;
+import com.samp.mobile.launcher.util.SharedPreferenceCore;
 
 import org.ini4j.Wini;
 
@@ -34,6 +38,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
+
 @Obfuscate
 public class FavouriteServerInformationFragment extends Dialog {
 
@@ -135,6 +141,37 @@ public class FavouriteServerInformationFragment extends Dialog {
                         e.printStackTrace();
                     }
                 }
+
+                if(new SharedPreferenceCore().getBoolean(getContext(), "MLOADER"))
+                {
+                    String data = Environment.getExternalStorageDirectory() + "/Android/media/com.samp.mobile";
+                    File file4 = new File(data + "/monetloader/compat/profile.json");
+                    Log.d("AXL", data + "/monetloader/compat/profile.json");
+                    if(file4.isDirectory() || !file4.exists())
+                    {
+                        file4.delete();
+                        try {
+                            file.createNewFile();
+                            FileWriter writer = new FileWriter(file4);
+                            writer.append("{\n" +
+                                    "  \"gtasa_name\": \"libGTASA.so\",\n" +
+                                    "  \"profile_name\": \"SA-MP 0.3.7\",\n" +
+                                    "  \"compat_scripts\": [],\n" +
+                                    "  \"samp_name\": \"libsamp.so\",\n" +
+                                    "  \"receiveignorerpc_pattern\": \"F0B503AF2DE900????B004460068C16A20468847\",\n" +
+                                    "  \"cnetgame_ctor_pattern\": \"F0B503AF2DE9000788B00D46????9146????0446002079447A44\",\n" +
+                                    "  \"rakclientinterface_netgame_offset\": 528,\n" +
+                                    "  \"use_samp_touch_workaround\": true,\n" +
+                                    "  \"nveventinsertnewest_offset\": 2606320\n" +
+                                    "}");
+                            writer.flush();
+                            writer.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+
                 File file1 = new File(act.getExternalFilesDir(null) + "/Text/american.dxt");
                 if(!file1.exists())
                 {

@@ -45,6 +45,7 @@ public:
 	void render() override;
 	void shutdown() override;
 
+
 	SplashScreen* splashscreen() const { return m_splashScreen; }
 	Chat* chat() const { return m_chat; }
 	Spawn* spawn() const { return m_spawn; }
@@ -79,6 +80,7 @@ public:
 
     void renderDebug();
 
+
     void ProcessPushedTextdraws();
     void PushToBufferedQueueTextDrawPressed(uint16_t textdrawId);
 
@@ -98,6 +100,8 @@ private:
     Label* label2;
     Label* label3;
     Label* label4;
+
+    float 		m_fFontSize;
 
 	bool m_bNeedClearMousePos = false;
 

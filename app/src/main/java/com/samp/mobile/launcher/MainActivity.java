@@ -93,11 +93,11 @@ public class MainActivity extends AppCompatActivity {
 
         ConfigValidator.validateConfigFiles(this);
 
-        if(!SignatureChecker.isSignatureValid(this, getPackageName()))
-        {
-            Toast.makeText(this, "Use original launcher! No remake", Toast.LENGTH_LONG).show();
-            return;
-        }
+        //if(!SignatureChecker.isSignatureValid(this, getPackageName()))
+        //{
+        //Toast.makeText(this, "Use original launcher! No remake", Toast.LENGTH_LONG).show();
+        //return;
+        //}
 
 
         File file = new File(getExternalFilesDir(null) + "/download/update.apk");

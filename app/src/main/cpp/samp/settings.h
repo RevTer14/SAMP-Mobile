@@ -9,6 +9,7 @@ struct stSettings
 	char szHost[MAX_SETTINGS_STRING+1];
 	int iPort;
 	char szPassword[MAX_SETTINGS_STRING+1];
+    char szVersion[MAX_SETTINGS_STRING+1];
 
 	// debug
 	bool bDebug;
@@ -65,6 +66,9 @@ public:
 	~CSettings();
 
 	stSettings& Get() { return m_Settings; }
+
+    const stSettings& GetReadOnly();
+    stSettings& GetWrite();
 	
 private:
 	struct stSettings m_Settings;

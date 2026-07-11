@@ -7,27 +7,28 @@ plugins {
 android {
     signingConfigs {
         debug {
-            storeFile file('C:\\Work\\projects2\\Projects\\NewLauncher\\keystore_playmarket2.jks')
-            storePassword 'hayk2010'
-            keyAlias 'key0'
-            keyPassword 'hayk2010'
+            storeFile file("../../keys/new.jks")
+            storePassword "123123"
+            keyAlias "key0"
+            keyPassword "123123"
         }
         release {
-            storeFile file('C:\\Work\\projects2\\Projects\\NewLauncher\\keystore_playmarket2.jks')
-            storePassword 'hayk2010'
-            keyPassword 'hayk2010'
-            keyAlias 'key0'
+            storeFile file("../../keys/new.jks")
+            storePassword "123123"
+            keyAlias "key0"
+            keyPassword "123123"
         }
     }
     compileSdk 34
+    allprojects {repositories {maven { url 'https://maven.aliyun.com/repository/jcenter' }}}
     namespace 'com.samp.mobile'
 
     defaultConfig {
         applicationId "com.samp.mobile"
         minSdk 26
         targetSdk 34
-        versionCode 103
-        versionName "0.8.2"
+        versionCode 105
+        versionName "0.8.2.1"
 
         multiDexEnabled true
 

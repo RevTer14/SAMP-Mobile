@@ -26,6 +26,7 @@ int g_iLagCompensationMode = 0;
 void ProcessIncommingEvent(PLAYERID playerID, int iEventType,
 	uint32_t dwParam1, uint32_t dwParam2, uint32_t dwParam3);
 
+void DisableAutoAim();
 void InitGame(RPCParameters* rpcParams)
 {
 	Log::traceLastFunc("[RPC-IN] InitGame");
@@ -108,8 +109,8 @@ void InitGame(RPCParameters* rpcParams)
 	}
 
 	//InstallWeaponFireHooks();
-	if (pGame) {
-		pGame->DisableAutoAim();
+	if (pGame && !pSettings->Get().bAutoAim) {
+		//DisableAutoAim();
 	}
 
 	uint8_t byteStrLen;

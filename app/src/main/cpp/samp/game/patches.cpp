@@ -87,8 +87,8 @@ void ApplyFPSPatch(uint8_t fps)
 
 void DisableAutoAim()
 {
-    CHook::RET("_ZN10CPlayerPed22FindWeaponLockOnTargetEv"); // CPedSamp::FindWeaponLockOnTarget
-    CHook::RET("_ZN10CPlayerPed26FindNextWeaponLockOnTargetEP7CEntityb"); // CPedSamp::FindNextWeaponLockOnTarget
+    CHook::RET("_ZN10CPlayerPed22FindWeaponLockOnTargetEv"); // CPed::FindWeaponLockOnTarget
+    CHook::RET("_ZN10CPlayerPed26FindNextWeaponLockOnTargetEP7CEntityb"); // CPed::FindNextWeaponLockOnTarget
     CHook::RET("_ZN4CPed21SetWeaponLockOnTargetEP7CEntity"); // CPed::SetWeaponLockOnTarget
 }
 
@@ -153,7 +153,6 @@ void ApplyPatches_level0()
 #else
     CHook::WriteMemory(g_libGTASA + 0x23FDE0, (uintptr_t)"\x22\x00\x80\x52", 4);
 #endif
-    DisableAutoAim();
 
     //CHook::RET("_ZN6CTrain10InitTrainsEv"); // CTrain::InitTrains
 

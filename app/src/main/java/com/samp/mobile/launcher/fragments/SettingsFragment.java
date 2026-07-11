@@ -10,10 +10,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.SeekBar;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.ToggleButton;
@@ -49,6 +53,11 @@ public class SettingsFragment extends Fragment {
     SeekBar mFPSSeekBar;
     TextView mFPSText;
 
+    String[] titles = {"0.3.7", "0.3.7-R1", "0.3.7-R3","0.3.7-R4","0.3.7-R5"};
+
+    Spinner autoCompleteTextView;
+    ArrayAdapter<String> adapter;
+
 
     @Override
     public View onCreateView(LayoutInflater layoutInflater, ViewGroup viewGroup, Bundle bundle) {
@@ -57,6 +66,7 @@ public class SettingsFragment extends Fragment {
         ((MainActivity)getActivity()).hideKeyboard(getActivity());
 
         mNickName = view.findViewById(R.id.settings_nickname);
+        autoCompleteTextView = view.findViewById(R.id.spinner);
         mKeyboardSwitch = view.findViewById(R.id.keyboard_switch);
         mFPSSwitch = view.findViewById(R.id.fps_switch);
         mMonetSwitch = view.findViewById(R.id.monet_switch);
@@ -66,6 +76,10 @@ public class SettingsFragment extends Fragment {
         mMessagesText = view.findViewById(R.id.messages_count);
         mFPSSeekBar = view.findViewById(R.id.fps_seekbar);
         mFPSText = view.findViewById(R.id.fps_count);
+
+        adapter = new ArrayAdapter<String>(getActivity(), androidx.appcompat.R.layout.support_simple_spinner_dropdown_item, titles);
+        adapter.setDropDownViewResource(androidx.appcompat.R.layout.support_simple_spinner_dropdown_item);
+        autoCompleteTextView.setAdapter(adapter);
 
         File file = new File(getActivity().getExternalFilesDir(null) + "/SAMP/settings.ini");
         try {
@@ -77,6 +91,30 @@ public class SettingsFragment extends Fragment {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        autoCompleteTextView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                new SharedPreferenceCore().setInt(requireContext().getApplicationContext(), "VERSION", position);
+                File file = new File(getActivity().getExternalFilesDir(null) + "/SAMP/settings.ini");
+                if(file.exists()) {
+                    try {
+                        if(mWini != null) {
+                            mWini.put("client", "version", titles[new SharedPreferenceCore().getInt(requireContext().getApplicationContext(), "VERSION")]);
+                            mWini.store();
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
         mNickName.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -130,10 +168,10 @@ public class SettingsFragment extends Fragment {
         mVoiceSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                new SharedPreferenceCore().setBoolean(requireContext().getApplicationContext(), "VOICE_CHAT", b);
+                new SharedPreferenceCore().setBoolean(requireContext().getApplicationContext(), "AIM", b);
                 try {
                     if(mWini != null) {
-                        mWini.put("gui", "VoiceChatEnable", b);
+                        mWini.put("gui", "autoaim", b);
                         mWini.store();
                     }
                 } catch (IOException e) {
@@ -265,10 +303,11 @@ public class SettingsFragment extends Fragment {
         super.onResume();
 
         mKeyboardSwitch.setChecked(new SharedPreferenceCore().getBoolean(requireContext().getApplicationContext(), "ANDROID_KEYBOARD"));
-        mVoiceSwitch.setChecked(new SharedPreferenceCore().getBoolean(requireContext().getApplicationContext(), "VOICE_CHAT"));
+        mVoiceSwitch.setChecked(new SharedPreferenceCore().getBoolean(requireContext().getApplicationContext(), "AIM"));
         mFPSSwitch.setChecked(new SharedPreferenceCore().getBoolean(requireContext().getApplicationContext(), "FPS_DISPLAY"));
         mModifySwitch.setChecked(new SharedPreferenceCore().getBoolean(requireContext().getApplicationContext(), "MODIFIED_DATA"));
         mMonetSwitch.setChecked(new SharedPreferenceCore().getBoolean(requireContext().getApplicationContext(), "MLOADER"));
+        autoCompleteTextView.setSelection(new SharedPreferenceCore().getInt(requireContext().getApplicationContext(), "VERSION"));
 
         int fps = new SharedPreferenceCore().getInt(getContext(), "FPS_LIMIT");
         switch (fps)

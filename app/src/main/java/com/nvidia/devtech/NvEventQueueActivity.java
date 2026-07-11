@@ -206,6 +206,8 @@ public abstract class NvEventQueueActivity extends AppCompatActivity implements 
 
     public native void togglePlayer(int toggle);
 
+    public native void onEventBackPressed();
+
     /**
      * Helper class used to pass raw data around.
      */

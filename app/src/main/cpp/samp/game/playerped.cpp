@@ -891,7 +891,7 @@ void CPlayerPed::ProcessVehicleHorn()
 // 0.3.7
 void CPlayerPed::PutDirectlyInVehicle(uint32_t dwVehicleGTAId, uint8_t byteSeatID)
 {
-	if (!m_pPed) return;
+	if (!m_pPed || !m_dwGTAId || !dwVehicleGTAId) return;
 	if (!GamePool_Vehicle_GetAt(dwVehicleGTAId)) return;
 	if (!GamePool_Ped_GetAt(m_dwGTAId)) return;
 
@@ -2321,7 +2321,7 @@ void CPlayerPed::ProcessAttach()
         auto attach = iter.second;
 
         CObject* pObject = attach.pObject;
-        if (m_pPed->IsAdded())
+        if (pObject && pObject->m_pEntity && m_pPed->IsAdded() && m_pPed->m_pRwClump)
         {
             auto hierarchy = GetAnimHierarchyFromSkinClump(m_pPed->m_pRwClump);
 
@@ -2394,7 +2394,7 @@ void CPlayerPed::ProcessAttach()
 
 void CPlayerPed::ProcessHeadMatrix()
 {
-    if(!m_pPed) return;
+    if(!m_pPed || !m_pPed->m_pRwClump) return;
     auto hierarchy = GetAnimHierarchyFromSkinClump(m_pPed->m_pRwClump);
 
     if(!hierarchy)

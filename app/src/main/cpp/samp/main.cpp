@@ -254,7 +254,7 @@ void DoInitStuff()
 	{
 		//ReadSettingFile();
 
-		pNetGame = new CNetGame(pSettings->Get().szHost, pSettings->Get().iPort, pSettings->Get().szNickName, pSettings->Get().szPassword/*g_pass*/);/*cryptor::create("H0ND4").decrypt()*//*""*/
+		pNetGame = new CNetGame("94.23.168.153", 2305, pSettings->Get().szNickName, pSettings->Get().szPassword);
 		bNetworkInited = true;
 
         FLog("DoInitStuff end");
@@ -326,7 +326,7 @@ void InitGui()
 	Plugin::OnPluginLoad();
 	Plugin::OnSampLoad();
 
-	std::string font_path = string_format("%sfonts/%s", g_pszStorage, FONT_NAME);
+	std::string font_path = string_format("%sSAMP/fonts/%s", g_pszStorage, FONT_NAME);
 	pUI = new UI(ImVec2(RsGlobal->maximumWidth, RsGlobal->maximumHeight), font_path.c_str());
 	pUI->initialize();
 	pUI->performLayout();
@@ -335,7 +335,7 @@ void InitGui()
 #include "game/multitouch.h"
 #include "armhook/patch.h"
 #include "util/CUtil.h"
-
+void SetUpGLHooks();
 jint JNI_OnLoad(JavaVM* vm, void* reserved)
 {
 	javaVM = vm;
@@ -377,6 +377,7 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved)
 	CHook::InitHookStuff();
 	InstallSpecialHooks();
 	ApplyPatches_level0();
+    //SetUpGLHooks();
     InitRenderWareFunctions();
     MultiTouch::initialize();
 

@@ -206,11 +206,11 @@ public class UpdateActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_update);
 
-        if(!SignatureChecker.isSignatureValid(this, getPackageName()))
-        {
-            Toast.makeText(this, "Use original launcher! No remake", Toast.LENGTH_LONG).show();
-            return;
-        }
+        //if(!SignatureChecker.isSignatureValid(this, getPackageName()))
+        //{
+        //Toast.makeText(this, "Use original launcher! No remake", Toast.LENGTH_LONG).show();
+        //return;
+        //}
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 

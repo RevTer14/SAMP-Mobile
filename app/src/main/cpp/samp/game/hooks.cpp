@@ -82,7 +82,6 @@ PLAYERID FindActorIDFromGtaPtr(CPedGTA* pPed)
 void RenderEffects() {
 //	RenderEffects();
     CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x0059DA40 + 1 : 0x6C1D6C));
-    RwRenderStateSet(rwRENDERSTATETEXTUREADDRESS, RWRSTATE(TRUE));
     CHook::CallFunction<void>(g_libGTASA + (VER_x32 ? 0x005BE914 + 1 : 0x6E2FB4));
 //    CRopes::Render();
 //    CGlass::Render();
@@ -1789,9 +1788,25 @@ void InjectHooks()
     CHook::Write(g_libGTASA+(VER_x32 ? 0xA45790:0xCE8538), &COcclusion::NumOccludersOnMap);
 }
 
+void InstallUrezHooks()
+{
+    CHook::UnFuck(g_libGTASA + (VER_x32 ? 0x1E87A0 : 0x714003 ));
+    *(char*)(g_libGTASA + (VER_x32 ? 0x1E87A0 : 0x714003 ) + 12) = 'd';
+    *(char*)(g_libGTASA + (VER_x32 ? 0x1E87A0 : 0x714003 ) + 13) = 'x';
+    *(char*)(g_libGTASA + (VER_x32 ? 0x1E87A0 : 0x714003 ) + 14) = 't';
+
+    CHook::UnFuck(g_libGTASA + (VER_x32 ? 0x1E8C04 : 0x71406F));
+    *(char*)(g_libGTASA + (VER_x32 ? 0x1E8C04 : 0x71406F) + 12) = 'd';
+    *(char*)(g_libGTASA + (VER_x32 ? 0x1E8C04 : 0x71406F) + 13) = 'x';
+    *(char*)(g_libGTASA + (VER_x32 ? 0x1E8C04 : 0x71406F) + 14) = 't';
+}
+
 void InstallSpecialHooks()
 {
     InjectHooks();
+
+    InstallUrezHooks();
+
     CHook::Redirect("_ZN5CGame20InitialiseRenderWareEv", &CGame::InitialiseRenderWare);
     CHook::InstallPLT(g_libGTASA + (VER_x32 ? 0x6785FC : 0x84EC20), &StartGameScreen__OnNewGameCheck_hook, &StartGameScreen__OnNewGameCheck);
 
@@ -1816,10 +1831,9 @@ void InstallSpecialHooks()
 
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>   // If using OpenGL ES 2.0 or 3.0
-void SetUpGLHooks();
+
 void InstallHooks()
 {
-    //SetUpGLHooks();
     CHook::Redirect("_Z13Render2dStuffv", &Render2dStuff);
     CHook::Redirect("_Z13RenderEffectsv", &RenderEffects);
     CHook::InlineHook("_Z14AND_TouchEventiiii", &AND_TouchEvent_hook, &AND_TouchEvent);

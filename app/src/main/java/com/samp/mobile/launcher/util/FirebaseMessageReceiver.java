@@ -41,6 +41,8 @@ public class FirebaseMessageReceiver extends FirebaseMessagingService {
 
     }
 
+
+
     private RemoteViews getCustomDesign(String title,String message, String urlString){
         RemoteViews remoteViews=new RemoteViews(getApplicationContext().getPackageName(),
                 R.layout.notification);
@@ -120,3 +122,4 @@ public class FirebaseMessageReceiver extends FirebaseMessagingService {
         }
     }
 }
+

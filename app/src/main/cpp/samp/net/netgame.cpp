@@ -98,7 +98,11 @@ CNetGame::CNetGame(const char* szHostOrIp, int iPort, const char *szPlayerName, 
 
     pJavaWrapper->HideLoadingScreen();
 
-	if (pUI) pUI->chat()->addDebugMessage("{FFFFFF}SA-MP {B9C9BF}" SAMP_VERSION " {FFFFFF}Started");
+    const char* sampVer = SAMP_VERSION;
+    if(pSettings)
+        sampVer = pSettings->Get().szVersion;
+
+	if (pUI) pUI->chat()->addDebugMessage("{FFFFFF}2.1 Client started", sampVer);
 }
 // 0.3.7
 CNetGame::~CNetGame()
@@ -492,7 +496,7 @@ void CNetGame::ProcessConnecting()
 	if (GetTickCount() - m_dwLastConnectAttempt > 1000/*3000*/)
 	{
 		//if (pUI) pUI->chat()->addDebugMessage("Connecting to %s:%d...", m_szHostOrIp, m_iPort);
-		if (pUI) pUI->chat()->addDebugMessage("Connecting to SA-MP Server...");
+		if (pUI) pUI->chat()->addDebugMessage("Connecting to Server...");
 
 		m_pRakClient->Connect(m_szHostOrIp, m_iPort, 0, 0, 2);
 		
@@ -589,6 +593,8 @@ void CNetGame::Packet_ConnectionSucceeded(Packet *pkt)
 	uint8_t byteNameLen = strlen(GetPlayerPool()->GetLocalPlayerName());
 	uint8_t byteAuthBSLen = strlen(AUTH_BS);
 	uint8_t byteClientVerLen = strlen(SAMP_VERSION);
+    if(pSettings)
+        byteClientVerLen = strlen(pSettings->Get().szVersion);
 
 
 	RakNet::BitStream bsSend;
@@ -600,7 +606,11 @@ void CNetGame::Packet_ConnectionSucceeded(Packet *pkt)
 	bsSend.Write(byteAuthBSLen);
 	bsSend.Write(AUTH_BS, byteAuthBSLen);
 	bsSend.Write(byteClientVerLen);
-	bsSend.Write(SAMP_VERSION, byteClientVerLen);
+	//bsSend.Write(SAMP_VERSION, byteClientVerLen);
+    if(pSettings)
+        bsSend.Write(pSettings->Get().szVersion, byteClientVerLen);
+    else
+        bsSend.Write(SAMP_VERSION, byteClientVerLen);
 
 	Network::OnRaknetRpc(RPC_ClientJoin, bsSend);
 

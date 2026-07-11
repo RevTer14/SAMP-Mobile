@@ -141,6 +141,8 @@ typedef struct _DAMAGE_MANAGER_INTERFACE            // 28 bytes due to the way i
 } DAMAGE_MANAGER_INTERFACE;
 #pragma pack(pop)
 
+
+
 enum ePanels
 {
 	FRONT_LEFT_PANEL = 0,

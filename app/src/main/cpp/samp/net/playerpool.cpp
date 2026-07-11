@@ -239,7 +239,7 @@ void CPlayerPool::ProcessAttachedObjects()
 		if (pRemotePlayer)
 		{
 			CPlayerPed* pPlayerPed = pRemotePlayer->GetPlayerPed();
-			if (pPlayerPed && !pPlayerPed->m_pPed->m_bRemoveFromWorld)
+			if (pPlayerPed && pPlayerPed->m_pPed && !pPlayerPed->m_pPed->m_bRemoveFromWorld)
 			{
 				pPlayerPed->ProcessSpecialAction(pPlayerPed->iSpecialAction);
 				pPlayerPed->ProcessAttach();
