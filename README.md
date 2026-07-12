@@ -36,3 +36,8 @@ This project is provided for educational and research purposes only.
 
 Grand Theft Auto, Grand Theft Auto: San Andreas and SA-MP are trademarks of their respective owners. This project is not affiliated with or endorsed by Rockstar Games, Take-Two Interactive or the original SA-MP development team.
 
+
+
+### Important! News about project
+
+[![Telegram](https://img.shields.io/badge/Join-Telegram-24A1DE?style=for-the-badge&logo=telegram&logoColor=white)](https://t.me/+gbKnbDEf3oVmYzcy)
