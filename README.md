@@ -2,6 +2,10 @@
 
 Modern **SA-MP 2.11** client for **Grand Theft Auto: San Andreas (Android)**.
 
+> Main author's:
+[**Egor Kuzn**](https://github.com/bkuzn2) && [**Vadim**](https://github.com/kuzia15)
+
+
 > **Status:** Active Development 🚧
 
 ## Features
@@ -64,7 +68,5 @@ This project is under active development. New fixes and improvements are added r
 ## License
 
 This project is provided for educational and research purposes only.
-
-Main author: [**Egor Kuzn**](https://github.com/bkuzn2)
 
 Grand Theft Auto, San Andreas and SA-MP are trademarks of their respective owners and are not affiliated with this project.
