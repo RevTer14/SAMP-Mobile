@@ -9,8 +9,6 @@ Choose the version you need:
 * ARM64 only
 * Gloss integration
 * 16 KB page size support
-* Fixed pickup synchronization
-* Fixed jetpack synchronization
 * Cache path: `/storage/emulated/0/GTA/`
 
 [Open GTA-2.11 branch](https://github.com/kuzia15/SAMP-Mobile/tree/GTA-2.11)
