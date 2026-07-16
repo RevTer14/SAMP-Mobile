@@ -40,7 +40,7 @@ jobs:
           cache: 'gradle'
 
       - name: Grab Gradle Wrapper
-        run: gradle wrapper --gradle-version 8.2
+        run: gradle wrapper --gradle-version 8.9
 
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
