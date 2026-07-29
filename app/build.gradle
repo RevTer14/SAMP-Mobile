@@ -118,6 +118,7 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:30.1.0')
     implementation 'com.google.firebase:firebase-analytics:21.2.0'
     implementation 'com.google.firebase:firebase-messaging:23.1.1'
+    implementation 'com.mindorks.android:prdownloader:0.6.0'
 
     implementation 'org.ini4j:ini4j:0.5.4'
 
