@@ -61,7 +61,7 @@ void FLog(const char* fmt, ...);
 
 int work = 0;
 
-void ReadSettingFile()
+/*void ReadSettingFile()
 {
 	/*char path[255] = { 0 };
 	//sprintf(path, "%ssamp.set", g_pszStorage);
@@ -83,6 +83,11 @@ void ReadSettingFile()
 	pSettings = new CSettings();
 
 	firebase::crashlytics::SetUserId(pSettings->Get().szNickName);
+}*/
+
+void ReadSettingFile()
+{
+    pSettings = new CSettings();
 }
 
 int hashing(const char* str) {
