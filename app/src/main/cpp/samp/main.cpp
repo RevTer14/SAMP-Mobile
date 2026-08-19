@@ -61,30 +61,6 @@ void FLog(const char* fmt, ...);
 
 int work = 0;
 
-/*void ReadSettingFile()
-{
-	/*char path[255] = { 0 };
-	//sprintf(path, "%ssamp.set", g_pszStorage);
-	sprintf(path, "%sNickName.ini", g_pszStorage);
-
-	FILE* fp = fopen(path, "r");
-	if (fp == NULL) return;
-
-	char buf[1024];
-
-	// nickname
-	if (fgets(buf, 1024, fp) != NULL) {
-		buf[strcspn(buf, "\n\r")] = 0;
-		strcpy(g_nick, buf);
-	}
-
-	fclose(fp);*/
-
-	pSettings = new CSettings();
-
-	firebase::crashlytics::SetUserId(pSettings->Get().szNickName);
-}*/
-
 void ReadSettingFile()
 {
     pSettings = new CSettings();
