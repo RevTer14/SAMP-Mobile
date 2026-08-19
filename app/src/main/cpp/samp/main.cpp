@@ -252,11 +252,21 @@ void DoInitStuff()
 
 	if (!bNetworkInited && !bDebug)
 	{
-		//ReadSettingFile();
+        ReadSettingFile();
 
-		pNetGame = new CNetGame("65.108.36.172", 19396, pSettings->Get().szNickName, pSettings->Get().szPassword);
-		bNetworkInited = true;
-
+        if (pSettings)
+		{
+		    //pNetGame = new CNetGame("65.108.36.172", 19396, pSettings->Get().szNickName, pSettings->Get().szPassword);
+            pNetGame = new CNetGame(pSettings->Get().szHost,
+                                    pSettings->Get().iPort,
+                                    pSettings->Get().szNickName,
+                                    pSettings->Get().szPassword);
+            bNetworkInited = true;
+		}
+        else
+        {
+            FLog("ERROR: pSettings is null!");
+		}
         FLog("DoInitStuff end");
 	}
 }
